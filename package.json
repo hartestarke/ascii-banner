@@ -1,0 +1,32 @@
+{
+  "name": "ascii-banner",
+  "version": "0.1.0",
+  "description": "Animated ASCII-field SVG banners for GitHub READMEs: wave field, figlet taglines, CSS-only animation, zero dependencies.",
+  "type": "module",
+  "bin": {
+    "ascii-banner": "bin/ascii-banner.mjs"
+  },
+  "exports": "./src/index.mjs",
+  "files": [
+    "bin",
+    "src",
+    "fonts",
+    "banner.config.mjs"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "ascii",
+    "banner",
+    "svg",
+    "readme",
+    "github-profile",
+    "figlet"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hartestarke/ascii-banner.git"
+  },
+  "license": "MIT"
+}
