@@ -1,6 +1,6 @@
 # Reveals
 
-How each tagline appears is a pluggable **reveal preset**. Every preset obeys the same contract:
+How each tagline appears is a pluggable **reveal preset**; the [gallery](gallery/README.md#reveals) renders each one small. Every preset obeys the same contract:
 
 - tagline *p* owns the slot `[p × (seconds + hold), (p + 1) × (seconds + hold))` of the tagline loop and is fully hidden outside it;
 - it reveals over `seconds`, then holds **settled** for `hold`, and the settled line is pixel-identical whichever preset drew it;
@@ -24,17 +24,17 @@ reveal: {
 
 **Legacy `decode`.** Configs written before presets existed used a top-level `decode: { seconds, hold, fps, noiseFrames, lead, leadVar, rag, ragTicks, burst, noiseAlpha }`. It still works and means `preset: "scramble"`: `seconds`/`hold`/`fps` go to `reveal`, the rest to `options`. Giving both `decode` and `reveal` is an error.
 
-Sizes below are for the template config (3 taglines, 880 × 240, default options). "Reveal" counts what the preset adds on top of the same banner with no taglines (895,692 bytes). Keyframe counts leave out the field's one. The budget is 1,048,576 bytes.
+Sizes below are for the template config (3 taglines, 880 × 240, default options). "Reveal" counts what the preset adds on top of the same banner with no taglines (822,303 bytes). Keyframe counts leave out the field's one. The budget is 1,048,576 bytes.
 
 | preset | file bytes | reveal bytes | reveal @keyframes |
 | --- | ---: | ---: | ---: |
-| scramble | 951,285 | 55.6 KB | 13 |
-| typewriter | 929,107 | 33.4 KB | 9 |
-| wipe | 928,648 | 33.0 KB | 3 |
-| dissolve | 933,955 | 38.3 KB | 18 |
-| fall | 958,301 | 62.6 KB | 26 |
-| glitch | 930,523 | 34.8 KB | 12 |
-| fade | 911,958 | 16.3 KB | 1 |
+| scramble | 877,686 | 55.4 KB | 13 |
+| typewriter | 855,508 | 33.2 KB | 9 |
+| wipe | 855,049 | 32.7 KB | 3 |
+| dissolve | 860,356 | 38.1 KB | 18 |
+| fall | 884,702 | 62.4 KB | 26 |
+| glitch | 856,924 | 34.6 KB | 12 |
+| fade | 838,359 | 16.1 KB | 1 |
 
 ## scramble (default)
 
@@ -50,7 +50,7 @@ The line decodes left to right behind a torn front. Each figlet row steps in who
 | `burst` | `0.85` | pace jitter: 0 = even, 1 = from a stall to a double step |
 | `noiseAlpha` | `0.65` | alpha of the not-yet-decoded glyphs |
 
-951,285 bytes, 13 keyframes.
+877,686 bytes, 13 keyframes.
 
 ## typewriter
 
@@ -61,7 +61,7 @@ All figlet rows advance together, whole columns per tick, left to right over `se
 | `cursor` | `"█"` | one character drawn down every row at the front; `""` = no cursor. It must exist in the font (the bundled one has the box and block glyphs) |
 | `blink` | `0` | 0 = the cursor leaves when the line settles; > 0 = it stays and blinks with this period (seconds) during the hold |
 
-929,107 bytes, 9 keyframes (3 per tagline).
+855,508 bytes, 9 keyframes (3 per tagline).
 
 ## wipe
 
@@ -72,7 +72,7 @@ One window per tagline sweeps over the line, and the knockout shares the window.
 | `direction` | `"right"` | way the edge travels: `"right"`, `"left"`, `"down"`, `"up"`, `"center"` (opens outwards), `"edges"` (closes inwards) |
 | `steps` | `0` | 0 = smooth linear sweep; *n* > 0 = *n* discrete steps |
 
-928,648 bytes, 3 keyframes.
+855,049 bytes, 3 keyframes.
 
 ## dissolve
 
@@ -83,7 +83,7 @@ Glyph cells switch on in ordered-dither order until the line is whole. Each tagl
 | `matrix` | `4` | dither tile in cells: `2`, `4` or `8` (4, 16 or 64 switch-on steps) |
 | `order` | `"bayer"` | `"bayer"` = ordered dither; `"random"` = shuffled thresholds |
 
-933,955 bytes, 18 keyframes (matrix 8: 947,665 bytes, 45 keyframes).
+860,356 bytes, 18 keyframes (matrix 8: 874,066 bytes, 45 keyframes).
 
 ## fall
 
@@ -95,7 +95,7 @@ Glyph groups drop into place with an ease-out, their start times staggered left 
 | `group` | `"letter"` | `"letter"` = runs of inked columns between blank ones. Fonts that butt letters together (like the bundled ANSI Shadow) leave fewer runs than letters, so those runs are cut into 6-column chunks. `"column"` = every inked column falls on its own |
 | `stagger` | `0.6` | fraction of `seconds` the start times spread over, in [0, 1] |
 
-958,301 bytes, 26 keyframes. `group: "column"` is the heaviest option: 1,056,665 bytes at the template size, over the 1 MiB budget, so it needs a smaller field or `budget.maxBytes` raised.
+884,702 bytes, 26 keyframes. `group: "column"` is the heaviest option: 983,066 bytes at the template size, 65,510 bytes under the 1 MiB budget, so a larger banner or longer taglines can push it over.
 
 ## glitch
 
@@ -108,7 +108,7 @@ The line appears at once. Then, for `seconds`, a few rows per tick jump sideways
 | `flashes` | `4` | one-tick noise flashes during the reveal; 0 = none |
 | `noiseAlpha` | `0.65` | alpha of the noise glyphs |
 
-930,523 bytes, 12 keyframes.
+856,924 bytes, 12 keyframes.
 
 ## fade
 
@@ -119,7 +119,7 @@ The line's opacity eases in over `seconds`, and the knockout fades with it.
 | `flicker` | `0` | 0 = smooth ease-in; up to 1 = stepped random opacity, a "CRT warm-up" that calms as it settles |
 | `rows` | `false` | `true` = rows fade one after another, top to bottom |
 
-911,958 bytes, 1 keyframes (`rows: true`: one per figlet row).
+838,359 bytes, 1 keyframes (`rows: true`: one per figlet row).
 
 ## Writing a preset
 

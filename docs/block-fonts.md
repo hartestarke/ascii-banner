@@ -166,19 +166,8 @@ for ASCII 32–126 in order, with endmark `@` and `@@` on each glyph's last row.
 The faces use only Block Elements (U+2580–259F), which are inside the embedded
 JetBrains Mono subset.
 
-## Registry entries
+## Registration
 
-For `src/fonts.mjs` (paths relative to the repo root):
-
-```js
-{ name: "blocks",        file: "fonts/block/blocks.flf",        shadowGlyphs: "",       layout: "full" },
-{ name: "blocks-shadow", file: "fonts/block/blocks-shadow.flf", shadowGlyphs: "░", layout: "full" }, // ░
-{ name: "pixel",        file: "fonts/block/pixel.flf",        shadowGlyphs: "",       layout: "full" },
-{ name: "blocks-thin",         file: "fonts/block/blocks-thin.flf",         shadowGlyphs: "",       layout: "full" },
-```
-
-Until the fonts are registered, a config can point at a file directly:
-
-```js
-tagline: { font: "fonts/block/blocks-shadow.flf", shadowGlyphs: "░" },
-```
+The four faces are registered in `src/fonts.mjs` as `blocks`, `blocks-shadow`,
+`blocks-thin` and `pixel`, with layout `full` and the `shadowGlyphs` from the
+table above, so `tagline: { font: "blocks-shadow" }` is all a config needs.

@@ -1,8 +1,8 @@
 # Tagline fonts
 
-Taglines are set in a figlet (`.flf`) font. Sixteen are bundled; `ascii-banner
-fonts` lists them and `ascii-banner fonts --sample "Hello"` renders a sample in
-each.
+Taglines are set in a figlet (`.flf`) font. Twenty are bundled; `ascii-banner
+fonts` lists them, `ascii-banner fonts --sample "Hello"` renders a sample in
+each, and the [gallery](gallery/README.md#fonts) shows each one in a banner.
 
 | Name | Style | Author (from the font header) | Licence | Layout default | Lowercase |
 |---|---|---|---|---|---|
@@ -22,11 +22,17 @@ each.
 | `smslant` | Small slanted letters | Glenn Chappell | BSD-3-Clause | `header` = smush, rules 1-4 | yes |
 | `smshadow` | Small letters with a drop shadow | Glenn Chappell | BSD-3-Clause | `header` = universal smush | yes |
 | `smscript` | Small cursive | Glenn Chappell | BSD-3-Clause | `header` = fit | yes |
+| `blocks` | Square pixels drawn as `██` pairs, ANSI Shadow's scale | this project | MIT, see [`fonts/block/NOTICE.md`](../fonts/block/NOTICE.md) | `full` (header: full) | no, draws capitals |
+| `blocks-shadow` | `blocks` with a `░` light-shade drop shadow | this project | MIT | `full` (header: full) | no, draws capitals |
+| `blocks-thin` | One `█` per pixel: tall, narrow letters | this project | MIT | `full` (header: full) | no, draws capitals |
+| `pixel` | Half blocks `▀` `▄`, two pixel rows per text row; the most compact | this project | MIT | `full` (header: full) | no, draws capitals |
 
 The fifteen FIGlet fonts come verbatim from the official FIGlet distribution;
 [`fonts/figlet/NOTICE.md`](../fonts/figlet/NOTICE.md) records the source
 commit, the licence ([`fonts/figlet/LICENSE`](../fonts/figlet/LICENSE)) and
-every author and modifier named in their headers.
+every author and modifier named in their headers. The four block faces are
+original work for this project, generated from one bitmap by
+`tools/mkfont.mjs`; [block-fonts.md](block-fonts.md) describes them.
 
 ## `tagline.font`
 
@@ -39,7 +45,8 @@ Only the printable ASCII glyphs (`' '` to `'~'`) are read. A character outside
 them renders as the font's `?` glyph and the build prints a warning. Every
 character a font draws must also exist in the embedded web font (the bundled
 JetBrains Mono subset covers ASCII, Box Drawing and Block Elements), or the
-build stops with an error. All fifteen FIGlet fonts draw plain ASCII only.
+build stops with an error. All fifteen FIGlet fonts draw plain ASCII only, and
+the block faces only Block Elements.
 `ansi-shadow` draws `+ = | { }` as blanks, and its `$` uses `·`, which the
 bundled subset lacks: a `$` in a tagline set in `ansi-shadow` needs your own
 `font.file`.
@@ -73,8 +80,8 @@ Set `layout: "fit"` to get figlet's own spacing for it.
 
 Glyphs drawn at `tagline.shadowAlpha`; every other glyph is drawn solid. `null`
 (the default) takes the bundled font's set: `"═║╔╗╚╝"` for `ansi-shadow`
-(its box-drawing shadow), `""` (single tone) for the fifteen FIGlet fonts and
-for a font given as a path. The FIGlet `shadow` and `smshadow` fonts draw
+(its box-drawing shadow), `"░"` for `blocks-shadow`, `""` (single tone) for
+the other block faces, the fifteen FIGlet fonts and a font given as a path. The FIGlet `shadow` and `smshadow` fonts draw
 their shadow with the same `_ | / \` strokes as the letter edges, so no glyph
 set separates the two. Set an explicit string to override, `""` to turn the
 second tone off.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ascii-banner CLI: `init` drops a commented config, `build` renders it,
-// `fonts` lists the bundled figlet fonts.
+// `fonts` lists the bundled figlet fonts, `presets` the field and reveal presets.
 // Exit codes: 0 ok, 1 user/config error (message only), 2 unexpected (stack).
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -8,6 +8,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildBanner, ConfigError, DEFAULTS } from "../src/index.mjs";
 import { describeLayout, figlet, loadFlf } from "../src/figlet.mjs";
 import { listFonts } from "../src/fonts.mjs";
+import { FIELD_PRESETS } from "../src/fields/index.mjs";
+import { REVEAL_PRESETS } from "../src/reveals/index.mjs";
 
 const CONFIG_NAME = "banner.config.mjs";
 const OUT_NAME = "banner.svg";
@@ -22,6 +24,9 @@ Usage:
                                              to an SVG (default ./${OUT_NAME})
   ascii-banner fonts [--sample <text>]       list the bundled figlet fonts (tagline.font);
                                              --sample renders <text> in each
+  ascii-banner presets [--json]              list the field and reveal presets
+                                             (field.preset, reveal.preset) with
+                                             their option defaults
   ascii-banner --help                        this text
 
 --config and --out are relative to the current directory; asset paths inside
@@ -139,12 +144,33 @@ function fonts(argv) {
   }
 }
 
+/** Field and reveal presets with their option defaults, straight from the registries; --json for scripts. */
+function presets(argv) {
+  const { pos, flags } = parseArgs(argv, [], ["--json"]);
+  if (pos.length) throw new ConfigError(`presets takes no positional arguments\n\n${USAGE}`);
+  const fields = Object.fromEntries(
+    Object.entries(FIELD_PRESETS).map(([name, p]) => [name, { ramp: p.ramp, bands: p.bands, options: p.defaults }]),
+  );
+  const reveals = Object.fromEntries(Object.entries(REVEAL_PRESETS).map(([name, p]) => [name, { options: p.defaults }]));
+  if (flags.json) return void console.log(JSON.stringify({ fields, reveals }, null, 2));
+
+  const width = Math.max(...Object.keys(fields).map((n) => n.length));
+  const options = (o) => Object.entries(o).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join(", ") || "(no options)";
+  console.log(`Field presets (field.preset). field.options overrides the defaults shown; null field.ramp / field.bands take the preset's.\n`);
+  for (const [name, p] of Object.entries(fields))
+    console.log(`  ${name.padEnd(width)}  ramp ${JSON.stringify(p.ramp)}, bands ${p.bands}\n      ${options(p.options)}`);
+  console.log(`\nReveal presets (reveal.preset). reveal.options overrides the defaults shown.\n`);
+  for (const [name, p] of Object.entries(reveals)) console.log(`  ${name}\n      ${options(p.options)}`);
+  console.log(`\nWhat each option does: docs/fields.md and docs/reveals.md. As JSON: ascii-banner presets --json`);
+}
+
 async function main(argv) {
   const [cmd, ...rest] = argv;
   if (!cmd || cmd === "help" || argv.includes("--help") || argv.includes("-h")) return void console.log(USAGE);
   if (cmd === "init") return init(rest);
   if (cmd === "build") return build(rest);
   if (cmd === "fonts") return fonts(rest);
+  if (cmd === "presets") return presets(rest);
   throw new ConfigError(`unknown command "${cmd}"\n\n${USAGE}`);
 }
 

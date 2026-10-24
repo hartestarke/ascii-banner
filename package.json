@@ -7,6 +7,9 @@
     "ascii-banner": "bin/ascii-banner.mjs"
   },
   "exports": "./src/index.mjs",
+  "scripts": {
+    "gallery": "node tools/gallery.mjs"
+  },
   "files": [
     "bin",
     "src",

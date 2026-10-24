@@ -6,6 +6,7 @@ function is sampled for every cell (105 × 15 at the template's 880 × 240,
 Each value in [0, 1] is quantised onto a glyph ramp, and the ramp's levels
 fold into one to three alpha bands. The brightness comes from a **preset**
 (`field.preset` + `field.options`) or from your own `field.sample` function.
+The [gallery](gallery/README.md#fields) renders every preset small.
 
 Byte figures below are full banners built from `banner.config.mjs` (three
 taglines) with only `field.preset` changed and `field.options: {}`. The
