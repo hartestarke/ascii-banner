@@ -71,12 +71,53 @@ export function renderSvg(cfg, g, field, figs, plan, fontB64) {
   // trimmed: x defaults to 0, xml:space is inherited from the root svg, and y
   // keeps its decimal only when the grid doesn't land on a whole pixel.
   const DELAY_DP = delayDecimals(FPS);
+  // Each row is written in whichever of two encodings is shorter; both put
+  // every glyph on exactly the same pixels. Nothing carries x: glyphs keep
+  // their grid column by advancing through the row's spaces (white-space:pre).
+  //  - per band: one <text> per band present, other cells as spaces. Cheap
+  //    for dense rows whose bands alternate every few cells.
+  //  - runs: one <text> classed as the row's most frequent band, every glyph
+  //    run in a <tspan> (bare for that band, classed for the others); a blank
+  //    run between two cells of one band stays inside the run, other blanks sit
+  //    between runs, the row's leading blanks open the first run. Cheap for
+  //    sparse rows. No glyph may sit in the bare <text> here: Firefox places
+  //    each character relative to the row's first one by CSS frame offsets,
+  //    and a frame inside a tspan sits an app unit off one directly in <text>,
+  //    which flips the glyph's pixel snap. First character and all glyphs at
+  //    the same depth = zero offset.
+  const perBand = (y, chars, bands) =>
+    field.bands.map((_, b) => {
+      const s = chars.map((c, i) => (bands[i] === b ? c : " ")).join("").trimEnd();
+      return s ? `<text class="b${b}" y="${y}">${esc(s)}</text>` : "";
+    }).join("");
+  const rowRuns = (y, chars, bands) => {
+    const count = field.bands.map(() => 0);
+    for (const b of bands) if (b >= 0) count[b]++;
+    const base = count.indexOf(Math.max(...count)); // ties → the dimmer band
+    const open = (b) => (b === base ? "<tspan>" : `<tspan class="b${b}">`);
+    let body = "", run = -1, gap = "";
+    chars.forEach((c, i) => {
+      const b = bands[i];
+      if (b < 0) return void (gap += c);
+      if (b === run) body += gap;
+      else body += run < 0 ? open(b) + gap : `</tspan>${gap}${open(b)}`;
+      run = b;
+      gap = "";
+      body += esc(c);
+    });
+    return `<text class="b${base}" y="${y}">${body}</tspan></text>`;
+  };
+  // Both encodings carry each glyph once, so string length ranks UTF-8 bytes too.
+  const rowText = ({ row, chars, bands }) => {
+    const y = num(y0 + row * PY + PY / 2);
+    const a = perBand(y, chars, bands), b = rowRuns(y, chars, bands);
+    return a.length <= b.length ? a : b;
+  };
   const frames = field.frames.map((rows, f) => {
-    const body = rows.map(({ row, band, text }) => `<text class="b${band}" y="${num(y0 + row * PY + PY / 2)}">${esc(text)}</text>`).join("");
+    const body = rows.map(rowText).join("");
     return `<g class="f${f === STILL ? " f-still" : ""}" style="animation-delay:${(f / FPS).toFixed(DELAY_DP)}s">${body}</g>`;
   });
-  const L = field.ramp.length - 1;
-  const bandFills = field.bands.map((b, i) => `.b${i}{fill:${rgb(ALPHA.lo + (ALPHA.hi - ALPHA.lo) * (b.rep / L))}}`).join("");
+  const bandFills = field.bands.map((b, i) => `.b${i}{fill:${rgb(ALPHA.lo + (ALPHA.hi - ALPHA.lo) * b.a)}}`).join("");
 
   // ---- tagline overlay ----
   // Keyframes hold (step-end) between stops, so ticks where the row stalls need

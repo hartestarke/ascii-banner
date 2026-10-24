@@ -5,6 +5,7 @@
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BUNDLED_FONTS, LAYOUTS, PATH_FONT_DEFAULTS, isBundledFont, packagePath } from "./fonts.mjs";
+import { FIELD_PRESETS } from "./fields/index.mjs";
 
 const fontsDir = (name) => fileURLToPath(new URL(`../fonts/${name}`, import.meta.url));
 
@@ -62,26 +63,24 @@ export const DEFAULTS = {
     loopSeconds: 20, // loop length — wave speeds are integer cycles per loop, so the seam is exact
     stillAt: 7, // second of the loop shown under prefers-reduced-motion
     alpha: { lo: 0.3, hi: 0.95 }, // field alpha across the ramp
+    // Alpha bands the ramp levels fold into: 3 = lo / mid / hi, 2 = lo / hi,
+    // 1 = everything at hi. null = the preset's default.
+    bands: null,
     // Brightness ramp, dim → bright: levels separated by spaces, the characters
     // of one level are interchangeable variants (so bands don't degrade into
-    // rings of one character). An empty level 0 is implicit.
-    ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
-    // Liquid-gradient field: a few plane waves, each under one period across
-    // the banner and pointed in different directions, interfere into one or
-    // two giant soft lobes. fx/fy are cycles per banner WIDTH on both axes
-    // (pixel-isotropic — per-axis normalisation on a 4:1 banner squashes the
-    // lobes flat); k is integer cycles per loop, which keeps the seam exact.
-    // Keep every k distinct — components sharing a speed freeze into a shape
-    // that merely translates; k=0 is legal.
-    waves: [
-      { fx: 0.75, fy: 0.55, k: 1 },
-      { fx: -0.35, fy: 0.95, k: -1 },
-      { fx: 0.95, fy: -0.4, k: 0 },
-    ],
-    gamma: 1.35, // >1 deepens the dark side of the gradient
-    drive: 2.4, // a sum of 3 sines rarely hits ±3; dividing by less (with a
-    // clamp) restores saturated highlights and deep troughs
-    // Optional (x, y, t) => brightness in [0, 1] replacing the wave sum;
+    // rings of one character). An empty level 0 is implicit. null = the
+    // preset's default ramp.
+    ramp: null,
+    gamma: 1.35, // >1 deepens the dark side of the gradient (presets only)
+    // 0 = quantise with a little per-cell jitter; 2 / 4 / 8 = ordered (Bayer)
+    // dither of that matrix size, so gradients become regular patterns.
+    dither: 0,
+    // Brightness field: a preset from src/fields/ (waves, stars, rain, …) and
+    // its options, merged over the preset's defaults. Legacy field.waves and
+    // field.drive are still accepted as aliases of the waves options.
+    preset: "waves",
+    options: {},
+    // Optional (x, y, t) => brightness in [0, 1] replacing the preset;
     // x, y = cell centre in px, t = seconds into the loop. Make it periodic
     // in t over loopSeconds or the loop seam will jump.
     sample: null,
@@ -96,7 +95,20 @@ export const DEFAULTS = {
 };
 
 // Keys whose default is null, with the types they may hold instead.
-const NULLABLE = { "field.sample": "function", "font.file": "string", "tagline.layout": "string", "tagline.shadowGlyphs": "string" };
+const NULLABLE = {
+  "field.sample": "function",
+  "field.ramp": "string",
+  "field.bands": "number",
+  "font.file": "string",
+  "tagline.layout": "string",
+  "tagline.shadowGlyphs": "string",
+};
+
+// Pre-preset field keys, now options of LEGACY_PRESET; still accepted on `field`.
+const LEGACY_PRESET = "waves";
+const LEGACY_FIELD_KEYS = ["waves", "drive"];
+const FIELD_BANDS = [1, 2, 3];
+const DITHER_SIZES = [0, 2, 4, 8];
 
 // C0 controls other than tab/LF/CR, and DEL: XML 1.0 forbids the former.
 const CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
@@ -143,11 +155,44 @@ export function parseRamp(ramp) {
 }
 
 /**
+ * field.options merged over the preset's defaults with merge()'s rules, plus
+ * the legacy field.waves / field.drive aliases; then the preset's own checks.
+ */
+function presetOptions(name, user, legacy, field) {
+  const preset = FIELD_PRESETS[name];
+  const path = "field.options";
+  if (user !== undefined && !isObj(user)) throw new ConfigError(`${path}: expected an object, got ${describe(user)}`);
+  const opts = { ...user };
+  for (const key of LEGACY_FIELD_KEYS) {
+    if (legacy[key] === undefined) continue;
+    check(name === LEGACY_PRESET, `field.${key}`,
+      `is a legacy alias of the "${LEGACY_PRESET}" preset's options; for field.preset "${name}" use field.options`);
+    check(!Object.hasOwn(opts, key), `field.${key}`, `given both as field.${key} (legacy) and ${path}.${key}; keep one`);
+    opts[key] = legacy[key];
+  }
+  for (const key of Object.keys(opts))
+    check(Object.hasOwn(preset.defaults, key), `${path}.${key}`,
+      `unknown option for preset "${name}" (it takes ${Object.keys(preset.defaults).join(", ")})`);
+  const out = merge(preset.defaults, opts, path);
+  preset.check?.(out, path, field);
+  return out;
+}
+
+/**
  * Deep-merge `user` over DEFAULTS and validate. Relative paths (font.file,
  * tagline.font) resolve against `baseDir` (default: cwd).
  */
 export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
-  const c = merge(DEFAULTS, user, "");
+  // field.options depend on the chosen preset and the legacy waves keys alias
+  // into them, so both skip the generic merge and resolve below.
+  const userField = isObj(user) && isObj(user.field) ? user.field : null;
+  const { options: userOptions, ...fieldRest } = userField ?? {};
+  const legacy = {};
+  for (const key of LEGACY_FIELD_KEYS) {
+    legacy[key] = fieldRest[key];
+    delete fieldRest[key];
+  }
+  const c = merge(DEFAULTS, userField ? { ...user, field: fieldRest } : user, "");
 
   positive(c.size.width, "size.width");
   positive(c.size.height, "size.height");
@@ -192,17 +237,16 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
     `must be within [0, loopSeconds) = [0, ${f.loopSeconds}), got ${f.stillAt}`);
   unit(f.alpha.lo, "field.alpha.lo");
   unit(f.alpha.hi, "field.alpha.hi");
+  check(Object.hasOwn(FIELD_PRESETS, f.preset), "field.preset",
+    `must be one of ${Object.keys(FIELD_PRESETS).join(", ")}; got ${describe(f.preset)}`);
+  f.options = presetOptions(f.preset, userOptions, legacy, f);
+  // null picks the preset's default; resolved in place so a resolved config resolves to itself
+  if (f.ramp === null) f.ramp = FIELD_PRESETS[f.preset].ramp;
+  if (f.bands === null) f.bands = FIELD_PRESETS[f.preset].bands;
   check(parseRamp(f.ramp).length >= 2, "field.ramp", "needs at least one level of glyphs");
-  check(f.waves.length > 0 || f.sample, "field.waves", "needs at least one wave (or a field.sample function)");
-  f.waves.forEach((w, i) => {
-    const p = `field.waves[${i}]`;
-    check(isObj(w), p, `expected { fx, fy, k }, got ${describe(w)}`);
-    for (const k of Object.keys(w)) check(["fx", "fy", "k"].includes(k), `${p}.${k}`, "unknown config key");
-    check(Number.isFinite(w.fx) && Number.isFinite(w.fy), p, "fx and fy must be finite numbers");
-    check(Number.isInteger(w.k), `${p}.k`, `must be an integer (cycles per loop) or the loop seam jumps, got ${w.k}`);
-  });
+  check(FIELD_BANDS.includes(f.bands), "field.bands", `must be one of ${FIELD_BANDS.join(", ")} (or null), got ${f.bands}`);
+  check(DITHER_SIZES.includes(f.dither), "field.dither", `must be one of ${DITHER_SIZES.join(", ")}, got ${f.dither}`);
   positive(f.gamma, "field.gamma");
-  positive(f.drive, "field.drive");
 
   positive(c.font.advance, "font.advance");
   check(Number.isInteger(c.budget.maxBytes) && c.budget.maxBytes >= 0, "budget.maxBytes", `must be an integer >= 0, got ${c.budget.maxBytes}`);

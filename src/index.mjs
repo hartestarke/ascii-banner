@@ -20,6 +20,10 @@ const MIN_TAGLINE_PX = 6;
 
 const show = (chars) => [...chars].map((c) => JSON.stringify(c)).join(" ");
 
+// Largest brightness step between the last frame's successor and frame 0 that
+// still reads as continuous motion; beyond it the loop visibly jumps.
+const SEAM_TOLERANCE = 0.02;
+
 /**
  * @param userConfig  config object (merged over DEFAULTS)
  * @param opts.baseDir directory relative font paths resolve against (default cwd)
@@ -33,6 +37,11 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
   const g = fieldGrid(cfg);
   const field = bakeField(cfg, g);
   const pool = field.ramp.flat();
+  if (field.seam > SEAM_TOLERANCE)
+    warnings.push(
+      `${cfg.field.sample ? "field.sample" : `field preset "${cfg.field.preset}"`} is not periodic over the loop: ` +
+      `brightness jumps by up to ${field.seam.toFixed(3)} where the loop wraps (t = ${cfg.field.loopSeconds}s vs 0)`,
+    );
 
   const flf = loadFlf(paths.flf, cfg.tagline.font, { layout: cfg.tagline.layout });
   const missing = new Set();
