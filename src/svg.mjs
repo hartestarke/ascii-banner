@@ -54,7 +54,7 @@ function runs(row, isShadow) {
  *   figs, pool      figlet rows per tagline, padded to TROWS; noise glyphs (the flattened ramp)
  *   W, H, CUT       viewBox size; knockout stroke px, 0 = no knockout
  *   esc, num, num2  XML text escape; 1 and 2 decimal numbers
- *   rgb(a), jitter  accent at alpha a; jitter(i) in [0, 1), the only RNG
+ *   rgb(a), jitter  tagline.color at alpha a; jitter(i) in [0, 1), the only RNG
  *   pct(s)          seconds → keyframe percent of TDUR (3 decimals, no "%")
  *   runs(row)       two-tone markup of a figlet row (bare text + <tspan class="s">)
  *   left(p), wrap(p, body)          tagline p's left edge; body in a <g> moved there, so text starts at x=0
@@ -84,7 +84,7 @@ export function renderReveal(cfg, layout, figs, pool) {
   };
   const ctx = {
     cfg, o: cfg.reveal.options, layout, figs, pool, W, H, CUT: cfg.tagline.knockout,
-    esc, num, num2, rgb: rgbOf(cfg.accent), jitter,
+    esc, num, num2, rgb: rgbOf(cfg.tagline.color), jitter,
     pct: (s) => ((s / TDUR) * 100).toFixed(3),
     runs: (row) => runs(row, isShadow),
     left,
@@ -100,12 +100,10 @@ export function renderReveal(cfg, layout, figs, pool) {
 /** The banner document: field frames under the knockout mask, the reveal's overlay on top. */
 export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
   const { width: W, height: H } = cfg.size;
-  const ACCENT = cfg.accent;
-  const { fontSize: FONT, fps: FPS, loopSeconds: DUR, alpha: ALPHA } = cfg.field;
-  const { shadowAlpha: SHADOW_A, knockout: CUT } = cfg.tagline;
+  const { fontSize: FONT, fps: FPS, loopSeconds: DUR, alpha: ALPHA, colors: COLORS, gradient: GRADIENT } = cfg.field;
+  const { shadowAlpha: SHADOW_A, knockout: CUT, color: TCOLOR, shadowColor: SCOLOR } = cfg.tagline;
   const { PY, NF, STILL, y0 } = grid;
   const { TFONT } = layout;
-  const rgb = rgbOf(ACCENT);
 
   // Attributes repeat on thousands of text nodes, so each is trimmed: x
   // defaults to 0, xml:space comes from the root, y drops its decimal on whole pixels.
@@ -146,7 +144,15 @@ export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
     const body = rows.map(fieldRow).join("");
     return `<g class="f${f === STILL ? " f-still" : ""}" style="animation-delay:${(f / FPS).toFixed(DELAY_DP)}s">${body}</g>`;
   });
-  const bandFills = field.bands.map((b, i) => `.b${i}{fill:${rgb(ALPHA.lo + (ALPHA.hi - ALPHA.lo) * b.a)}}`).join("");
+  const bandAlpha = (b) => ALPHA.lo + (ALPHA.hi - ALPHA.lo) * b.a;
+  // userSpaceOnUse: one gradient across the banner, not one per <text> box.
+  const gradient = GRADIENT
+    ? `<linearGradient id="fg" gradientUnits="userSpaceOnUse" x1="0" x2="${W}">${GRADIENT.map(
+        (c, i) => `<stop offset="${+(i / (GRADIENT.length - 1)).toFixed(3)}" stop-color="${c}"/>`).join("")}</linearGradient>`
+    : "";
+  const bandFills = field.bands.map((b, i) => GRADIENT
+    ? `.b${i}{fill:url(#fg);fill-opacity:${bandAlpha(b).toFixed(2)}}`
+    : `.b${i}{fill:${rgbOf(COLORS[Math.min(i, COLORS.length - 1)])(bandAlpha(b))}}`).join("");
 
   const LABEL = escAttr(cfg.taglines[0] ?? "ASCII field");
   // Knockout: the mask clears the field around the letters (CUT px of stroke),
@@ -171,11 +177,11 @@ ${bandFills}
 .f{visibility:hidden;animation:k ${DUR}s step-end infinite}
 @keyframes k{0%{visibility:visible}${(100 / NF).toFixed(3)}%{visibility:hidden}100%{visibility:hidden}}
 .tg{font-size:${TFONT}px}
-.tx{fill:${ACCENT}}.s{fill:${rgb(SHADOW_A)}}${reveal.css}
+.tx{fill:${TCOLOR}}.s{fill:${rgbOf(SCOLOR)(SHADOW_A)}}${reveal.css}
 mask text{fill:#000;stroke:#000;stroke-width:${CUT};stroke-linejoin:round}
 @media (prefers-reduced-motion:reduce){${[".f", ...rm.stop].join(",")}{animation:none}.f-still{visibility:visible}${rm.settle}}
 </style>
-<defs>${reveal.defs}${mask}</defs>
+<defs>${gradient}${reveal.defs}${mask}</defs>
 <g${mask ? ' mask="url(#cut)"' : ""}>
 ${frames.join("\n")}
 </g>

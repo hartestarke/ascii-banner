@@ -22,6 +22,8 @@ field: {
   loopSeconds: 20,    // loop length; frames = fps × loopSeconds
   stillAt: 7,         // second shown under prefers-reduced-motion
   alpha: { lo: 0.3, hi: 0.95 },
+  colors: null,       // 1–3 #rrggbb, dimmest band first; null = [accent]
+  gradient: null,     // 2–8 #rrggbb stops, left → right; not with colors
   bands: null,        // 1 | 2 | 3 alpha bands; null = the preset's default
   ramp: null,         // glyph ramp string; null = the preset's default
   gamma: 1.35,        // applied to every preset's output (not to `sample`)
@@ -51,6 +53,7 @@ field: {
   `field.drive` are still accepted as aliases of the waves options. Giving
   both forms of one key, or a legacy key with another preset, is an error.
 - **`sample`**: when set, it wins over the preset (see below).
+- **`colors`**, **`gradient`**: the field's hues, see [Colours](#colours).
 
 **Loop seam.** The build samples one full loop later (frame NF; for `sample`,
 t = loopSeconds) against frame 0 and warns when any cell jumps by more than
@@ -61,6 +64,27 @@ One layout is a `<text>` per band. The other is a single `<text>` with a
 `<tspan>` per glyph run. Dense, banded presets favour the first, sparse ones
 the second. Raw size grows with lit cells and with band changes along a row.
 `bands: 1` roughly halves a dense field.
+
+## Colours
+
+By default the field, the taglines and their shadows are all `accent` at
+different alphas. That one hue is what keeps the banner theme-neutral on
+GitHub: `<picture>` follows the OS colour scheme, not the GitHub theme, so a
+transparent banner has to read on light, dark and dimmed pages alike. Extra
+hues work as long as each one reads on both white and near-black. Taglines
+take `tagline.color` and `tagline.shadowColor` (see
+[Reveals](reveals.md#config)).
+
+- **`colors`**: 1–3 `#rrggbb`, dimmest band first. Band *i* takes entry *i*
+  and bands past the end take the last entry, so `["#2D8CE6", "#E62D42"]` on
+  3 bands is blue / red / red. More entries than the resolved `bands` is an
+  error. Each band keeps its alpha from `alpha.lo`..`alpha.hi`. `null` =
+  `[accent]`. A few bytes.
+- **`gradient`**: 2–8 `#rrggbb` stops, spread evenly left → right across the
+  banner width. Every band fills with the same horizontal gradient at its own
+  alpha, so the hue follows x and the brightness still comes from the band.
+  Giving both `colors` and `gradient` is an error. About 200 bytes.
+- The knockout is a mask and takes no colour.
 
 ## Presets
 

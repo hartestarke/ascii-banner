@@ -22,7 +22,8 @@ export class ConfigError extends Error {
 export const DEFAULTS = {
   // viewBox size; README scales it down responsively
   size: { width: 880, height: 240 },
-  // the only hue: field, taglines and shadows are all this colour at different alphas
+  // the base hue: field, taglines and shadows are all this colour at different
+  // alphas unless field.colors / field.gradient / tagline.color say otherwise
   accent: "#E62D42",
   // rotation order; [] for a pure field
   taglines: ["hello world", "ascii banner", "make it yours"],
@@ -32,6 +33,8 @@ export const DEFAULTS = {
     // lines would otherwise grow until the knockout swallows the field
     lineHeight: 1.2, // tagline row pitch, em; █ spans -0.3..1.02em so ≤1.32 stays seamless
     shadowAlpha: 0.5, // alpha of the shadow strokes vs solid blocks
+    color: null, // #rrggbb of the letters and of whatever the reveal draws with them; null = accent
+    shadowColor: null, // #rrggbb of the shadow strokes, still at shadowAlpha; null = tagline.color
     knockout: 6, // stroke px the field is cleared around the letters; 0 = off
     font: "ansi-shadow", // BUNDLED_FONTS name, or a path to any .flf
     layout: null, // one of LAYOUTS; null = the font's default
@@ -53,6 +56,8 @@ export const DEFAULTS = {
     loopSeconds: 20, // loop length — wave speeds are integer cycles per loop, so the seam is exact
     stillAt: 7, // second of the loop shown under prefers-reduced-motion
     alpha: { lo: 0.3, hi: 0.95 }, // field alpha across the ramp
+    colors: null, // 1–3 #rrggbb, dim band → bright band, the last one filling the rest; null = [accent]
+    gradient: null, // 2–8 #rrggbb stops spread left → right over the width, in place of colors
     bands: null, // alpha bands the ramp folds into: 3 = lo / mid / hi, 2 = lo / hi, 1 = hi; null = the preset's
     // Brightness ramp, dim → bright: space-separated levels whose characters are
     // interchangeable, so bands don't degrade into rings of one character.
@@ -85,6 +90,10 @@ const NULLABLE = {
   "font.file": "string",
   "tagline.layout": "string",
   "tagline.shadowGlyphs": "string",
+  "tagline.color": "string",
+  "tagline.shadowColor": "string",
+  "field.colors": "array",
+  "field.gradient": "array",
 };
 
 // C0 controls other than tab, LF and CR, and DEL: XML 1.0 forbids the former.
@@ -92,6 +101,8 @@ const CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const describe = (v) => (v === null ? "null" : Array.isArray(v) ? "array" : typeof v === "string" ? JSON.stringify(v) : typeof v);
+/** typeof, with arrays told apart from objects: the type names NULLABLE uses. */
+const kind = (v) => (Array.isArray(v) ? "array" : typeof v);
 
 function check(ok, path, msg) {
   if (!ok) throw new ConfigError(`${path}: ${msg}`);
@@ -106,6 +117,12 @@ const int = (v, path, min, hint) =>
     `must be an integer${min == null ? "" : ` >= ${min}`}${hint ? ` (${hint})` : ""}, got ${v}`);
 const oneOf = (v, path, values) =>
   check(values.includes(v), path, `must be one of ${values.map((x) => JSON.stringify(x)).join(", ")}, got ${JSON.stringify(v)}`);
+const hexColour = (v, path) =>
+  check(typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v), path, `must be a #rrggbb hex colour, got ${describe(v)}`);
+const colourList = (v, path, min, max) => {
+  check(v.length >= min && v.length <= max, path, `must hold ${min} to ${max} #rrggbb colours, got ${v.length}`);
+  v.forEach((x, i) => hexColour(x, `${path}[${i}]`));
+};
 
 /** `user` deep-merged over `def`. Arrays and NULLABLE values replace the default whole. */
 function merge(def, user, path) {
@@ -119,7 +136,7 @@ function merge(def, user, path) {
     return out;
   }
   if (def === null) {
-    if (user !== null && typeof user !== NULLABLE[path])
+    if (user !== null && kind(user) !== NULLABLE[path])
       throw new ConfigError(`${path}: expected ${NULLABLE[path]} or null, got ${describe(user)}`);
     return user;
   }
@@ -218,7 +235,7 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
 
   positive(c.size.width, "size.width");
   positive(c.size.height, "size.height");
-  check(/^#[0-9a-fA-F]{6}$/.test(c.accent), "accent", `must be a #rrggbb hex colour, got ${JSON.stringify(c.accent)}`);
+  hexColour(c.accent, "accent");
   c.taglines.forEach((line, i) => {
     check(typeof line === "string" && line.trim() !== "", `taglines[${i}]`, `must be a non-empty string, got ${describe(line)}`);
     check(!CONTROL_CHARS.test(line), `taglines[${i}]`, `must not contain control characters (not allowed in XML), got ${describe(line)}`);
@@ -233,6 +250,10 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   check(t.font !== "", "tagline.font", "must name a bundled figlet font or a .flf path");
   check(t.layout === null || LAYOUTS.includes(t.layout), "tagline.layout",
     `must be one of ${LAYOUTS.map((l) => JSON.stringify(l)).join(", ")} or null, got ${describe(t.layout)}`);
+  if (t.color !== null) hexColour(t.color, "tagline.color");
+  if (t.shadowColor !== null) hexColour(t.shadowColor, "tagline.shadowColor");
+  t.color ??= c.accent;
+  t.shadowColor ??= t.color;
 
   const d = c.reveal;
   const at = reveal.path === "decode" ? "decode" : "reveal"; // errors name the key the user wrote
@@ -266,6 +287,14 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   check([1, 2, 3].includes(f.bands), "field.bands", `must be one of 1, 2, 3 (or null), got ${f.bands}`);
   oneOf(f.dither, "field.dither", [0, 2, 4, 8]);
   positive(f.gamma, "field.gamma");
+  if (f.colors !== null && f.gradient !== null) throw new ConfigError("give either field.colors or field.gradient, not both");
+  if (f.colors !== null) {
+    colourList(f.colors, "field.colors", 1, 3);
+    check(f.colors.length <= f.bands, "field.colors",
+      `${f.colors.length} colours for ${f.bands} band${f.bands > 1 ? "s" : ""} (field.bands); give at most one per band`);
+  }
+  if (f.gradient !== null) colourList(f.gradient, "field.gradient", 2, 8);
+  else f.colors ??= [c.accent];
 
   positive(c.font.advance, "font.advance");
   int(c.budget.maxBytes, "budget.maxBytes", 0);

@@ -7,8 +7,9 @@ export default {
   // grows with width × height, so keep within the budget below.
   size: { width: 880, height: 240 },
 
-  // The only hue: field, taglines and shadows are this colour at different
+  // The base hue: field, taglines and shadows are this colour at different
   // alphas, so the banner reads on light, dark and dimmed themes alike.
+  // tagline.color / shadowColor and field.colors / gradient override it per part.
   accent: "#E62D42",
 
   // Lines revealed one after another, in this order; [] = field only. The
@@ -22,6 +23,8 @@ export default {
     maxHeight: 0.34, // ...and fraction of the height the letters span at most
     lineHeight: 1.2, // em, row pitch; block glyphs span -0.3..1.02em, so ≤ 1.32 stays seamless
     shadowAlpha: 0.5, // alpha of the shadow strokes vs the solid blocks
+    color: null, // #rrggbb of the letters and the reveal's noise and cursor; null = accent
+    shadowColor: null, // #rrggbb of the shadow strokes, drawn at shadowAlpha; null = color
     knockout: 6, // px the field is cleared around the letters; 0 = off
     // A bundled figlet font (`ascii-banner fonts` lists them: standard, slant,
     // big, small, shadow, ...) or a path to any .flf, relative to this file.
@@ -76,6 +79,8 @@ export default {
     loopSeconds: 20, // s, loop length; the file holds fps × loopSeconds frames
     stillAt: 7, // s into the loop, the frame prefers-reduced-motion visitors see
     alpha: { lo: 0.3, hi: 0.95 }, // field alpha of the dimmest and the brightest band
+    colors: null, // 1–3 #rrggbb, dimmest band first, the last filling the rest; null = [accent]
+    gradient: null, // 2–8 #rrggbb stops, left → right across the width, at the band alphas; not with colors
     // Alpha bands the ramp levels fold into: 3 = lo / mid / hi, 2 = lo / hi,
     // 1 = all at hi (smallest file). null = the preset's default.
     bands: null,

@@ -22,6 +22,8 @@ reveal: {
 
 `options` takes only the chosen preset's keys: an unknown key is an error that names the preset, and each value must have the default's type. Leave a key out to keep its default.
 
+**Colour.** `tagline.color` (`#rrggbb`, `null` = `accent`) paints the letters and everything a preset draws in letter colour: the scramble noise, glitch's noise flashes and the typewriter cursor. `tagline.shadowColor` (`null` = `tagline.color`) paints the shadow strokes (`tagline.shadowGlyphs`), still at `tagline.shadowAlpha`. Left at `null`, the whole banner stays in the one `accent` hue, which is what keeps it theme-neutral on GitHub ([Fields → Colours](fields.md#colours)).
+
 **Legacy `decode`.** Configs written before presets existed used a top-level `decode: { seconds, hold, fps, noiseFrames, lead, leadVar, rag, ragTicks, burst, noiseAlpha }`. It still works and means `preset: "scramble"`: `seconds`/`hold`/`fps` go to `reveal`, the rest to `options`. Giving both `decode` and `reveal` is an error.
 
 Sizes below are for the template config (3 taglines, 880 × 240, default options). "Reveal" counts what the preset adds on top of the same banner with no taglines (822,303 bytes). Keyframe counts leave out the field's one. The budget is 1,048,576 bytes.
