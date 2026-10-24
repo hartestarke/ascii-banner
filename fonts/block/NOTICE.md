@@ -5,9 +5,11 @@ The fonts in this directory are original work for ascii-banner:
 - `src/hairline.txt` is a 5×7 glyph bitmap drawn by hand for this project.
   It covers space, `A`–`Z`, `0`–`9` and the 32 ASCII punctuation marks. It was
   not traced or converted from any existing font.
-- `blocks.flf`, `blocks-shadow.flf`, `pixel.flf` and `blocks-thin.flf` are generated from
-  that bitmap by `tools/mkfont.mjs`. Each is a different way of drawing the same
-  pixels with Unicode Block Elements.
+- `blocks.flf`, `blocks-shadow.flf`, `pixel.flf`, `blocks-thin.flf`,
+  `blocks-3d.flf` and `blocks-iso.flf` are generated from that bitmap by
+  `tools/mkfont.mjs`. Each is a different way of drawing the same pixels with
+  Unicode Block Elements. The 3-D faces (`blocks-3d`, `blocks-iso`) are
+  computed from the bitmap too, not adapted from any 3-D FIGlet font.
 
 They are covered by the repository's MIT licence (see `LICENSE` at the repo
 root). This is unlike `../ansi-shadow.flf`, whose licence is unclear (see
@@ -38,13 +40,17 @@ Regenerate, then look at the result through every face before committing.
 ## Add a face
 
 1. In `tools/mkfont.mjs`, add an entry to `FACES`: `about` (one line, written
-   into the font's comment block), `shadowGlyphs` (the glyphs a config should
-   list in `tagline.shadowGlyphs`, `""` for none) and `render(bits)`. `render`
-   takes one glyph as 7 rows of booleans, with the gap column already
-   appended. It returns the text rows, the same number of rows for every glyph.
+   into the font's comment block), `render(bits)` and, when rows of shadow or
+   depth hang below the letters, `baseline(height)`. `render` takes one glyph
+   as 7 rows of pixels, with the gap column already appended: `true` (on),
+   `false` (off) or `GAP` (the gap column and the whole space glyph), which
+   `paint` writes as hardblanks so `fit` layouts keep it. It returns the
+   text rows, the same number of rows for every glyph. `dropShadow`, `extrude`
+   and `shear` build on another face's rows.
 2. Use only characters the embedded font covers: printable ASCII, Box Drawing
    (U+2500–257F) and Block Elements (U+2580–259F). The banner build rejects
    anything else.
 3. Run `node tools/mkfont.mjs --all`. It writes `<face>.flf` here.
 4. Add the face to the table and samples in `docs/block-fonts.md`, and give the
-   integrator its registry entry (`name`, `file`, `shadowGlyphs`, `layout: "full"`).
+   integrator its registry entry (`name`, `file`, `shadowGlyphs`, `layout: "full"`):
+   `shadowGlyphs` names the glyphs a face draws as shadow or depth, `""` for none.

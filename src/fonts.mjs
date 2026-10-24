@@ -19,7 +19,7 @@ const BLOCK = { notice: "fonts/block/NOTICE.md", source: "MIT, drawn for this pr
 const figletFont = (name) => ({ file: `fonts/figlet/${name}.flf`, shadowGlyphs: "", layout: "header", ...FIGLET });
 
 // mkfont faces have their spacing drawn in, so they are set at full width.
-const blockFont = (name, shadowGlyphs = "") => ({ file: `fonts/block/${name}.flf`, shadowGlyphs, layout: "full", ...BLOCK });
+const blockFont = (name, shadowGlyphs = "", layout = "full") => ({ file: `fonts/block/${name}.flf`, shadowGlyphs, layout, ...BLOCK });
 
 export const BUNDLED_FONTS = {
   // Full width although its header asks for fitting: the default banner is
@@ -42,6 +42,10 @@ export const BUNDLED_FONTS = {
   "blocks-shadow": blockFont("blocks-shadow", "░"),
   "blocks-thin": blockFont("blocks-thin"),
   pixel: blockFont("pixel"),
+  "blocks-3d": blockFont("blocks-3d", "▓▒"),
+  // Fitted: each glyph carries its lean as plain blank padding, which fitting
+  // closes up, while the hardblank letter and word gaps stay.
+  "blocks-iso": blockFont("blocks-iso", "▓▒", "fit"),
 };
 
 /** Absolute path of a package-relative file. */

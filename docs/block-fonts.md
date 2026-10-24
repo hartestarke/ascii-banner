@@ -1,6 +1,6 @@
 # Block fonts
 
-Four tagline fonts drawn from one original bitmap, `fonts/block/src/hairline.txt`:
+Six tagline fonts drawn from one original bitmap, `fonts/block/src/hairline.txt`:
 a classic 5×7 pixel matrix with one-pixel strokes and proportional widths.
 `tools/mkfont.mjs` renders that bitmap into FIGlet (`.flf`) files, one per
 *face*. A face is a way of drawing pixels with Block Elements. All of it is
@@ -22,6 +22,8 @@ A text cell is 0.6 em wide and 1.2 em tall (1:2), and that shape sets each face'
 | `blocks-shadow` | `fonts/block/blocks-shadow.flf` | 8 | as `blocks`, plus a light-shade drop shadow | `"░"` (U+2591) |
 | `pixel` | `fonts/block/pixel.flf` | 4 | a half block `▀` / `▄`, square; two pixel rows per text row | `""` |
 | `blocks-thin` | `fonts/block/blocks-thin.flf` | 7 | one full block `█`, twice as tall as wide | `""` |
+| `blocks-3d` | `fonts/block/blocks-3d.flf` | 9 | as `blocks`, plus a two-pixel extrusion to the lower right in `▓` then `▒` | `"▓▒"` (U+2593, U+2592) |
+| `blocks-iso` | `fonts/block/blocks-iso.flf` | 9 | as `blocks`, leaning right half a pixel per row, plus a two-row extrusion straight down in `▓` then `▒` | `"▓▒"` (U+2593, U+2592) |
 
 - **blocks**: the bitmap at ANSI Shadow's scale. A one-pixel gap separates the glyphs.
 - **blocks-shadow**: the glyph shifted one column right and one row down,
@@ -32,12 +34,47 @@ A text cell is 0.6 em wide and 1.2 em tall (1:2), and that shape sets each face'
   blank bottom row, then paired into 4 text rows (`▀` top pixel, `▄` bottom
   pixel, `█` both).
 - **blocks-thin**: the cheap variant, with tall narrow letters.
+- **blocks-3d**: the glyph's silhouette repeated one design pixel (two
+  columns, one row) further to the lower right per depth level, two levels
+  deep: `▓` for the near level, `▒` for the far one, each drawn only where
+  nothing nearer is. The face stays on top, so the depth shows as the right
+  and lower side of every stroke, receding at 45°. The depth fills the
+  one-pixel glyph gap, and each glyph grows by 4 columns so one blank pixel
+  still separates it from the next letter.
+- **blocks-iso**: `blocks` sheared so that each text row sits one column
+  right of the row below it (about 27°, close to an isometric lean), then the
+  same two levels extruded straight down, which under the lean read as the
+  underside and right side of a slab. Full-width layout cannot overlap glyphs,
+  so each glyph carries its own lean as 6 columns of blank padding. The face
+  therefore defaults to layout `fit`, which closes the padding up and keeps
+  the one-pixel letter gap of `blocks`.
+
+List `▓▒` in `tagline.shadowGlyphs` (the bundled default for both 3-D faces)
+so the depth draws at `tagline.shadowAlpha` and reads as a side plane rather
+than as part of the letter.
 
 `blocks` and `blocks-shadow` spend two text columns per pixel, and `pixel` and
 `blocks-thin` spend one. At the same banner width the first two therefore set at about
 half the font size. A 26-glyph punctuation line is 240 columns in `blocks` and
 5.6 px on the 880 px template, just under the build's 6 px warning. Short
 taglines are fine.
+
+The 3-D faces cost both ways. Width: a 5-pixel letter takes 16 columns in
+`blocks-3d` against 12 in `blocks`, and `blocks-iso` takes 12 plus 6
+columns of lean once per line; `hello world` is 172 and 134 columns, which
+the 880 px template's width alone sets at 7.8 and 10.1 px. Height:
+they are 9 rows (the face's 7 plus 2 of depth), and `tagline.maxHeight`
+(0.34 of the banner height by default) caps all 9, so a tagline bound by
+height sets its letters at 7/9 of the size `blocks` gets. For a single
+tagline, set `tagline.maxHeight: 0.45` (about 0.34 × 9/7) to give the face
+its height back. That pays off for up to about eight letters in `blocks-3d`
+and ten in `blocks-iso` on the template; longer taglines are bound by the
+width anyway.
+
+The letter gap and the space glyph are drawn in hardblanks (`$`), which
+render as spaces but are never kerned away, so `tagline.layout: "fit"` keeps
+the one-pixel letter gap and the word gap: it sets every block face exactly
+as `full` does, except `blocks-iso`, where it removes the lean padding.
 
 ## Samples
 
@@ -105,6 +142,42 @@ taglines are fine.
 
 <!-- /sample -->
 
+### blocks-3d
+
+<!-- sample:blocks-3d -->
+
+```text
+  ██████        ████████          ██          ██████
+██  ▓▓▓▓██      ██▓▓▓▓▓▓██      ████▓▓      ██  ▓▓▓▓██
+██▓▓  ▒▒██▓▓    ██▓▓▒▒▒▒██▓▓      ██▓▓▒▒      ▓▓  ▒▒██▓▓
+██████████▓▓▒▒  ████████  ▓▓▒▒    ██▓▓▒▒        ▒▒██  ▓▓▒▒
+██▓▓▓▓▓▓██▓▓▒▒  ██▓▓▓▓▓▓██  ▒▒    ██▓▓▒▒        ██  ▓▓  ▒▒
+██▓▓▒▒▒▒██▓▓▒▒  ██▓▓▒▒▒▒██▓▓      ██▓▓▒▒          ▓▓  ▒▒
+██▓▓▒▒  ██▓▓▒▒  ████████  ▓▓▒▒  ██████▒▒        ██  ▒▒
+  ▓▓▒▒    ▓▓▒▒    ▓▓▓▓▓▓▓▓  ▒▒    ▓▓▓▓▓▓          ▓▓
+    ▒▒      ▒▒      ▒▒▒▒▒▒▒▒        ▒▒▒▒▒▒          ▒▒
+```
+
+<!-- /sample -->
+
+### blocks-iso
+
+<!-- sample:blocks-iso -->
+
+```text
+        ██████          ████████            ██            ██████
+     ██ ▓▓▓▓▓██        ██▓▓▓▓▓▓██        ████▓         ██ ▓▓▓▓▓██
+    ██▓ ▒▒▒▒██▓       ██▓▒▒▒▒▒██▓        ▓██▓▒         ▓▓ ▒▒▒▒██▓
+   ██████████▓▒      ████████ ▓▓▒        ██▓▒          ▒▒  ██ ▓▓▒
+  ██▓▓▓▓▓▓██▓▒      ██▓▓▓▓▓▓██▒▒        ██▓▒            ██ ▓▓ ▒▒
+ ██▓▒▒▒▒▒██▓▒      ██▓▒▒▒▒▒██▓         ██▓▒             ▓▓ ▒▒
+██▓▒    ██▓▒      ████████ ▓▓▒      ██████            ██▒▒
+▓▓▒     ▓▓▒       ▓▓▓▓▓▓▓▓ ▒▒       ▓▓▓▓▓▓            ▓▓
+▒▒      ▒▒        ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒            ▒▒
+```
+
+<!-- /sample -->
+
 To preview any text in a face:
 
 ```sh
@@ -159,7 +232,8 @@ node tools/mkfont.mjs <bitmap.txt> --face <name> --out <file.flf>
 Zero dependencies, Node >= 20. The output depends only on the bitmap and the
 face: there are no dates or absolute paths, so running `--all` twice leaves
 `git status` clean. Each file has the header
-`flf2a$ <height> <height> <maxLength> -1 <comments> 0 0`. Old layout -1 and
+`flf2a$ <height> <baseline> <maxLength> -1 <comments> 0 0`, where the
+baseline is the face's last row, above any shadow or depth. Old layout -1 and
 full layout 0 mean full width, so glyphs butt together exactly as designed.
 After the header come 5 comment lines (source, face, licence), then the glyphs
 for ASCII 32–126 in order, with endmark `@` and `@@` on each glyph's last row.
@@ -168,6 +242,9 @@ JetBrains Mono subset.
 
 ## Registration
 
-The four faces are registered in `src/fonts.mjs` as `blocks`, `blocks-shadow`,
-`blocks-thin` and `pixel`, with layout `full` and the `shadowGlyphs` from the
-table above, so `tagline: { font: "blocks-shadow" }` is all a config needs.
+The six faces are registered in `src/fonts.mjs` as `blocks`, `blocks-shadow`,
+`blocks-thin`, `pixel`, `blocks-3d` and `blocks-iso`, with layout `full`
+(`fit` for `blocks-iso`) and
+the `shadowGlyphs` from the table above, so `tagline: { font: "blocks-shadow" }`
+is all a config needs. For a single tagline in a 3-D face, add
+`maxHeight: 0.45` (see [Faces](#faces)).
