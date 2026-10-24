@@ -1,10 +1,6 @@
-// buildBanner(config) → { svg, stats, warnings }. Reads the font files the
-// config names; writes nothing.
-//
-// Pipeline: field.mjs bakes the wave field into per-frame glyph rows,
-// figlet.mjs sets the taglines, layout.mjs sizes and times them, the reveal
-// preset (reveals/) draws how each line appears, svg.mjs assembles one
-// self-contained SVG with CSS-only animation (README images allow no JS).
+// buildBanner(config) → { svg, stats, warnings }: one self-contained SVG
+// animated by CSS alone, since README images run no JS. Reads the font files
+// the config names; writes nothing.
 import { readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { ConfigError, BUNDLED_GLYPHS, assetPaths, resolveConfig } from "./config.mjs";
@@ -18,16 +14,13 @@ export { ConfigError, DEFAULTS, resolveConfig } from "./config.mjs";
 // Below this the block letters stop reading as letters at README scale.
 const MIN_TAGLINE_PX = 6;
 
-const show = (chars) => [...chars].map((c) => JSON.stringify(c)).join(" ");
-
-// Largest brightness step between the last frame's successor and frame 0 that
-// still reads as continuous motion; beyond it the loop visibly jumps.
+// Largest brightness step across the loop wrap (t = loopSeconds vs 0) that
+// reads as continuous motion; beyond it the loop visibly jumps.
 const SEAM_TOLERANCE = 0.02;
 
-/**
- * @param userConfig  config object (merged over DEFAULTS)
- * @param opts.baseDir directory relative font paths resolve against (default cwd)
- */
+const show = (chars) => [...chars].map((c) => JSON.stringify(c)).join(" ");
+
+/** Resolve, check and render a config; relative font paths resolve against `baseDir` (default cwd). */
 export async function buildBanner(userConfig = {}, { baseDir } = {}) {
   const t0 = performance.now();
   const cfg = resolveConfig(userConfig, { baseDir });
@@ -56,7 +49,7 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
   // grid drifts out of register.
   const drawn = new Set(pool);
   for (const rows of figs) for (const r of rows) for (const c of r) if (c !== " ") drawn.add(c);
-  for (const c of reveal.extraGlyphs) drawn.add(c); // glyphs the reveal draws itself (typewriter cursor)
+  for (const c of reveal.extraGlyphs) drawn.add(c);
   if (paths.fontBundled) {
     const have = new Set(readFileSync(BUNDLED_GLYPHS, "utf8").replace(/[\r\n]/g, ""));
     const lack = [...drawn].filter((c) => !have.has(c));

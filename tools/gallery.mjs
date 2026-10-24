@@ -1,16 +1,8 @@
 #!/usr/bin/env node
 // Gallery: one small SVG per field preset, reveal preset and bundled tagline
-// font, plus an index page (README.md) listing them with their sizes.
-//
-//   node tools/gallery.mjs                      render everything into docs/gallery/
-//   node tools/gallery.mjs --only fields        just one family: fields | reveals | fonts
-//   node tools/gallery.mjs --out <dir>          render somewhere else
-//
-// Zero dependencies, Node >= 20. Output depends only on the registries and the
-// configs below (buildBanner is deterministic), so running it twice leaves
-// `git status` clean. The index always lists every registry entry; an entry
-// whose SVG is not in the output directory (say after `--only` into a fresh
-// --out) is marked as not built.
+// font, plus an index page listing them with their sizes. Output depends only
+// on the registries and the configs below (buildBanner is deterministic), so a
+// rerun leaves git status clean.
 import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -28,22 +20,21 @@ const INDEX_NAME = "README.md";
 // fails the run instead of quietly bloating the README.
 const MAX_BYTES = 200 * 1024;
 
-// Shared look: a quarter of the template's area, and a short, slow field loop
-// (36 frames) so a page of these stays light on bytes and CPU. stillAt must lie
-// inside the loop (the default, 7 s, does not).
+// A quarter of the template's area and a short, slow field loop (36 frames), so
+// a page of these stays light on bytes and CPU. stillAt must lie inside the
+// loop; the default, 7 s, does not.
 const SIZE = { width: 440, height: 120 };
 const FIELD = { fps: 6, loopSeconds: 6, stillAt: 3 };
 // At 120 px the letter height, not the width, bounds the tagline: the default
 // maxHeight (0.34) sets 6- to 8-row fonts at 4.3-5.7 px, under the build's 6 px
 // legibility warning. 0.5 keeps every bundled font at 6 px or more.
 const TAGLINE = { font: "ansi-shadow", maxHeight: 0.5 };
-const SCRAMBLE = { preset: "scramble", seconds: 1.2, hold: 2.8 };
 const REVEAL_TIMING = { seconds: 1.6, hold: 2.4 };
 const BASE = {
   size: SIZE,
   tagline: TAGLINE,
   field: FIELD,
-  reveal: SCRAMBLE,
+  reveal: { preset: "scramble", seconds: 1.2, hold: 2.8 },
   budget: { maxBytes: MAX_BYTES },
 };
 
@@ -105,7 +96,10 @@ function fail(msg) {
   process.exit(1);
 }
 
-/** Index page: one table per family, every registry entry, sizes read from disk. */
+/**
+ * One table per family listing every registry entry, sizes read from disk; an
+ * entry with no SVG in outDir (after --only into a fresh --out) shows as not built.
+ */
 function indexPage(outDir) {
   const out = [
     "# Gallery",
@@ -123,10 +117,9 @@ function indexPage(outDir) {
     for (const name of fam.names) {
       const file = fileOf(fam, name);
       const path = join(outDir, file);
-      const cell = existsSync(path)
-        ? `<img src="${file}" width="${SIZE.width}" alt="${name} ${fam.prefix} sample">`
-        : "not built";
-      const bytes = existsSync(path) ? thousands(statSync(path).size) : "";
+      const exists = existsSync(path);
+      const cell = exists ? `<img src="${file}" width="${SIZE.width}" alt="${name} ${fam.prefix} sample">` : "not built";
+      const bytes = exists ? thousands(statSync(path).size) : "";
       out.push(`| \`${name}\` | ${cell} | ${bytes} |`);
     }
   }

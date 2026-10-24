@@ -1,29 +1,24 @@
 #!/usr/bin/env node
 // mkfont: bake a hand-drawn glyph bitmap into FIGlet (.flf) fonts, one per
-// "face" (a way of drawing the bitmap's pixels with Block Elements).
-//
-//   node tools/mkfont.mjs <bitmap.txt> --face <name> --out <file.flf>
-//   node tools/mkfont.mjs --all
-//
-// --all regenerates every bundled face into fonts/block/. Output is a pure
-// function of the bitmap: no dates, no absolute paths. Format and faces are
-// described in docs/block-fonts.md.
+// "face" (a way of drawing the bitmap's pixels with Block Elements). Output is
+// a pure function of the bitmap, with no dates or absolute paths, so --all
+// leaves git status clean. Format and faces: docs/block-fonts.md.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const BUNDLED_BITMAP = "fonts/block/src/hairline.txt"; // relative to ROOT
-const BUNDLED_DIR = "fonts/block"; // --all writes <face>.flf here
+const BUNDLED_BITMAP = "fonts/block/src/hairline.txt";
+const BUNDLED_DIR = "fonts/block";
 
-const DESIGN_ROWS = 7; // every bitmap glyph is this many rows tall
-const DESIGN_MAX_COLS = 5; // and at most this many columns wide
-const GAP_COLS = 1; // blank design columns appended after every glyph
-const FIRST_CODE = 32; // .flf glyphs run from ' '...
-const LAST_CODE = 126; // ...to '~', in order
+const DESIGN_ROWS = 7;
+const DESIGN_MAX_COLS = 5;
+const GAP_COLS = 1; // blank design columns after every glyph
+const FIRST_CODE = 32; // ' '
+const LAST_CODE = 126; // '~'
 const ENDMARK = "@";
-const HARDBLANK = "$"; // declared in the header; full-width layout never needs one
+const HARDBLANK = "$"; // the header must name one; full-width layout never uses it
 const OLD_LAYOUT = -1; // full width: glyphs butt together exactly as drawn
 const ON = "#";
 const OFF = ".";
@@ -33,7 +28,7 @@ const PIXEL_ROW = new RegExp(`^[${ON}${OFF}]+$`);
 const FULL = "█";
 const UPPER = "▀";
 const LOWER = "▄";
-const SHADE = "░"; // light shade; the shadow glyph of blocks-shadow
+const SHADE = "░";
 const HALF = [" ", LOWER, UPPER, FULL]; // indexed by top * 2 + bottom
 
 class MkfontError extends Error {}
@@ -41,13 +36,10 @@ const fail = (msg) => {
   throw new MkfontError(msg);
 };
 
-/**
- * Faces: `render(bits)` turns one glyph's pixels (DESIGN_ROWS rows of
- * booleans, gap column included) into its text rows; every glyph of a face
- * renders to the same number of rows. `baseline` is the .flf header's
- * baseline row (rows above it carry the letters; default = every row); the
- * shadow glyphs a face wants dimmed are declared in src/fonts.mjs.
- */
+// render(bits) turns one glyph's pixels (DESIGN_ROWS rows of booleans, gap
+// column included) into text rows, the same number for every glyph of a face.
+// baseline(height) defaults to height. Which glyphs a face dims is declared in
+// src/fonts.mjs, not here.
 const FACES = {
   blocks: {
     about: "two full blocks per pixel (square pixels), 7 rows",
@@ -60,7 +52,7 @@ const FACES = {
   },
   pixel: {
     about: "half blocks, two pixel rows per text row (square pixels), 4 rows",
-    render: (bits) => halfBlocks(bits),
+    render: halfBlocks,
   },
   "blocks-thin": {
     about: "one full block per pixel (tall narrow pixels), 7 rows",
@@ -68,7 +60,7 @@ const FACES = {
   },
 };
 
-/** The glyph shifted one column right and one row down, in SHADE, wherever the glyph itself is blank. */
+/** The glyph plus a SHADE copy one column right and one row down, behind it. */
 function dropShadow(rows) {
   const cols = rows[0].length;
   const out = [...rows.map((r) => [...r]), Array(cols).fill(" ")];
@@ -90,11 +82,8 @@ function halfBlocks(bits) {
   return out;
 }
 
-/**
- * Parse a glyph atlas: "# <char>" (or "# space") headers, each followed by
- * DESIGN_ROWS rows of ON/OFF, glyphs separated by blank lines, "//" comments.
- * Returns Map(char -> boolean[][]). `label` names the file in errors.
- */
+// The bitmap: "# <char>" (or "# space") headers, each followed by DESIGN_ROWS
+// rows of ON/OFF, glyphs separated by blank lines, "//" comments.
 function parseBitmap(text, label) {
   const glyphs = new Map();
   let cur = null;
@@ -135,17 +124,14 @@ function parseBitmap(text, label) {
   return glyphs;
 }
 
-/**
- * The glyph for `ch`: drawn, else (a-z) its capital, else a blank as wide
- * as the space, so every printable ASCII character renders.
- */
+/** The drawn glyph, else (a-z) its capital, else a blank as wide as the space: every printable ASCII character renders. */
 function glyphFor(glyphs, ch) {
   if (glyphs.has(ch)) return glyphs.get(ch);
   if (ch >= "a" && ch <= "z" && glyphs.has(ch.toUpperCase())) return glyphs.get(ch.toUpperCase());
   return glyphs.get(" ").map((row) => row.map(() => false));
 }
 
-/** The .flf text of one face. `source` is the bitmap path shown in the comment. */
+/** The .flf text of one face; `source` is the bitmap path its comments name. */
 function buildFlf(glyphs, faceName, source) {
   const face = FACES[faceName];
   const gap = Array(GAP_COLS).fill(false);
@@ -173,7 +159,7 @@ function buildFlf(glyphs, faceName, source) {
   return `${lines.join("\n")}\n`;
 }
 
-/** Bitmap path as written into the font: repo-relative with "/", else the bare file name. */
+/** Bitmap path as written into the font: repo-relative with "/", else the bare file name, never absolute. */
 function sourceLabel(path) {
   const rel = relative(ROOT, path);
   return rel.startsWith("..") || isAbsolute(rel) ? basename(path) : rel.split(sep).join("/");
@@ -200,17 +186,16 @@ const USAGE = `usage:
 faces: ${Object.keys(FACES).join(", ")}`;
 
 function main(argv) {
-  let args;
+  let v, pos;
   try {
-    args = parseArgs({
+    ({ values: v, positionals: pos } = parseArgs({
       args: argv,
       allowPositionals: true,
       options: { all: { type: "boolean" }, face: { type: "string" }, out: { type: "string" }, help: { type: "boolean", short: "h" } },
-    });
+    }));
   } catch (e) {
     fail(`${e.message}\n${USAGE}`);
   }
-  const { values: v, positionals: pos } = args;
   if (v.help || !argv.length) return void console.log(USAGE);
   if (v.all) {
     if (pos.length || v.face || v.out) fail(`--all takes no other arguments\n${USAGE}`);

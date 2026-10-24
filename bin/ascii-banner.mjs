@@ -43,10 +43,7 @@ const shortPath = (p) => {
 
 const isOption = (a) => a.length > 1 && a.startsWith("-");
 
-/**
- * Split argv into positionals and --flags. Value flags take `--flag=value` or
- * the next arg; a missing value, or one that looks like another option, is an error.
- */
+/** Positionals and --flags. A value flag takes `--flag=value` or the next arg, which must not look like an option. */
 function parseArgs(argv, valueFlags, boolFlags) {
   const pos = [];
   const flags = {};
@@ -119,7 +116,6 @@ async function build(argv) {
   );
 }
 
-/** Bundled figlet fonts: name, default layout (and what the header asks for), source; --sample renders text in each. */
 function fonts(argv) {
   const { pos, flags } = parseArgs(argv, ["--sample"], []);
   if (pos.length) throw new ConfigError(`fonts takes no positional arguments\n\n${USAGE}`);
@@ -130,29 +126,29 @@ function fonts(argv) {
   });
   const width = (key) => Math.max(...list.map((f) => f[key].length));
   const line = (f) => `${f.name.padEnd(width("name"))}  ${f.layout.padEnd(width("layout"))}  ${f.source}`;
-  if (flags.sample === undefined) {
-    console.log(`Bundled figlet fonts (tagline.font). Layout = the default a null tagline.layout takes.\n`);
-    for (const f of list) console.log(`  ${line(f)}`);
-    console.log(`\nRender a sample in each: ascii-banner fonts --sample "Hello"`);
+  if (flags.sample !== undefined) {
+    for (const f of list) {
+      const missing = new Set();
+      let rows;
+      try {
+        rows = figlet(f.font, flags.sample, missing, "--sample");
+      } catch (e) {
+        // Every character of the sample is blank in this font (ansi-shadow has no + = | { }).
+        if (!(e instanceof ConfigError)) throw e;
+        console.log(`${line(f)}  [renders blank: ${e.message}]\n`);
+        continue;
+      }
+      const lacks = missing.size ? `  [no glyph for ${[...missing].map((c) => JSON.stringify(c)).join(" ")}: drawn as "?"]` : "";
+      console.log(`${line(f)}${lacks}\n${rows.map((r) => r.trimEnd()).join("\n")}\n`);
+    }
     return;
   }
-  for (const f of list) {
-    const missing = new Set();
-    let rows;
-    try {
-      rows = figlet(f.font, flags.sample, missing, "--sample");
-    } catch (e) {
-      // A font that draws every character of the sample blank (ansi-shadow has no + = | { }).
-      if (!(e instanceof ConfigError)) throw e;
-      console.log(`${line(f)}  [renders blank: ${e.message}]\n`);
-      continue;
-    }
-    const lacks = missing.size ? `  [no glyph for ${[...missing].map((c) => JSON.stringify(c)).join(" ")}: drawn as "?"]` : "";
-    console.log(`${line(f)}${lacks}\n${rows.map((r) => r.trimEnd()).join("\n")}\n`);
-  }
+
+  console.log(`Bundled figlet fonts (tagline.font). Layout = the default a null tagline.layout takes.\n`);
+  for (const f of list) console.log(`  ${line(f)}`);
+  console.log(`\nRender a sample in each: ascii-banner fonts --sample "Hello"`);
 }
 
-/** Field and reveal presets with their option defaults, straight from the registries; --json for scripts. */
 function presets(argv) {
   const { pos, flags } = parseArgs(argv, [], ["--json"]);
   if (pos.length) throw new ConfigError(`presets takes no positional arguments\n\n${USAGE}`);
@@ -160,7 +156,10 @@ function presets(argv) {
     Object.entries(FIELD_PRESETS).map(([name, p]) => [name, { ramp: p.ramp, bands: p.bands, options: p.defaults }]),
   );
   const reveals = Object.fromEntries(Object.entries(REVEAL_PRESETS).map(([name, p]) => [name, { options: p.defaults }]));
-  if (flags.json) return void console.log(JSON.stringify({ fields, reveals }, null, 2));
+  if (flags.json) {
+    console.log(JSON.stringify({ fields, reveals }, null, 2));
+    return;
+  }
 
   const width = Math.max(...Object.keys(fields).map((n) => n.length));
   const options = (o) => Object.entries(o).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join(", ") || "(no options)";
