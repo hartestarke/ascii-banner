@@ -78,7 +78,8 @@ as `full` does, except `blocks-iso`, where it removes the lean padding.
 
 ## Samples
 
-`Ab1?`, rendered from the generated `.flf` files by `src/figlet.mjs`:
+`Ab1?`, rendered from the generated `.flf` files by `src/figlet.mjs` (the
+[gallery](gallery/README.md#fonts) shows each face in a banner):
 
 ### blocks
 

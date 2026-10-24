@@ -6,7 +6,7 @@ import { isAbsolute, resolve } from "node:path";
 import { BUNDLED_FONTS, LAYOUTS, PATH_FONT_DEFAULTS, isBundledFont, packagePath } from "./fonts.mjs";
 import { FIELD_PRESETS } from "./fields/index.mjs";
 import { GLYPH_SETS } from "./glyphsets.mjs";
-import { REVEALS } from "./reveals/index.mjs";
+import { REVEAL_PRESETS } from "./reveals/index.mjs";
 
 /** The embedded JetBrains Mono subset and the characters it covers. */
 export const BUNDLED_FONT = packagePath("fonts/jetbrains-mono.woff2");
@@ -42,7 +42,7 @@ export const DEFAULTS = {
     shadowGlyphs: null, // figlet glyphs drawn at shadowAlpha; null = the font's default
   },
   reveal: {
-    preset: "scramble", // REVEALS name; "none" = each line shown settled for its slot
+    preset: "scramble", // REVEAL_PRESETS name; "none" = each line shown settled for its slot
     seconds: 2.2, // seconds a line spends revealing
     hold: 5.8, // seconds a settled line holds before the next one starts
     fps: 20, // step rate of stepped reveals; scramble reads as noise below ~15
@@ -288,13 +288,13 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
 
   const d = c.reveal;
   const at = reveal.path === "decode" ? "decode" : "reveal"; // errors name the key the user wrote
-  oneOf(d.preset, "reveal.preset", Object.keys(REVEALS));
+  oneOf(d.preset, "reveal.preset", Object.keys(REVEAL_PRESETS));
   positive(d.seconds, `${at}.seconds`);
   nonNeg(d.hold, `${at}.hold`);
   positive(d.fps, `${at}.fps`);
   check(Math.round(d.seconds * d.fps) >= 1, `${at}.fps`,
     `seconds × fps must round to at least one reveal tick, got ${d.seconds * d.fps}`);
-  d.options = presetOptions(REVEALS[d.preset], reveal.options, reveal.path, (key, takes) =>
+  d.options = presetOptions(REVEAL_PRESETS[d.preset], reveal.options, reveal.path, (key, takes) =>
     `unknown option "${reveal.path}.${key}" for reveal preset "${d.preset}" (it takes ${takes || "no options"})`);
 
   const f = c.field;

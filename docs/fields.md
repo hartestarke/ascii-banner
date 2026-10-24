@@ -48,7 +48,8 @@ field: {
   be in the bundled font subset (ASCII, `°` `·` `•` `∘` `∙`, Box Drawing
   U+2500–257F, Block Elements U+2580–259F, and the Geometric Shapes
   U+25A0–25FF that JetBrains Mono has), or the build fails and names the
-  missing glyphs. `null` takes the preset's ramp.
+  missing glyphs. `null` takes the preset's ramp. The
+  [gallery](gallery/README.md#glyph-sets) shows each set on waves.
 - **`bands`**: how many fill classes the levels fold into. 3 = lo / mid / hi
   (each band coloured as its middle level, the original look). 2 = `alpha.lo` /
   `alpha.hi`. 1 = everything at `alpha.hi`, the smallest file. `null` takes the
@@ -100,7 +101,8 @@ GitHub: `<picture>` follows the OS colour scheme, not the GitHub theme, so a
 transparent banner has to read on light, dark and dimmed pages alike. Extra
 hues work as long as each one reads on both white and near-black. Taglines
 take `tagline.color` and `tagline.shadowColor` (see
-[Reveals](reveals.md#config)).
+[Reveals](reveals.md#config)). The [gallery](gallery/README.md#colours) has a
+sample of each.
 
 - **`colors`**: 1–3 `#rrggbb`, dimmest band first. Band *i* takes entry *i*
   and bands past the end take the last entry, so `["#2D8CE6", "#E62D42"]` on

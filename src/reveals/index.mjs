@@ -13,10 +13,4 @@ import fall from "./fall.mjs";
 import glitch from "./glitch.mjs";
 import none from "./none.mjs";
 
-export const REVEAL_PRESETS = { scramble, typewriter, wipe, dissolve, fall, glitch };
-
-/**
- * Every reveal.preset value. "none" stays out of REVEAL_PRESETS, which the
- * gallery renders one SVG per entry from, since it has no reveal to show.
- */
-export const REVEALS = { ...REVEAL_PRESETS, none };
+export const REVEAL_PRESETS = { scramble, typewriter, wipe, dissolve, fall, glitch, none };

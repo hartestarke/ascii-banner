@@ -3,7 +3,7 @@
 // output is byte-stable for a given config, so keep the formats as they are.
 import { NO_FIELD } from "./config.mjs";
 import { jitter } from "./field.mjs";
-import { REVEALS } from "./reveals/index.mjs";
+import { REVEAL_PRESETS } from "./reveals/index.mjs";
 
 // `>` too: a literal "]]>" is not allowed in XML character data.
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -96,7 +96,7 @@ export function renderReveal(cfg, layout, figs, pool) {
     knockRows: (p) => figs[p].map((_, i) => rowKnock(p, i)).join(""),
     delays: (cls) => figs.slice(1).map((_, i) => `.${cls}${i + 1}{animation-delay:${num2((i + 1) * SLOT_T)}s}`).join(""),
   };
-  return REVEALS[cfg.reveal.preset].render(ctx);
+  return REVEAL_PRESETS[cfg.reveal.preset].render(ctx);
 }
 
 /**

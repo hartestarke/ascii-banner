@@ -10,7 +10,7 @@ import { describeLayout, figlet, loadFlf } from "../src/figlet.mjs";
 import { listFonts } from "../src/fonts.mjs";
 import { FIELD_PRESETS } from "../src/fields/index.mjs";
 import { GLYPH_SETS } from "../src/glyphsets.mjs";
-import { REVEALS } from "../src/reveals/index.mjs";
+import { REVEAL_PRESETS } from "../src/reveals/index.mjs";
 
 const CONFIG_NAME = "banner.config.mjs";
 const OUT_NAME = "banner.svg";
@@ -156,7 +156,7 @@ function presets(argv) {
   const fields = Object.fromEntries(
     Object.entries(FIELD_PRESETS).map(([name, p]) => [name, { ramp: p.ramp, bands: p.bands, options: p.defaults }]),
   );
-  const reveals = Object.fromEntries(Object.entries(REVEALS).map(([name, p]) => [name, { options: p.defaults }]));
+  const reveals = Object.fromEntries(Object.entries(REVEAL_PRESETS).map(([name, p]) => [name, { options: p.defaults }]));
   if (flags.json) {
     console.log(JSON.stringify({ fields, reveals, glyphSets: GLYPH_SETS }, null, 2));
     return;

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Gallery: one small SVG per field preset, reveal preset and bundled tagline
-// font, plus an index page listing them with their sizes. Output depends only
-// on the registries and the configs below (buildBanner is deterministic), so a
-// rerun leaves git status clean.
+// Gallery: one small SVG per field preset, reveal preset, bundled tagline font
+// and glyph set, three colour samples, and an index page listing them with
+// their sizes. Output depends only on the registries and the configs below
+// (buildBanner is deterministic), so a rerun leaves git status clean.
 import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,6 +11,7 @@ import { buildBanner, ConfigError } from "../src/index.mjs";
 import { FIELD_PRESETS } from "../src/fields/index.mjs";
 import { REVEAL_PRESETS } from "../src/reveals/index.mjs";
 import { BUNDLED_FONTS } from "../src/fonts.mjs";
+import { GLYPH_SETS } from "../src/glyphsets.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const DEFAULT_OUT = join(ROOT, "docs", "gallery");
@@ -27,7 +28,8 @@ const SIZE = { width: 440, height: 120 };
 const FIELD = { fps: 6, loopSeconds: 6, stillAt: 3 };
 // At 120 px the letter height, not the width, bounds the tagline: the default
 // maxHeight (0.34) sets 6- to 8-row fonts at 4.3-5.7 px, under the build's 6 px
-// legibility warning. 0.5 keeps every bundled font at 6 px or more.
+// legibility warning. 0.5 keeps them at 6 px or more; the 9-row extruded faces
+// (blocks-3d, blocks-iso) land at 5.6 px and warn.
 const TAGLINE = { font: "ansi-shadow", maxHeight: 0.5 };
 const REVEAL_TIMING = { seconds: 1.6, hold: 2.4 };
 const BASE = {
@@ -41,6 +43,34 @@ const BASE = {
 const FIELD_TAGLINES = ["ascii"];
 const REVEAL_TAGLINES = ["hello", "world"];
 const FONT_TAGLINES = ["Hello"];
+const SET_TAGLINES = ["ascii banner"];
+const COLOR_TAGLINES = ["ascii banner"];
+
+// A non-ASCII glyph costs 3 bytes per cell, so those sets fold into one band.
+const isAscii = (s) => /^[\x20-\x7e]*$/.test(s);
+const setField = (name) => ({ ...FIELD, ramp: name, ...(isAscii(GLYPH_SETS[name]) ? {} : { bands: 1 }) });
+
+// Hues picked to read on white and on GitHub dark (#0d1117) next to the
+// default accent, #E62D42. `setting` is the index's first column.
+const hexList = (a) => `[${a.map((c) => `"${c}"`).join(", ")}]`;
+const BAND_COLORS = ["#2D8CE6", "#8A5CF6", "#E62D42"]; // dim band cool, crests warm
+const GRADIENT = ["#14A38B", "#2D8CE6", "#8A5CF6", "#E62D42"];
+// The shadow keeps clear of the accent, or it merges with the field around it.
+const TWO_TONE = { color: "#2D8CE6", shadowColor: "#8A5CF6" };
+const COLOR_SAMPLES = {
+  bands: {
+    setting: `field.colors: ${hexList(BAND_COLORS)}`,
+    config: { field: { ...FIELD, colors: BAND_COLORS } },
+  },
+  gradient: {
+    setting: `field.gradient: ${hexList(GRADIENT)}`,
+    config: { field: { ...FIELD, gradient: GRADIENT } },
+  },
+  "two-tone": {
+    setting: `tagline.color: "${TWO_TONE.color}", tagline.shadowColor: "${TWO_TONE.shadowColor}"`,
+    config: { tagline: { ...TAGLINE, ...TWO_TONE } },
+  },
+};
 
 const looks = `${SIZE.width} × ${SIZE.height}, field loop ${FIELD.loopSeconds} s at ${FIELD.fps} fps`;
 const quoted = (lines) => lines.map((t) => `"${t}"`).join(", ");
@@ -81,14 +111,41 @@ const FAMILIES = [
       `[block-fonts.md](../block-fonts.md)). ${looks}, waves field, scramble reveal; tagline ` +
       `${quoted(FONT_TAGLINES)}. Caps-only fonts (\`ansi-shadow\` and the block faces) draw it in capitals.`,
   },
+  {
+    key: "sets",
+    prefix: "set",
+    title: "Glyph sets",
+    setting: "field.ramp",
+    names: Object.keys(GLYPH_SETS),
+    config: (name) => ({ ...BASE, taglines: SET_TAGLINES, field: setField(name) }),
+    intro:
+      `\`field.ramp\` given as a glyph set name (see [fields.md](../fields.md#the-field-block)). ${looks}, ` +
+      `waves field; scramble reveal, whose noise draws from the same set; tagline ${quoted(SET_TAGLINES)} ` +
+      `in \`${TAGLINE.font}\`. The sets beyond ASCII cost 3 bytes a glyph, so they take \`field.bands: 1\`.`,
+  },
+  {
+    key: "colors",
+    prefix: "color",
+    title: "Colours",
+    setting: "sample",
+    names: Object.keys(COLOR_SAMPLES),
+    label: (name) => `\`${name}\`<br>\`${COLOR_SAMPLES[name].setting}\``,
+    config: (name) => ({ ...BASE, taglines: COLOR_TAGLINES, ...COLOR_SAMPLES[name].config }),
+    intro:
+      `The field's and the taglines' own hues instead of the one \`accent\` (see [fields.md](../fields.md#colours) ` +
+      `and [reveals.md](../reveals.md#config)). ${looks}, waves field, scramble reveal; tagline ` +
+      `${quoted(COLOR_TAGLINES)} in \`${TAGLINE.font}\`. Every hue reads on white and on GitHub dark (#0d1117).`,
+  },
 ];
 
 const USAGE = `node tools/gallery.mjs [--only ${FAMILIES.map((f) => f.key).join("|")}] [--out <dir>]
 
-Renders one ${SIZE.width}x${SIZE.height} SVG per field preset, reveal preset and bundled font
-into <dir> (default docs/gallery), then rewrites <dir>/${INDEX_NAME}.`;
+Renders one ${SIZE.width}x${SIZE.height} SVG per field preset, reveal preset, bundled font and
+glyph set, plus ${Object.keys(COLOR_SAMPLES).length} colour samples, into <dir> (default docs/gallery),
+then rewrites <dir>/${INDEX_NAME}.`;
 
 const fileOf = (fam, name) => `${fam.prefix}-${name}.svg`;
+const labelOf = (fam, name) => (fam.label ? fam.label(name) : `\`${name}\``);
 const thousands = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 function fail(msg) {
@@ -108,7 +165,7 @@ function indexPage(outDir) {
     "",
     `This page is heavy: ${FAMILIES.reduce((n, f) => n + f.names.length, 0)} animated SVGs.`,
     "",
-    "Every field preset, reveal preset and bundled tagline font, rendered small. " +
+    "Every field preset, reveal preset, bundled tagline font and glyph set, plus three colour samples, rendered small. " +
       "Rebuild with `npm run gallery`. Sizes are raw bytes of these small SVGs; " +
       "[fields.md](../fields.md) and [reveals.md](../reveals.md) give full-size (880 × 240, 20 s) figures.",
   ];
@@ -120,7 +177,7 @@ function indexPage(outDir) {
       const exists = existsSync(path);
       const cell = exists ? `<img src="${file}" width="${SIZE.width}" alt="${name} ${fam.prefix} sample">` : "not built";
       const bytes = exists ? thousands(statSync(path).size) : "";
-      out.push(`| \`${name}\` | ${cell} | ${bytes} |`);
+      out.push(`| ${labelOf(fam, name)} | ${cell} | ${bytes} |`);
     }
   }
   return `${out.join("\n")}\n`;

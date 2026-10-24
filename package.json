@@ -1,6 +1,6 @@
 {
   "name": "ascii-banner",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Animated ASCII-field SVG banners for GitHub READMEs: wave field, figlet taglines, CSS-only animation, zero dependencies.",
   "type": "module",
   "bin": {
