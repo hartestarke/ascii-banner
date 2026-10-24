@@ -1,14 +1,14 @@
-// Field preset registry. Each preset:
-//   defaults  its options (field.options is merged over them; unknown keys and
-//             type mismatches are config errors)
-//   ramp      default glyph ramp (field.ramp: null picks it), dim → bright
-//   bands     default alpha band count (field.bands: null picks it)
-//   validate  optional (opts, v) => void; range-checks opts through v (config.mjs
-//             optionChecks, shared with reveal presets; v.field = the field config)
-//   make      (g, opts, cfg) => (col, row, f) => brightness in [0, 1]
-//             g = fieldGrid(cfg); f = frame 0..NF-1, t = f / NF. The sampler must
-//             be exactly periodic: frame NF must equal frame 0 (integer cycle
-//             counts, integer drifts per loop). field.gamma is applied after it.
+// Field preset registry. Each preset is
+//   defaults  its options; field.options merges over them, and unknown keys or
+//             type mismatches are config errors
+//   ramp      glyph ramp for a null field.ramp, dim → bright
+//   bands     alpha band count for a null field.bands
+//   validate  optional (o, v) => void, range checks through v (config.mjs
+//             optionChecks; v.field is the field config)
+//   make      (g, o, cfg) => (col, row, f) => brightness in [0, 1], where
+//             g = fieldGrid(cfg) and f runs 0..NF. Frame NF must equal frame 0
+//             (integer cycles and drifts per loop) or the loop seam jumps.
+//             field.gamma is applied on top.
 import waves from "./waves.mjs";
 import stars from "./stars.mjs";
 import rain from "./rain.mjs";

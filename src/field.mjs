@@ -13,11 +13,10 @@ export const jitter = (i) => {
 };
 
 /**
- * Collapse the ramp's levels into n fill classes: glyph weight already carries
- * most of the gradient. Levels 1..L split into n runs; `a` is the band's
- * position on field.alpha lo → hi. 3 bands are coloured as their middle level
- * (for the default 9 levels: 1–3 as 2, 4–6 as 5, 7–9 as 8); 2 bands sit at lo
- * and hi; 1 band at hi.
+ * Split ramp levels 1..L into n runs { lo, hi, rep, a }, one fill each: glyph
+ * weight already carries most of the gradient. `a` places the run on
+ * field.alpha lo → hi: 3 or more runs at their middle level (9 levels: 1–3 as
+ * 2, 4–6 as 5, 7–9 as 8), 2 runs at lo and hi, 1 run at hi.
  */
 function bands(levels, n) {
   const L = levels - 1;
@@ -111,9 +110,9 @@ export function bakeField(cfg, g) {
       for (let col = 0; col < COLS; col++) {
         const i = row * COLS + col;
         const v = at(col, row, f);
-        // ordered dither: a Bayer threshold turns a gradient into a regular
-        // pattern; otherwise ±0.05 of per-cell jitter keeps level boundaries
-        // from drawing hard contour lines
+        // A Bayer threshold turns a gradient into a regular pattern; without
+        // dither, ±0.05 of per-cell jitter keeps level boundaries from drawing
+        // hard contour lines.
         const x = BAYER ? v * N + BAYER[row % D][col % D] : (v + jitter(i) * 0.1 - 0.05) * N;
         const lv = Math.min(N - 1, Math.max(0, Math.floor(x)));
         const band = bandOf[lv];

@@ -1,21 +1,13 @@
 // rain: streaks falling at three depths, a bright head over a fading tail.
 import { rnd } from "./util.mjs";
 
-// Per depth (far → near): speed multiplier and head brightness.
-const DEPTHS = [
-  { speed: 1, bright: 0.5 },
-  { speed: 2, bright: 0.75 },
-  { speed: 3, bright: 1 },
-];
-
 export default {
   defaults: {
     columns: 0.35, // fraction of columns carrying a streak
-    speed: 2, // falls per loop of the slowest depth (integer; nearer depths ×2, ×3)
-    tail: 6, // rows of fading tail behind the head
+    speed: 2, // falls per loop of the far depth; nearer depths fall ×2, ×3
+    tail: 6, // rows
     seed: 1,
   },
-  // dashed light verticals for the tail, solid then heavy for the head
   ramp: "┊ ┆ ╎ │ ┃",
   bands: 3,
   validate(o, v) {
@@ -25,20 +17,18 @@ export default {
     v.int("seed");
   },
   make(g, o) {
-    const { ROWS, NF } = g;
-    // A streak's head runs through rows 0 .. ROWS + tail - 1, so the tail fully
-    // leaves the bottom before the head re-enters at the top.
-    const span = ROWS + o.tail;
+    // the head runs on past the last row until its tail has left the bottom
+    const span = g.ROWS + o.tail;
     const streaks = Array.from({ length: g.COLS }, (_, col) => {
       if (rnd(o.seed, col, 1) >= o.columns) return null;
-      const d = DEPTHS[Math.floor(rnd(o.seed, col, 2) * DEPTHS.length)];
-      return { k: o.speed * d.speed, bright: d.bright, phase: rnd(o.seed, col, 3) * span };
+      const depth = Math.floor(rnd(o.seed, col, 2) * 3); // far → near: faster, brighter
+      return { k: o.speed * (depth + 1), bright: 0.5 + 0.25 * depth, phase: rnd(o.seed, col, 3) * span };
     });
     return (col, row, f) => {
       const s = streaks[col];
       if (!s) return 0;
-      // integer falls per loop: at f = NF the head is back where it started
-      const head = Math.floor((s.phase + (f / NF) * s.k * span) % span);
+      const t = f / g.NF;
+      const head = Math.floor((s.phase + t * s.k * span) % span);
       const dist = head - row;
       return dist >= 0 && dist < o.tail ? s.bright * (1 - dist / o.tail) : 0;
     };

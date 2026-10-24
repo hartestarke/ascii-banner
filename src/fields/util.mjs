@@ -1,27 +1,25 @@
-// Shared helpers for field presets. Every preset is a pure function of
-// (col, row, frame); randomness comes only from field.mjs `jitter`, so the
-// output is deterministic.
+// Helpers shared by the field presets. A preset is a pure function of
+// (col, row, frame) whose only randomness is field.mjs `jitter`, so a config
+// always bakes the same SVG.
 import { jitter } from "../field.mjs";
 
 export const TAU = Math.PI * 2;
-
-// jitter() multiplies its index by a 32-bit constant in float arithmetic, so
-// indices are kept below 2^20 where that product stays exact.
-const RND_SPACE = 1 << 20;
 
 /** jitter() keyed by several integers (seed, item, slot…) → [0, 1) in 1/1024 steps. */
 export const rnd = (...parts) => {
   let h = 0x811c9dc5;
   for (const p of parts) h = Math.imul(h ^ (p | 0), 0x01000193);
-  return jitter((h >>> 0) % RND_SPACE);
+  // jitter() multiplies in doubles: below 2^20 its first product stays under
+  // 2^53, so the low bits the hash keeps are exact
+  return jitter((h >>> 0) % (1 << 20));
 };
 
 /** Fractional part, always in [0, 1). */
 export const frac = (v) => v - Math.floor(v);
 
 /**
- * Cell centre in banner-width units on both axes (pixel-isotropic, so circles
- * stay round): x in [0, 1], y in [0, H/W]. cx, cy = the banner centre.
+ * Cell centre in banner widths on both axes, so circles stay round: x in
+ * [0, 1], y in [0, H/W] including the y0 offset. cx, cy = the banner centre.
  */
 export const space = (g) => ({
   x: (col) => ((col + 0.5) * g.PX) / g.W,
@@ -31,9 +29,9 @@ export const space = (g) => ({
 });
 
 /**
- * Memoise a per-frame buffer builder: build(f) fills a Float32Array of
- * COLS × ROWS cells. Any f is computed from its own t = f / NF, so frame NF is
- * genuinely evaluated (the loop-seam check depends on that).
+ * Sampler over per-frame buffers: build(t, f) returns COLS × ROWS cells
+ * (row-major), cached by frame. Frame NF is built from its own t = 1, not
+ * aliased to frame 0, or the seam check would always read 0.
  */
 export function perFrame(g, build) {
   const cache = new Map();

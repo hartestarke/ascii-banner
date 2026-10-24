@@ -1,19 +1,13 @@
-// interference: two ring gratings whose centres orbit the middle in
-// opposition; their product beats into moiré bands that open as the centres
-// part and close as they meet. Only the positive lobes of the product light up.
+// interference: two ring gratings whose centres orbit the middle in mirror
+// image; their product beats into moiré bands that open as the centres part
+// and close as they meet.
 import { TAU, space } from "./util.mjs";
-
-// Vertical extent of the orbit relative to its horizontal radius: the banner
-// is wide and short, so the centres sweep a flat ellipse.
-const ORBIT_ASPECT = 0.35;
-// > 1 narrows each lobe (fewer lit cells, a lighter file).
-const LOBE = 1.4;
 
 export default {
   defaults: {
-    spacing: 0.08, // ring spacing, fraction of the banner width
-    orbit: 0.15, // orbit radius of each centre, fraction of the banner width
-    cycles: 1, // orbits per loop (integer)
+    spacing: 0.08, // ring spacing, banner widths
+    orbit: 0.15, // orbit radius, banner widths
+    cycles: 1, // orbits per loop
   },
   ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
   bands: 3,
@@ -25,14 +19,15 @@ export default {
   make(g, o) {
     const sp = space(g);
     return (col, row, f) => {
-      const a = TAU * o.cycles * (f / g.NF);
-      // mirrored across the vertical axis: the gap swings 0 → 2·orbit → 0
-      const dx = o.orbit * Math.cos(a), dy = o.orbit * ORBIT_ASPECT * Math.sin(a);
-      const x = sp.x(col), y = sp.y(row);
+      const x = sp.x(col), y = sp.y(row), t = f / g.NF;
+      const a = TAU * o.cycles * t;
+      // a flat ellipse for a wide, short banner; mirrored across the vertical
+      // axis, so the gap swings 0 → 2·orbit → 0
+      const dx = o.orbit * Math.cos(a), dy = o.orbit * 0.35 * Math.sin(a);
       const r1 = Math.hypot(x - (sp.cx + dx), y - (sp.cy + dy));
       const r2 = Math.hypot(x - (sp.cx - dx), y - (sp.cy + dy));
-      // only where the gratings agree: the other half stays blank (and cheap)
-      return Math.max(0, Math.cos((TAU * r1) / o.spacing) * Math.cos((TAU * r2) / o.spacing)) ** LOBE;
+      // positive lobes only, narrowed: fewer lit cells, a lighter file
+      return Math.max(0, Math.cos((TAU * r1) / o.spacing) * Math.cos((TAU * r2) / o.spacing)) ** 1.4;
     };
   },
 };
