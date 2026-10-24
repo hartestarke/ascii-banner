@@ -157,12 +157,6 @@ banner ends.
 - `cycles`: 1 turn per loop.
 - ramp = waves', bands 3. **872,285 bytes**.
 
-### static
-TV noise: a fresh hash per cell per frame, looping every NF frames.
-- `density`: 0.5, the fraction of cells lit per frame.
-- ramp `░ ▒ ▓ █`, bands 1 (per-cell band changes would cost a tspan per
-  cell). **801,729 bytes**.
-
 ## Writing your own
 
 **A `sample` function** (in your config, no code changes):

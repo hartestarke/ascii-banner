@@ -12,7 +12,7 @@ How each tagline appears is a pluggable **reveal preset**; the [gallery](gallery
 
 ```js
 reveal: {
-  preset: "scramble", // "scramble" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch" | "fade"
+  preset: "scramble", // "scramble" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch"
   seconds: 2.2,       // seconds a line spends revealing
   hold: 5.8,          // seconds a settled line holds before the next one starts
   fps: 20,            // step rate of stepped reveals (round(seconds × fps) ticks)
@@ -34,7 +34,6 @@ Sizes below are for the template config (3 taglines, 880 × 240, default options
 | dissolve | 860,356 | 38.1 KB | 18 |
 | fall | 884,702 | 62.4 KB | 26 |
 | glitch | 856,924 | 34.6 KB | 12 |
-| fade | 838,359 | 16.1 KB | 1 |
 
 ## scramble (default)
 
@@ -109,17 +108,6 @@ The line appears at once. Then, for `seconds`, a few rows per tick jump sideways
 | `noiseAlpha` | `0.65` | alpha of the noise glyphs |
 
 856,924 bytes, 12 keyframes.
-
-## fade
-
-The line's opacity eases in over `seconds`, and the knockout fades with it.
-
-| option | default | meaning |
-| --- | --- | --- |
-| `flicker` | `0` | 0 = smooth ease-in; up to 1 = stepped random opacity, a "CRT warm-up" that calms as it settles |
-| `rows` | `false` | `true` = rows fade one after another, top to bottom |
-
-838,359 bytes, 1 keyframes (`rows: true`: one per figlet row).
 
 ## Writing a preset
 

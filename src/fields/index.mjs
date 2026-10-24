@@ -19,7 +19,6 @@ import halo from "./halo.mjs";
 import mesh from "./mesh.mjs";
 import contour from "./contour.mjs";
 import vortex from "./vortex.mjs";
-import staticNoise from "./static.mjs";
 
 export const FIELD_PRESETS = {
   waves,
@@ -32,5 +31,4 @@ export const FIELD_PRESETS = {
   mesh,
   contour,
   vortex,
-  static: staticNoise,
 };

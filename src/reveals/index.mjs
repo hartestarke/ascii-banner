@@ -3,7 +3,7 @@
 // the config's rules (no unknown keys, matching types), then `validate`
 // range-checks it through `v` (config.mjs optionChecks). ctx and the render
 // result are documented at svg.mjs renderReveal. Classes and ids carry a
-// per-preset prefix (tw, wp, dv, dp, gx, op) clear of the field's (.f, .b<n>,
+// per-preset prefix (tw, wp, dv, dp, gx) clear of the field's (.f, .b<n>,
 // k); scramble's unprefixed names are part of the default banner's bytes.
 import scramble from "./scramble.mjs";
 import typewriter from "./typewriter.mjs";
@@ -11,6 +11,5 @@ import wipe from "./wipe.mjs";
 import dissolve from "./dissolve.mjs";
 import fall from "./fall.mjs";
 import glitch from "./glitch.mjs";
-import fade from "./fade.mjs";
 
-export const REVEAL_PRESETS = { scramble, typewriter, wipe, dissolve, fall, glitch, fade };
+export const REVEAL_PRESETS = { scramble, typewriter, wipe, dissolve, fall, glitch };

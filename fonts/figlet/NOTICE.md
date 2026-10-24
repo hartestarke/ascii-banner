@@ -11,7 +11,7 @@ distribution, copied verbatim (comment headers included, nothing changed).
 - Licence: BSD 3-Clause, the repository's `LICENSE`, copied verbatim as
   [`LICENSE`](LICENSE) next to this file
 
-Only these fifteen fonts are bundled; nothing comes from other font collections.
+Only these thirteen fonts are bundled; nothing comes from other font collections.
 
 | File | Authors and modifiers named in its header comments |
 |---|---|
@@ -24,9 +24,7 @@ Only these fifteen fonts are bundled; nothing comes from other font collections.
 | `lean.flf` | Glenn Chappell (4/93, based on various .sig's); Paul Burton (12/96) |
 | `mini.flf` | Glenn Chappell (4/93); Paul Burton (12/96) |
 | `script.flf` | Glenn Chappell (4/93); Paul Burton (12/96) |
-| `digital.flf` | Glenn Chappell (1/94, based on Bubble); John Cowan (Latin-2,3,4); Paul Burton (12/96) |
 | `banner.flf` | Ryan Youck (from the Unix `banner` program); Glenn Chappell (help); Vinney Thai (Katakana); Cyrillic from the "koi8x8" BDF font; John Cowan (merge); Paul Burton (12/96) |
-| `bubble.flf` | Glenn Chappell (4/93); John Cowan (Latin-2,3,4); Paul Burton (12/96) |
 | `smslant.flf` | Glenn Chappell (6/93, based on Small & Slant); Paul Burton (12/96) |
 | `smshadow.flf` | Glenn Chappell (4/93, based on Small); Paul Burton (12/96) |
 | `smscript.flf` | Glenn Chappell (4/93, based on Script); Paul Burton (12/96) |

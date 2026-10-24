@@ -41,7 +41,7 @@ export default {
   // it settled for `hold` and opens the knockout with the letters. A top-level
   // `decode: {...}` block is an alias of preset "scramble" with those knobs.
   reveal: {
-    // "scramble" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch" | "fade"
+    // "scramble" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch"
     preset: "scramble",
     seconds: 2.2, // s a line spends revealing
     hold: 5.8, // s a settled line holds before the next one starts
@@ -58,8 +58,6 @@ export default {
     //               stagger (0.6 = fraction of seconds the start times spread over)
     //   glitch:     slices (3 rows jumped per tick), shift (2 = max jump, columns),
     //               flashes (4 noise flashes), noiseAlpha (0.65)
-    //   fade:       flicker (0; up to 1 = stepped "CRT warm-up"), rows (false;
-    //               true = rows fade top to bottom)
     options: {
       noiseFrames: 6, // distinct scramble frames cycled during the reveal
       lead: 16, // columns of scramble running ahead of the settled text
@@ -90,7 +88,7 @@ export default {
     // (Bayer) dither of that size, which turns gradients into regular patterns.
     dither: 0,
     // The brightness field: waves, stars, rain, caustics, ripples, interference,
-    // halo, mesh, contour, vortex or static (see docs/fields.md). `options` tunes
+    // halo, mesh, contour or vortex (see docs/fields.md). `options` tunes
     // the chosen preset: omitted keys keep its defaults, unknown keys are an
     // error. Shown: waves' options, with their defaults.
     preset: "waves",
