@@ -1,10 +1,13 @@
 #!/usr/bin/env node
-// ascii-banner CLI: `init` drops a commented config, `build` renders it.
+// ascii-banner CLI: `init` drops a commented config, `build` renders it,
+// `fonts` lists the bundled figlet fonts.
 // Exit codes: 0 ok, 1 user/config error (message only), 2 unexpected (stack).
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildBanner, ConfigError, DEFAULTS } from "../src/index.mjs";
+import { describeLayout, figlet, loadFlf } from "../src/figlet.mjs";
+import { listFonts } from "../src/fonts.mjs";
 
 const CONFIG_NAME = "banner.config.mjs";
 const OUT_NAME = "banner.svg";
@@ -17,10 +20,13 @@ Usage:
   ascii-banner build [--config <path>] [--out <path>]
                                              render the config (default ./${CONFIG_NAME})
                                              to an SVG (default ./${OUT_NAME})
+  ascii-banner fonts [--sample <text>]       list the bundled figlet fonts (tagline.font);
+                                             --sample renders <text> in each
   ascii-banner --help                        this text
 
 --config and --out are relative to the current directory; asset paths inside
 the config (font.file, tagline.font) are relative to the config file.
+tagline.font is a bundled font name or a path to any .flf.
 Flags also take the --flag=value form.
 `;
 
@@ -108,11 +114,37 @@ async function build(argv) {
   );
 }
 
+/** Bundled figlet fonts: name, default layout (and what the header asks for), source; --sample renders text in each. */
+function fonts(argv) {
+  const { pos, flags } = parseArgs(argv, ["--sample"], []);
+  if (pos.length) throw new ConfigError(`fonts takes no positional arguments\n\n${USAGE}`);
+  const list = listFonts().map((f) => {
+    const font = loadFlf(f.path, f.name, { layout: f.layout });
+    const header = describeLayout(font.headerMode);
+    return { ...f, font, layout: f.layout === "header" ? `header = ${header}` : `${f.layout} (header: ${header})` };
+  });
+  const width = (key) => Math.max(...list.map((f) => f[key].length));
+  const line = (f) => `${f.name.padEnd(width("name"))}  ${f.layout.padEnd(width("layout"))}  ${f.source}`;
+  if (flags.sample === undefined) {
+    console.log(`Bundled figlet fonts (tagline.font). Layout = the default a null tagline.layout takes.\n`);
+    for (const f of list) console.log(`  ${line(f)}`);
+    console.log(`\nRender a sample in each: ascii-banner fonts --sample "Hello"`);
+    return;
+  }
+  for (const f of list) {
+    const missing = new Set();
+    const rows = figlet(f.font, flags.sample, missing, "--sample");
+    const lacks = missing.size ? `  [no glyph for ${[...missing].map((c) => JSON.stringify(c)).join(" ")}: drawn as "?"]` : "";
+    console.log(`${line(f)}${lacks}\n${rows.map((r) => r.trimEnd()).join("\n")}\n`);
+  }
+}
+
 async function main(argv) {
   const [cmd, ...rest] = argv;
   if (!cmd || cmd === "help" || argv.includes("--help") || argv.includes("-h")) return void console.log(USAGE);
   if (cmd === "init") return init(rest);
   if (cmd === "build") return build(rest);
+  if (cmd === "fonts") return fonts(rest);
   throw new ConfigError(`unknown command "${cmd}"\n\n${USAGE}`);
 }
 

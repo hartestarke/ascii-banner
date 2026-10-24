@@ -34,7 +34,7 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
   const field = bakeField(cfg, g);
   const pool = field.ramp.flat();
 
-  const flf = loadFlf(paths.flf, cfg.tagline.font);
+  const flf = loadFlf(paths.flf, cfg.tagline.font, { layout: cfg.tagline.layout });
   const missing = new Set();
   const figs = cfg.taglines.map((t, i) => figlet(flf, t, missing, `taglines[${i}]`));
   if (missing.size) warnings.push(`tagline font has no glyph for ${show(missing)}; drawn as its "?" glyph`);

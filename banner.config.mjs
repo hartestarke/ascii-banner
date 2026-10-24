@@ -12,8 +12,9 @@ export default {
   accent: "#E62D42",
 
   // Lines decoded one after another, in this order. [] = pure field, no text.
-  // The bundled font is caps only (lowercase renders as caps); characters it
-  // lacks render as its "?" glyph and the build prints a warning.
+  // The default font, ANSI Shadow, is caps only (lowercase renders as caps);
+  // the other bundled fonts have lowercase. Characters a font lacks render as
+  // its "?" glyph and the build prints a warning.
   taglines: ["hello world", "ascii banner", "make it yours"],
 
   tagline: {
@@ -22,8 +23,16 @@ export default {
     lineHeight: 1.2, // row pitch, em; block glyphs span -0.3..1.02em, so ≤ 1.32 stays seamless
     shadowAlpha: 0.5, // alpha of the shadow strokes vs the solid blocks
     knockout: 6, // px the field is cleared around the letters; 0 = off
-    font: "ansi-shadow", // bundled figlet font, or a path to any .flf (relative to this file)
-    shadowGlyphs: "═║╔╗╚╝", // figlet glyphs drawn at shadowAlpha; all others are solid
+    // Bundled figlet font (`ascii-banner fonts` lists them: standard, slant,
+    // big, small, shadow, ...), or a path to any .flf (relative to this file).
+    font: "ansi-shadow",
+    // Glyph spacing: "full" (butted together), "fit" (moved together until they
+    // touch), "smush" (merged where they touch), "header" (as the .flf says).
+    // null = the font's default: "full" for ansi-shadow, "header" otherwise.
+    layout: null,
+    // Figlet glyphs drawn at shadowAlpha; all others are solid. null = the
+    // font's default: "═║╔╗╚╝" for ansi-shadow, "" (single tone) otherwise.
+    shadowGlyphs: null,
   },
 
   decode: {

@@ -4,13 +4,13 @@
 // something subtly wrong.
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { BUNDLED_FONTS, LAYOUTS, PATH_FONT_DEFAULTS, isBundledFont, packagePath } from "./fonts.mjs";
 
 const fontsDir = (name) => fileURLToPath(new URL(`../fonts/${name}`, import.meta.url));
 
-/** Bundled assets. */
+/** Bundled assets. Bundled figlet fonts: see fonts.mjs. */
 export const BUNDLED_FONT = fontsDir("jetbrains-mono.woff2");
 export const BUNDLED_GLYPHS = fontsDir("glyphs.txt");
-export const BUNDLED_FLF = { "ansi-shadow": fontsDir("ansi-shadow.flf") };
 
 /** A problem the user can fix in their config or invocation (CLI exit 1). */
 export class ConfigError extends Error {
@@ -34,8 +34,13 @@ export const DEFAULTS = {
     lineHeight: 1.2, // tagline row pitch, em; █ spans -0.3..1.02em so ≤1.32 stays seamless
     shadowAlpha: 0.5, // alpha of the shadow strokes vs solid blocks
     knockout: 6, // stroke px the field is cleared around the letters; 0 = off
-    font: "ansi-shadow", // bundled figlet font name, or a path to any .flf
-    shadowGlyphs: "═║╔╗╚╝", // figlet glyphs drawn at shadowAlpha; every other one is solid
+    font: "ansi-shadow", // bundled figlet font name (fonts.mjs), or a path to any .flf
+    // "full" | "fit" | "smush" | "header" (as the .flf header says); null = the
+    // bundled font's default ("full" for ansi-shadow), "header" for a path
+    layout: null,
+    // figlet glyphs drawn at shadowAlpha; every other one is solid. null = the
+    // bundled font's set (ansi-shadow: "═║╔╗╚╝"), "" (single tone) for a path
+    shadowGlyphs: null,
   },
   decode: {
     seconds: 2.2, // seconds a line spends decoding
@@ -91,7 +96,7 @@ export const DEFAULTS = {
 };
 
 // Keys whose default is null, with the types they may hold instead.
-const NULLABLE = { "field.sample": "function", "font.file": "string" };
+const NULLABLE = { "field.sample": "function", "font.file": "string", "tagline.layout": "string", "tagline.shadowGlyphs": "string" };
 
 // C0 controls other than tab/LF/CR, and DEL: XML 1.0 forbids the former.
 const CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
@@ -159,6 +164,8 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   unit(t.shadowAlpha, "tagline.shadowAlpha");
   check(t.knockout >= 0, "tagline.knockout", `must be >= 0, got ${t.knockout}`);
   check(t.font !== "", "tagline.font", "must name a bundled figlet font or a .flf path");
+  check(t.layout === null || LAYOUTS.includes(t.layout), "tagline.layout",
+    `must be one of ${LAYOUTS.map((l) => JSON.stringify(l)).join(", ")} or null, got ${describe(t.layout)}`);
 
   const d = c.decode;
   positive(d.seconds, "decode.seconds");
@@ -203,7 +210,11 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   // Paths become absolute in place, so a resolved config resolves to itself.
   const abs = (p) => (isAbsolute(p) ? p : resolve(baseDir, p));
   if (c.font.file !== null) c.font.file = abs(c.font.file);
-  if (!Object.hasOwn(BUNDLED_FLF, t.font)) t.font = abs(t.font);
+  // A registry name wins over a same-named file; null layout/shadowGlyphs take the font's defaults.
+  const fontDefaults = isBundledFont(t.font) ? BUNDLED_FONTS[t.font] : PATH_FONT_DEFAULTS;
+  if (!isBundledFont(t.font)) t.font = abs(t.font);
+  t.layout ??= fontDefaults.layout;
+  t.shadowGlyphs ??= fontDefaults.shadowGlyphs;
   return c;
 }
 
@@ -211,5 +222,5 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
 export const assetPaths = (c) => ({
   font: c.font.file ?? BUNDLED_FONT,
   fontBundled: c.font.file === null,
-  flf: Object.hasOwn(BUNDLED_FLF, c.tagline.font) ? BUNDLED_FLF[c.tagline.font] : c.tagline.font,
+  flf: isBundledFont(c.tagline.font) ? packagePath(BUNDLED_FONTS[c.tagline.font].file) : c.tagline.font,
 });
