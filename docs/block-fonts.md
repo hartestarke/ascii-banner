@@ -29,7 +29,8 @@ A text cell is 0.6 em wide and 1.2 em tall (1:2), and that shape sets each face'
 - **blocks-shadow**: the glyph shifted one column right and one row down,
   drawn in `░` wherever the glyph itself is blank. List `░` in
   `tagline.shadowGlyphs` so the shadow draws at `tagline.shadowAlpha`. This is
-  our own ANSI-Shadow-like face.
+  our own ANSI-Shadow-like face. The shadow takes the first column of the
+  one-pixel glyph gap, so one blank column remains before the next letter.
 - **pixel**: the most compact face. The 7 design rows are padded to 8 with a
   blank bottom row, then paired into 4 text rows (`▀` top pixel, `▄` bottom
   pixel, `█` both).
@@ -44,10 +45,12 @@ A text cell is 0.6 em wide and 1.2 em tall (1:2), and that shape sets each face'
 - **blocks-iso**: `blocks` sheared so that each text row sits one column
   right of the row below it (about 27°, close to an isometric lean), then the
   same two levels extruded straight down, which under the lean read as the
-  underside and right side of a slab. Full-width layout cannot overlap glyphs,
-  so each glyph carries its own lean as 6 columns of blank padding. The face
-  therefore defaults to layout `fit`, which closes the padding up and keeps
-  the one-pixel letter gap of `blocks`.
+  underside and right side of a slab. The depth fills the one-pixel glyph
+  gap, and each glyph grows by 2 columns so one blank pixel still separates it
+  from the next letter. Full-width layout cannot overlap glyphs, so each glyph
+  carries its own lean as 8 columns of blank padding, one per row below the
+  top. The face therefore defaults to layout `fit`, which closes the padding
+  up between letters and keeps the blank pixel after the depth.
 
 List `▓▒` in `tagline.shadowGlyphs` (the bundled default for both 3-D faces)
 so the depth draws at `tagline.shadowAlpha` and reads as a side plane rather
@@ -60,15 +63,16 @@ half the font size. A 26-glyph punctuation line is 240 columns in `blocks` and
 taglines are fine.
 
 The 3-D faces cost both ways. Width: a 5-pixel letter takes 16 columns in
-`blocks-3d` against 12 in `blocks`, and `blocks-iso` takes 12 plus 6
-columns of lean once per line; `hello world` is 172 and 134 columns, which
-the 880 px template's width alone sets at 7.8 and 10.1 px. Height:
+`blocks-3d` against 12 in `blocks`, and `blocks-iso` takes 14 plus 6
+columns of lean once per line (22 per letter under `full`); `hello world` is
+172 and 156 columns, which the 880 px template's width alone sets at 7.8 and
+8.6 px. Height:
 they are 9 rows (the face's 7 plus 2 of depth), and `tagline.maxHeight`
 (0.34 of the banner height by default) caps all 9, so a tagline bound by
 height sets its letters at 7/9 of the size `blocks` gets. For a single
 tagline, set `tagline.maxHeight: 0.45` (about 0.34 × 9/7) to give the face
 its height back. That pays off for up to about eight letters in `blocks-3d`
-and ten in `blocks-iso` on the template; longer taglines are bound by the
+and nine in `blocks-iso` on the template; longer taglines are bound by the
 width anyway.
 
 The letter gap and the space glyph are drawn in hardblanks (`$`), which
@@ -166,15 +170,15 @@ as `full` does, except `blocks-iso`, where it removes the lean padding.
 <!-- sample:blocks-iso -->
 
 ```text
-        ██████          ████████            ██            ██████
-     ██ ▓▓▓▓▓██        ██▓▓▓▓▓▓██        ████▓         ██ ▓▓▓▓▓██
-    ██▓ ▒▒▒▒██▓       ██▓▒▒▒▒▒██▓        ▓██▓▒         ▓▓ ▒▒▒▒██▓
-   ██████████▓▒      ████████ ▓▓▒        ██▓▒          ▒▒  ██ ▓▓▒
-  ██▓▓▓▓▓▓██▓▒      ██▓▓▓▓▓▓██▒▒        ██▓▒            ██ ▓▓ ▒▒
- ██▓▒▒▒▒▒██▓▒      ██▓▒▒▒▒▒██▓         ██▓▒             ▓▓ ▒▒
-██▓▒    ██▓▒      ████████ ▓▓▒      ██████            ██▒▒
-▓▓▒     ▓▓▒       ▓▓▓▓▓▓▓▓ ▒▒       ▓▓▓▓▓▓            ▓▓
-▒▒      ▒▒        ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒            ▒▒
+          ██████              ████████                ██                ██████
+       ██ ▓▓▓▓▓██            ██▓▓▓▓▓▓██            ████▓             ██ ▓▓▓▓▓██
+      ██▓ ▒▒▒▒██▓           ██▓▒▒▒▒▒██▓            ▓██▓▒             ▓▓ ▒▒▒▒██▓
+     ██████████▓▒          ████████ ▓▓▒            ██▓▒              ▒▒  ██ ▓▓▒
+    ██▓▓▓▓▓▓██▓▒          ██▓▓▓▓▓▓██▒▒            ██▓▒                ██ ▓▓ ▒▒
+   ██▓▒▒▒▒▒██▓▒          ██▓▒▒▒▒▒██▓             ██▓▒                 ▓▓ ▒▒
+  ██▓▒    ██▓▒          ████████ ▓▓▒          ██████                ██▒▒
+  ▓▓▒     ▓▓▒           ▓▓▓▓▓▓▓▓ ▒▒           ▓▓▓▓▓▓                ▓▓
+  ▒▒      ▒▒            ▒▒▒▒▒▒▒▒              ▒▒▒▒▒▒                ▒▒
 ```
 
 <!-- /sample -->
