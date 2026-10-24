@@ -33,7 +33,7 @@ const PIXEL_ROW = new RegExp(`^[${ON}${OFF}]+$`);
 const FULL = "█";
 const UPPER = "▀";
 const LOWER = "▄";
-const SHADE = "░"; // light shade; the shadow glyph of block-shadow
+const SHADE = "░"; // light shade; the shadow glyph of blocks-shadow
 const HALF = [" ", LOWER, UPPER, FULL]; // indexed by top * 2 + bottom
 
 class MkfontError extends Error {}
@@ -48,22 +48,22 @@ const fail = (msg) => {
  * registry passes as tagline.shadowGlyphs.
  */
 const FACES = {
-  block: {
+  blocks: {
     about: "two full blocks per pixel (square pixels), 7 rows",
     shadowGlyphs: "",
     render: (bits) => bits.map((row) => row.map((on) => (on ? FULL + FULL : "  ")).join("")),
   },
-  "block-shadow": {
+  "blocks-shadow": {
     about: "block plus a light-shade drop shadow one column right and one row down, 8 rows",
     shadowGlyphs: SHADE,
-    render: (bits) => dropShadow(FACES.block.render(bits)),
+    render: (bits) => dropShadow(FACES.blocks.render(bits)),
   },
   pixel: {
     about: "half blocks, two pixel rows per text row (square pixels), 4 rows",
     shadowGlyphs: "",
     render: (bits) => halfBlocks(bits),
   },
-  thin: {
+  "blocks-thin": {
     about: "one full block per pixel (tall narrow pixels), 7 rows",
     shadowGlyphs: "",
     render: (bits) => bits.map((row) => row.map((on) => (on ? FULL : " ")).join("")),
@@ -77,7 +77,7 @@ function dropShadow(rows) {
   rows.forEach((r, y) =>
     [...r].forEach((ch, x) => {
       if (ch !== FULL) return;
-      if (x + 1 >= cols) fail(`block-shadow: a pixel touches the right edge; the shadow needs GAP_COLS >= 1`);
+      if (x + 1 >= cols) fail(`blocks-shadow: a pixel touches the right edge; the shadow needs GAP_COLS >= 1`);
       if (out[y + 1][x + 1] === " ") out[y + 1][x + 1] = SHADE;
     }),
   );

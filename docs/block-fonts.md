@@ -18,24 +18,24 @@ A text cell is 0.6 em wide and 1.2 em tall (1:2), and that shape sets each face'
 
 | Face | File | Rows | One pixel is | `shadowGlyphs` |
 | --- | --- | --- | --- | --- |
-| `block` | `fonts/block/block.flf` | 7 | two full blocks `██`, square | `""` |
-| `block-shadow` | `fonts/block/block-shadow.flf` | 8 | as `block`, plus a light-shade drop shadow | `"░"` (U+2591) |
+| `blocks` | `fonts/block/blocks.flf` | 7 | two full blocks `██`, square | `""` |
+| `blocks-shadow` | `fonts/block/blocks-shadow.flf` | 8 | as `blocks`, plus a light-shade drop shadow | `"░"` (U+2591) |
 | `pixel` | `fonts/block/pixel.flf` | 4 | a half block `▀` / `▄`, square; two pixel rows per text row | `""` |
-| `thin` | `fonts/block/thin.flf` | 7 | one full block `█`, twice as tall as wide | `""` |
+| `blocks-thin` | `fonts/block/blocks-thin.flf` | 7 | one full block `█`, twice as tall as wide | `""` |
 
-- **block**: the bitmap at ANSI Shadow's scale. A one-pixel gap separates the glyphs.
-- **block-shadow**: the glyph shifted one column right and one row down,
+- **blocks**: the bitmap at ANSI Shadow's scale. A one-pixel gap separates the glyphs.
+- **blocks-shadow**: the glyph shifted one column right and one row down,
   drawn in `░` wherever the glyph itself is blank. List `░` in
   `tagline.shadowGlyphs` so the shadow draws at `tagline.shadowAlpha`. This is
   our own ANSI-Shadow-like face.
 - **pixel**: the most compact face. The 7 design rows are padded to 8 with a
   blank bottom row, then paired into 4 text rows (`▀` top pixel, `▄` bottom
   pixel, `█` both).
-- **thin**: the cheap variant, with tall narrow letters.
+- **blocks-thin**: the cheap variant, with tall narrow letters.
 
-`block` and `block-shadow` spend two text columns per pixel, and `pixel` and
-`thin` spend one. At the same banner width the first two therefore set at about
-half the font size. A 26-glyph punctuation line is 240 columns in `block` and
+`blocks` and `blocks-shadow` spend two text columns per pixel, and `pixel` and
+`blocks-thin` spend one. At the same banner width the first two therefore set at about
+half the font size. A 26-glyph punctuation line is 240 columns in `blocks` and
 5.6 px on the 880 px template, just under the build's 6 px warning. Short
 taglines are fine.
 
@@ -43,9 +43,9 @@ taglines are fine.
 
 `Ab1?`, rendered from the generated `.flf` files by `src/figlet.mjs`:
 
-### block
+### blocks
 
-<!-- sample:block -->
+<!-- sample:blocks -->
 
 ```text
   ██████    ████████      ██      ██████
@@ -59,9 +59,9 @@ taglines are fine.
 
 <!-- /sample -->
 
-### block-shadow
+### blocks-shadow
 
-<!-- sample:block-shadow -->
+<!-- sample:blocks-shadow -->
 
 ```text
   ██████    ████████      ██      ██████
@@ -89,9 +89,9 @@ taglines are fine.
 
 <!-- /sample -->
 
-### thin
+### blocks-thin
 
-<!-- sample:thin -->
+<!-- sample:blocks-thin -->
 
 ```text
  ███  ████   █   ███
@@ -109,7 +109,7 @@ To preview any text in a face:
 
 ```sh
 node --input-type=module -e 'import { loadFlf, figlet } from "./src/figlet.mjs";
-console.log(figlet(loadFlf("fonts/block/block-shadow.flf"), "Hello").join("\n"))'
+console.log(figlet(loadFlf("fonts/block/blocks-shadow.flf"), "Hello").join("\n"))'
 ```
 
 ## Bitmap format
@@ -171,14 +171,14 @@ JetBrains Mono subset.
 For `src/fonts.mjs` (paths relative to the repo root):
 
 ```js
-{ name: "block",        file: "fonts/block/block.flf",        shadowGlyphs: "",       layout: "full" },
-{ name: "block-shadow", file: "fonts/block/block-shadow.flf", shadowGlyphs: "░", layout: "full" }, // ░
+{ name: "blocks",        file: "fonts/block/blocks.flf",        shadowGlyphs: "",       layout: "full" },
+{ name: "blocks-shadow", file: "fonts/block/blocks-shadow.flf", shadowGlyphs: "░", layout: "full" }, // ░
 { name: "pixel",        file: "fonts/block/pixel.flf",        shadowGlyphs: "",       layout: "full" },
-{ name: "thin",         file: "fonts/block/thin.flf",         shadowGlyphs: "",       layout: "full" },
+{ name: "blocks-thin",         file: "fonts/block/blocks-thin.flf",         shadowGlyphs: "",       layout: "full" },
 ```
 
 Until the fonts are registered, a config can point at a file directly:
 
 ```js
-tagline: { font: "fonts/block/block-shadow.flf", shadowGlyphs: "░" },
+tagline: { font: "fonts/block/blocks-shadow.flf", shadowGlyphs: "░" },
 ```

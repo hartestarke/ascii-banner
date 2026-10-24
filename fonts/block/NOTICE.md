@@ -5,7 +5,7 @@ The fonts in this directory are original work for ascii-banner:
 - `src/hairline.txt` is a 5×7 glyph bitmap drawn by hand for this project.
   It covers space, `A`–`Z`, `0`–`9` and the 32 ASCII punctuation marks. It was
   not traced or converted from any existing font.
-- `block.flf`, `block-shadow.flf`, `pixel.flf` and `thin.flf` are generated from
+- `blocks.flf`, `blocks-shadow.flf`, `pixel.flf` and `blocks-thin.flf` are generated from
   that bitmap by `tools/mkfont.mjs`. Each is a different way of drawing the same
   pixels with Unicode Block Elements.
 
