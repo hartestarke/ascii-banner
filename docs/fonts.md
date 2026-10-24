@@ -54,7 +54,7 @@ left to right):
 - `"smush"`: one column further, where the touching characters merge by the
   font's own smushing rules (equal character, underscore, hierarchy, opposite
   pair, big X, hardblank). A font that defines no rules gets universal
-  smushing: the later glyph's character wins. This is figlet's `-s`.
+  smushing: the later glyph's character wins. This is figlet's `-S`.
 - `"header"`: whatever the `.flf` header asks for. This is figlet's default.
   The full_layout header field decides when present, otherwise old_layout
   (-1 full, 0 fit, positive smush with those rules; like figlet, rule 6 is not

@@ -44,28 +44,26 @@ const fail = (msg) => {
 /**
  * Faces: `render(bits)` turns one glyph's pixels (DESIGN_ROWS rows of
  * booleans, gap column included) into its text rows; every glyph of a face
- * renders to the same number of rows. `shadowGlyphs` is what the font
- * registry passes as tagline.shadowGlyphs.
+ * renders to the same number of rows. `baseline` is the .flf header's
+ * baseline row (rows above it carry the letters; default = every row); the
+ * shadow glyphs a face wants dimmed are declared in src/fonts.mjs.
  */
 const FACES = {
   blocks: {
     about: "two full blocks per pixel (square pixels), 7 rows",
-    shadowGlyphs: "",
     render: (bits) => bits.map((row) => row.map((on) => (on ? FULL + FULL : "  ")).join("")),
   },
   "blocks-shadow": {
     about: "block plus a light-shade drop shadow one column right and one row down, 8 rows",
-    shadowGlyphs: SHADE,
+    baseline: (height) => height - 1, // the last row is only the shadow
     render: (bits) => dropShadow(FACES.blocks.render(bits)),
   },
   pixel: {
     about: "half blocks, two pixel rows per text row (square pixels), 4 rows",
-    shadowGlyphs: "",
     render: (bits) => halfBlocks(bits),
   },
   "blocks-thin": {
     about: "one full block per pixel (tall narrow pixels), 7 rows",
-    shadowGlyphs: "",
     render: (bits) => bits.map((row) => row.map((on) => (on ? FULL : " ")).join("")),
   },
 };
@@ -169,7 +167,8 @@ function buildFlf(glyphs, faceName, source) {
     `Lowercase a-z repeat the capitals; undrawn characters are blank.`,
     `Original work for ascii-banner, MIT licence (see fonts/block/NOTICE.md).`,
   ];
-  const lines = [`flf2a${HARDBLANK} ${height} ${height} ${maxLength} ${OLD_LAYOUT} ${comments.length} 0 0`, ...comments];
+  const baseline = face.baseline ? face.baseline(height) : height;
+  const lines = [`flf2a${HARDBLANK} ${height} ${baseline} ${maxLength} ${OLD_LAYOUT} ${comments.length} 0 0`, ...comments];
   for (const rows of chars) rows.forEach((r, i) => lines.push(r + ENDMARK + (i === rows.length - 1 ? ENDMARK : "")));
   return `${lines.join("\n")}\n`;
 }

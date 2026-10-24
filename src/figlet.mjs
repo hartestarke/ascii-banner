@@ -61,7 +61,7 @@ function headerSmushMode({ oldLayout, fullLayout }) {
   return oldLayout === 0 ? SM_KERN : (oldLayout & OLD_LAYOUT_RULES) | SM_SMUSH;
 }
 
-/** Smush mode for a `tagline.layout` value; "smush" keeps the font's rules, like figlet -s. */
+/** Smush mode for a `tagline.layout` value; "smush" keeps the font's rules, like figlet -S. */
 function layoutSmushMode(layout, headerMode) {
   switch (layout) {
     case "full":
