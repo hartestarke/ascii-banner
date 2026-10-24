@@ -6,6 +6,7 @@ import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BUNDLED_FONTS, LAYOUTS, PATH_FONT_DEFAULTS, isBundledFont, packagePath } from "./fonts.mjs";
 import { FIELD_PRESETS } from "./fields/index.mjs";
+import { REVEAL_PRESETS } from "./reveals/index.mjs";
 
 const fontsDir = (name) => fileURLToPath(new URL(`../fonts/${name}`, import.meta.url));
 
@@ -43,17 +44,14 @@ export const DEFAULTS = {
     // bundled font's set (ansi-shadow: "═║╔╗╚╝"), "" (single tone) for a path
     shadowGlyphs: null,
   },
-  decode: {
-    seconds: 2.2, // seconds a line spends decoding
+  reveal: {
+    preset: "scramble", // how a line appears: a REVEAL_PRESETS name (reveals/index.mjs)
+    seconds: 2.2, // seconds a line spends revealing
     hold: 5.8, // seconds a settled line holds before the next one starts
-    fps: 20, // decode step rate; reads as noise below ~15
-    noiseFrames: 6, // distinct scramble frames cycled during decode
-    lead: 16, // tagline columns of scramble running ahead of the settled text
-    leadVar: 0.35, // per-row spread of lead, as a fraction of it
-    rag: 3, // columns a row's front may stray either side of the mean front
-    ragTicks: 3, // decode ticks between a row's wander knots; lower = twitchier
-    burst: 0.85, // pace jitter of the mean front: 0 = even, 1 = from a stall to a double step
-    noiseAlpha: 0.65, // alpha of not-yet-decoded glyphs
+    fps: 20, // step rate of stepped reveals; scramble reads as noise below ~15
+    // The preset's own knobs, merged over its defaults (reveals/<preset>.mjs).
+    // The legacy top-level `decode: {...}` maps to preset "scramble".
+    options: {},
   },
   field: {
     fontSize: 14, // field glyph font-size, px
@@ -149,6 +147,51 @@ const positive = (v, path) => check(v > 0, path, `must be > 0, got ${v}`);
 const unit = (v, path) => check(v >= 0 && v <= 1, path, `must be within [0, 1], got ${v}`);
 const posInt = (v, path) => check(Number.isInteger(v) && v >= 1, path, `must be an integer >= 1, got ${v}`);
 
+/**
+ * Pull the reveal options out of a user config (they merge over the chosen
+ * preset's defaults, not over DEFAULTS) and map the legacy top-level
+ * `decode: {...}` to preset "scramble": seconds/hold/fps → reveal, the rest →
+ * options. Returns the config without options, the options and their path.
+ */
+function splitReveal(user) {
+  if (!isObj(user)) return { rest: user, options: undefined, optionsPath: "reveal.options" };
+  const { decode, ...rest } = user;
+  if (decode !== undefined) {
+    if (user.reveal !== undefined) throw new ConfigError('give either "reveal" or the legacy "decode", not both');
+    if (!isObj(decode)) throw new ConfigError(`decode: expected an object, got ${describe(decode)}`);
+    const { seconds, hold, fps, ...options } = decode;
+    const timing = Object.fromEntries(Object.entries({ seconds, hold, fps }).filter(([, v]) => v !== undefined));
+    return { rest: { ...rest, reveal: { preset: "scramble", ...timing } }, options, optionsPath: "decode" };
+  }
+  if (!isObj(user.reveal)) return { rest: user, options: undefined, optionsPath: "reveal.options" };
+  const { options, ...reveal } = user.reveal;
+  return { rest: { ...user, reveal }, options, optionsPath: "reveal.options" };
+}
+
+/** Merge reveal options over the preset's defaults, then range-check them. */
+function revealOptions(preset, user, path) {
+  const { defaults, validate } = REVEAL_PRESETS[preset];
+  if (user !== undefined && !isObj(user)) throw new ConfigError(`${path}: expected an object, got ${describe(user)}`);
+  for (const key of Object.keys(user ?? {}))
+    if (!Object.hasOwn(defaults, key))
+      throw new ConfigError(
+        `unknown option "${path}.${key}" for reveal preset "${preset}" ` +
+        `(it takes ${Object.keys(defaults).join(", ") || "no options"})`,
+      );
+  const o = merge(defaults, user, path);
+  const at = (key) => `${path}.${key}`;
+  validate?.(o, {
+    check: (ok, key, msg) => check(ok, at(key), msg),
+    positive: (key) => positive(o[key], at(key)),
+    nonNeg: (key) => check(o[key] >= 0, at(key), `must be >= 0, got ${o[key]}`),
+    unit: (key) => unit(o[key], at(key)),
+    posInt: (key) => posInt(o[key], at(key)),
+    oneOf: (key, values) => check(values.includes(o[key]), at(key),
+      `must be one of ${values.map((x) => JSON.stringify(x)).join(", ")}, got ${JSON.stringify(o[key])}`),
+  });
+  return o;
+}
+
 /** Split the ramp string into levels; level 0 (empty) is implicit. */
 export function parseRamp(ramp) {
   return [[], ...ramp.trim().split(/\s+/).filter(Boolean).map((lv) => [...lv])];
@@ -192,7 +235,9 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
     legacy[key] = fieldRest[key];
     delete fieldRest[key];
   }
-  const c = merge(DEFAULTS, userField ? { ...user, field: fieldRest } : user, "");
+  // reveal.options (or the legacy decode block) likewise resolve against their preset.
+  const { rest, options, optionsPath } = splitReveal(userField ? { ...user, field: fieldRest } : user);
+  const c = merge(DEFAULTS, rest, "");
 
   positive(c.size.width, "size.width");
   positive(c.size.height, "size.height");
@@ -212,19 +257,16 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   check(t.layout === null || LAYOUTS.includes(t.layout), "tagline.layout",
     `must be one of ${LAYOUTS.map((l) => JSON.stringify(l)).join(", ")} or null, got ${describe(t.layout)}`);
 
-  const d = c.decode;
-  positive(d.seconds, "decode.seconds");
-  check(d.hold >= 0, "decode.hold", `must be >= 0, got ${d.hold}`);
-  positive(d.fps, "decode.fps");
-  check(Math.round(d.seconds * d.fps) >= 1, "decode.fps",
-    `seconds × fps must round to at least one decode tick, got ${d.seconds * d.fps}`);
-  posInt(d.noiseFrames, "decode.noiseFrames");
-  positive(d.lead, "decode.lead");
-  check(d.leadVar >= 0 && d.leadVar < 1, "decode.leadVar", `must be within [0, 1), got ${d.leadVar}`);
-  check(d.rag >= 0, "decode.rag", `must be >= 0, got ${d.rag}`);
-  posInt(d.ragTicks, "decode.ragTicks");
-  unit(d.burst, "decode.burst");
-  unit(d.noiseAlpha, "decode.noiseAlpha");
+  const d = c.reveal;
+  const dp = optionsPath === "decode" ? "decode" : "reveal"; // name the key the user wrote
+  check(Object.hasOwn(REVEAL_PRESETS, d.preset), "reveal.preset",
+    `must be one of ${Object.keys(REVEAL_PRESETS).map((n) => JSON.stringify(n)).join(", ")}, got ${JSON.stringify(d.preset)}`);
+  positive(d.seconds, `${dp}.seconds`);
+  check(d.hold >= 0, `${dp}.hold`, `must be >= 0, got ${d.hold}`);
+  positive(d.fps, `${dp}.fps`);
+  check(Math.round(d.seconds * d.fps) >= 1, `${dp}.fps`,
+    `seconds × fps must round to at least one reveal tick, got ${d.seconds * d.fps}`);
+  d.options = revealOptions(d.preset, options, optionsPath);
 
   const f = c.field;
   positive(f.fontSize, "field.fontSize");

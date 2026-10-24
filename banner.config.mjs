@@ -35,17 +35,39 @@ export default {
     shadowGlyphs: null,
   },
 
-  decode: {
-    seconds: 2.2, // seconds a line spends decoding
+  // How each line appears. Every preset hides the line outside its slot,
+  // holds it settled for `hold` and opens the knockout with the letters.
+  // (The older top-level `decode: {...}` block still works: it means
+  // preset "scramble" with those knobs.)
+  reveal: {
+    // "scramble" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch" | "fade"
+    preset: "scramble",
+    seconds: 2.2, // seconds a line spends revealing
     hold: 5.8, // seconds a settled line holds before the next one starts
-    fps: 20, // decode step rate; reads as noise below ~15
-    noiseFrames: 6, // distinct scramble frames cycled during decode
-    lead: 16, // columns of scramble running ahead of the settled text
-    leadVar: 0.35, // per-row spread of lead, as a fraction of it
-    rag: 3, // columns a row's front may stray either side of the mean front
-    ragTicks: 3, // decode ticks between a row's wander knots; lower = twitchier
-    burst: 0.85, // pace jitter of the front: 0 = even, 1 = from a stall to a double step
-    noiseAlpha: 0.65, // alpha of not-yet-decoded glyphs
+    fps: 20, // step rate of stepped reveals; scramble reads as noise below ~15
+    // The preset's own knobs; leave out any to keep its default. Unknown ones
+    // are an error, so replace these when you switch preset. Shown: scramble's.
+    // The others (defaults):
+    //   typewriter: cursor ("█" full block; "" = none), blink (0 = cursor leaves
+    //               at settle; > 0 = blink period in s during the hold)
+    //   wipe:       direction ("right" | "left" | "down" | "up" | "center" | "edges"),
+    //               steps (0 = smooth; n > 0 = n discrete steps)
+    //   dissolve:   matrix (4; 2 | 4 | 8 dither tile), order ("bayer" | "random")
+    //   fall:       from ("top" | "bottom" | "scatter"), group ("letter" | "column"),
+    //               stagger (0.6 = fraction of seconds the start times spread over)
+    //   glitch:     slices (3 rows jumped per tick), shift (2 = max jump, columns),
+    //               flashes (4 noise flashes), noiseAlpha (0.65)
+    //   fade:       flicker (0; up to 1 = stepped "CRT warm-up"), rows (false; true =
+    //               rows fade top to bottom)
+    options: {
+      noiseFrames: 6, // distinct scramble frames cycled during the reveal
+      lead: 16, // columns of scramble running ahead of the settled text
+      leadVar: 0.35, // per-row spread of lead, as a fraction of it
+      rag: 3, // columns a row's front may stray either side of the mean front
+      ragTicks: 3, // reveal ticks between a row's wander knots; lower = twitchier
+      burst: 0.85, // pace jitter of the front: 0 = even, 1 = from a stall to a double step
+      noiseAlpha: 0.65, // alpha of not-yet-decoded glyphs
+    },
   },
 
   field: {

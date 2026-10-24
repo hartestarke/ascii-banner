@@ -1,6 +1,8 @@
 // SVG assembly: embedded font, band fills, flipbook frames, tagline windows,
 // knockout mask and every keyframe. All number formatting lives here — the
 // output is byte-stable for a given config, so keep the formats as they are.
+import { jitter } from "./field.mjs";
+import { REVEAL_PRESETS } from "./reveals/index.mjs";
 
 // `>` too: a literal "]]>" is not allowed in XML character data.
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -45,26 +47,73 @@ function runs(row, isShadow) {
 }
 
 /**
- * @param cfg   resolved config
- * @param g     field grid (field.mjs fieldGrid)
- * @param field baked field (field.mjs bakeField)
- * @param figs  figlet rows per tagline
- * @param plan  decode plan (decode.mjs planDecode)
+ * Run the configured reveal preset (reveals/index.mjs) over the laid-out
+ * taglines. The preset gets one `ctx` object:
+ *   cfg     resolved config; o = cfg.reveal.options (merged over the preset's defaults)
+ *   layout  layout.mjs layoutTaglines(): TROWS, maxCols, TFONT, TPX, TPY, rowY(i),
+ *           SLOT_T, TDUR, NT (reveal ticks = round(seconds × fps)), tickT(k)
+ *   figs    figlet rows per tagline, padded to TROWS; pool = scramble glyphs (flattened ramp)
+ *   W, H    viewBox size; CUT = tagline.knockout stroke px (0 = no knockout)
+ *   esc, num (1 dp), num2 (2 dp), rgb(alpha) → accent rgb(), jitter(i) (the only RNG)
+ *   pct(s)        seconds → keyframe percent of TDUR (3 dp, no "%")
+ *   runs(row)     two-tone markup of one figlet row (solid text + <tspan class="s">)
+ *   left(p)       tagline p's left edge, formatted; wrap(p, body) = <g translate(left)>
+ *                 so every tagline's text starts at local x=0
+ *   rowText(p, i) / rowKnock(p, i)  settled row i as <text class="tg tx"> / mask
+ *                 copy <text class="tg">, "" for a blank row; textRows(p) / knockRows(p) all rows
+ *   delays(cls)   `.${cls}${p}{animation-delay:…}` for p ≥ 1 — emit after the
+ *                 `animation` shorthands, which reset the delay
+ * and returns { defs, css, overlay, knockout, reducedMotionCss: { stop, settle },
+ * extraGlyphs }. css is spliced right after the shared `.tx`/`.s` rules (start
+ * it with "\n" for a new line); stop = selectors whose animation reduced motion
+ * turns off (joined to the field's), settle = rules that show tagline 0 settled.
+ */
+export function renderReveal(cfg, layout, figs, pool) {
+  const { width: W, height: H } = cfg.size;
+  const { TPX, TDUR, SLOT_T, rowY } = layout;
+  const shadowSet = new Set(cfg.tagline.shadowGlyphs);
+  const isShadow = (c) => shadowSet.has(c);
+  const left = (p) => num((W - figs[p][0].length * TPX) / 2);
+  const rowText = (p, i) => {
+    const row = figs[p][i].trimEnd();
+    return row ? `<text class="tg tx" y="${num(rowY(i))}">${runs(row, isShadow)}</text>` : "";
+  };
+  const rowKnock = (p, i) => {
+    const row = figs[p][i].trimEnd();
+    return row ? `<text class="tg" y="${num(rowY(i))}">${esc(row)}</text>` : "";
+  };
+  const ctx = {
+    cfg, o: cfg.reveal.options, layout, figs, pool, W, H, CUT: cfg.tagline.knockout,
+    esc, num, num2, rgb: rgbOf(cfg.accent), jitter,
+    pct: (s) => ((s / TDUR) * 100).toFixed(3),
+    runs: (row) => runs(row, isShadow),
+    left,
+    wrap: (p, body) => `<g transform="translate(${left(p)})">${body}</g>`,
+    rowText, rowKnock,
+    textRows: (p) => figs[p].map((_, i) => rowText(p, i)).join(""),
+    knockRows: (p) => figs[p].map((_, i) => rowKnock(p, i)).join(""),
+    delays: (cls) => figs.slice(1).map((_, i) => `.${cls}${i + 1}{animation-delay:${num2((i + 1) * SLOT_T)}s}`).join(""),
+  };
+  return REVEAL_PRESETS[cfg.reveal.preset].render(ctx);
+}
+
+/**
+ * @param cfg    resolved config
+ * @param g      field grid (field.mjs fieldGrid)
+ * @param field  baked field (field.mjs bakeField)
+ * @param layout tagline layout (layout.mjs layoutTaglines)
+ * @param reveal rendered reveal (renderReveal)
  * @param fontB64 base64 woff2
  */
-export function renderSvg(cfg, g, field, figs, plan, fontB64) {
+export function renderSvg(cfg, g, field, layout, reveal, fontB64) {
   const { width: W, height: H } = cfg.size;
   const ACCENT = cfg.accent;
   const TAGLINES = cfg.taglines;
   const { fontSize: FONT, fps: FPS, loopSeconds: DUR, alpha: ALPHA } = cfg.field;
   const { shadowAlpha: SHADOW_A, knockout: CUT } = cfg.tagline;
-  const { noiseAlpha: NOISE_A, noiseFrames: NOISE_FRAMES, fps: TFPS } = cfg.decode;
   const { PY, NF, STILL, y0 } = g;
-  const { TFONT, TPX, rowY, SLOT_T, TDUR, NT, tickT, leads, START, END, FAR, fronts, patterns, noise, STRIP, BAND } = plan;
+  const { TFONT } = layout;
   const rgb = rgbOf(ACCENT);
-  const shadowSet = new Set(cfg.tagline.shadowGlyphs);
-  const isShadow = (c) => shadowSet.has(c);
-  const pct = (s) => ((s / TDUR) * 100).toFixed(3);
 
   // ---- field frames ----
   // Attribute bytes repeat per text node (thousands of them), so every one is
@@ -119,73 +168,17 @@ export function renderSvg(cfg, g, field, figs, plan, fontB64) {
   });
   const bandFills = field.bands.map((b, i) => `.b${i}{fill:${rgb(ALPHA.lo + (ALPHA.hi - ALPHA.lo) * b.a)}}`).join("");
 
-  // ---- tagline overlay ----
-  // Keyframes hold (step-end) between stops, so ticks where the row stalls need
-  // none: decode, hold to the slot's end, snap back to hidden.
-  const frontKeyframes = (name, steps, sign) => {
-    let css = `@keyframes ${name}{0%{transform:none}`;
-    for (let k = 1; k <= NT; k++)
-      if (steps[k] !== steps[k - 1]) css += `${pct(tickT(k))}%{transform:translateX(${num2(sign * steps[k] * TPX)}px)}`;
-    return `${css}${pct(SLOT_T)}%{transform:none}100%{transform:none}}`;
-  };
-
-  const overlay = [];
-  const cuts = [];
-  figs.forEach((rows, p) => {
-    const wrap = (body) => `<g transform="translate(${num((W - rows[0].length * TPX) / 2)})">${body}</g>`;
-    const pattern = patterns[p];
-    // Clip window: the clipped group slides (Firefox ignores transforms on the
-    // clipPath's own children), the inner group counter-slides the glyphs.
-    // d<p> delays the pair to the tagline's slot; e/ei pin the first tagline
-    // open under prefers-reduced-motion.
-    const win = (i, clip, body) =>
-      `<g class="r${pattern[i]}${p ? ` d${p}` : " e"}" clip-path="url(#${clip})">` +
-      `<g class="q${pattern[i]}${p ? ` d${p}` : " ei"}">${body}</g></g>`;
-    const lines = [];
-    const cutLines = [];
-    rows.forEach((r, i) => {
-      const row = r.trimEnd();
-      if (!row) return;
-      let strip = "";
-      for (let k = 0; k < NOISE_FRAMES; k++)
-        strip += `<text class="tg nz" y="${num(rowY(i) + k * STRIP)}">${esc(noise(p, i, k, row))}</text>`;
-      lines.push(
-        win(i, `n${i}`, `<g class="st">${strip}</g>`) +
-        win(i, "s", `<text class="tg tx" y="${num(rowY(i))}">${runs(row, isShadow)}</text>`),
-      );
-      cutLines.push(win(i, `m${i}`, `<text class="tg" y="${num(rowY(i))}">${esc(row)}</text>`));
-    });
-    overlay.push(wrap(lines.join("")));
-    if (CUT > 0) cuts.push(wrap(cutLines.join("")));
-  });
-  // Clip rects live in the sliding group's space, offset so that zero travel
-  // hides everything: settled text shows left of the front, the scramble in a
-  // band of the row's lead right of it, the knockout up to a column past the band.
-  const rect = (x, w, y = 0, h = H) => `<rect x="${num2(x)}"${y ? ` y="${num2(y)}"` : ""} width="${num2(w)}" height="${num2(h)}"/>`;
-  const clips = !TAGLINES.length ? "" :
-    `<clipPath id="s">${rect(-FAR, FAR - START)}</clipPath>` +
-    leads.map((lead, i) =>
-      `<clipPath id="n${i}">${rect(-START, lead * TPX, rowY(i) - BAND / 2, BAND)}</clipPath>` +
-      (CUT > 0 ? `<clipPath id="m${i}">${rect(-FAR, FAR - START + (lead + 1) * TPX)}</clipPath>` : ""),
-    ).join("");
-
   const LABEL = escAttr(TAGLINES[0] ?? "ASCII field");
   // Knockout: a mask clears the field around the letters (CUT px of stroke
   // dilation), which keeps the tagline legible on any page colour and over the
-  // field's hot zones. It opens with the scramble front — opened up front, the
-  // letter-shaped hole would give the line away before it decodes.
-  const mask = cuts.length
-    ? `<mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/>${cuts.join("")}</mask>`
+  // field's hot zones. The reveal preset draws its content and makes it follow
+  // the reveal — opened up front, the letter-shaped hole would give the line away.
+  const mask = reveal.knockout
+    ? `<mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/>${reveal.knockout}</mask>`
     : "";
-  // Timelines: the field flips on DUR; every tagline window runs its row's front
-  // keyframes on TDUR with its slot's delay — no visibility toggles, so nested
-  // groups can't leak through a hidden parent. The d<p> rules must follow the
-  // r/q ones: the `animation` shorthand resets the delay.
-  const frontCss = fronts.map((steps, i) =>
-    `.r${i}{animation:r${i} ${TDUR}s step-end infinite}.q${i}{animation:q${i} ${TDUR}s step-end infinite}` +
-    frontKeyframes(`r${i}`, steps, 1) + frontKeyframes(`q${i}`, steps, -1),
-  ).join("\n");
-  const delayCss = TAGLINES.slice(1).map((_, i) => `.d${i + 1}{animation-delay:${num2((i + 1) * SLOT_T)}s}`).join("");
+  // Timelines: the field flips on DUR; the preset's tagline animations run on
+  // the tagline loop with per-slot delays (see reveals/).
+  const rm = reveal.reducedMotionCss;
   // No background: GitHub's <picture>/prefers-color-scheme follows the OS, not
   // the GitHub theme, so a transparent banner in theme-neutral accent alphas
   // blends with every theme instead. The embedded font has its layout tables
@@ -200,19 +193,15 @@ ${bandFills}
 .f{visibility:hidden;animation:k ${DUR}s step-end infinite}
 @keyframes k{0%{visibility:visible}${(100 / NF).toFixed(3)}%{visibility:hidden}100%{visibility:hidden}}
 .tg{font-size:${TFONT}px}
-.tx{fill:${ACCENT}}.s{fill:${rgb(SHADOW_A)}}.nz{fill:${rgb(NOISE_A)}}
-${frontCss}
-${delayCss}
-.st{animation:nk ${num2(NOISE_FRAMES / TFPS)}s steps(${NOISE_FRAMES}) infinite}
-@keyframes nk{to{transform:translateY(${-NOISE_FRAMES * STRIP}px)}}
+.tx{fill:${ACCENT}}.s{fill:${rgb(SHADOW_A)}}${reveal.css}
 mask text{fill:#000;stroke:#000;stroke-width:${CUT};stroke-linejoin:round}
-@media (prefers-reduced-motion:reduce){.f,g[clip-path],g[clip-path]>g,.st{animation:none}.f-still{visibility:visible}.e{transform:translateX(${num2(END)}px)}.ei{transform:translateX(${num2(-END)}px)}}
+@media (prefers-reduced-motion:reduce){${[".f", ...rm.stop].join(",")}{animation:none}.f-still{visibility:visible}${rm.settle}}
 </style>
-<defs>${clips}${mask}</defs>
+<defs>${reveal.defs}${mask}</defs>
 <g${mask ? ' mask="url(#cut)"' : ""}>
 ${frames.join("\n")}
 </g>
-${overlay.join("\n")}
+${reveal.overlay}
 </svg>
 `;
 }
