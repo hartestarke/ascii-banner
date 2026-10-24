@@ -44,7 +44,8 @@ a file.
 Only the printable ASCII glyphs (`' '` to `'~'`) are read. A character outside
 them renders as the font's `?` glyph and the build prints a warning. Every
 character a font draws must also exist in the embedded web font (the bundled
-JetBrains Mono subset covers ASCII, Box Drawing and Block Elements), or the
+JetBrains Mono subset covers ASCII, Box Drawing, Block Elements and the
+Geometric Shapes the glyph sets use; `fonts/NOTICE.md` lists the ranges), or the
 build stops with an error. All thirteen FIGlet fonts draw plain ASCII only, and
 the block faces only Block Elements.
 `ansi-shadow` draws `+ = | { }` as blanks, and its `$` uses `·`, which the
