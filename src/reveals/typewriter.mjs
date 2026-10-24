@@ -1,22 +1,20 @@
-// Typewriter: every figlet row advances in lockstep, whole columns at a time
-// on the reveal ticks, left to right over `seconds`; a cursor block rides the
-// front. Same window mechanics as scramble (Firefox ignores transforms on a
-// clipPath's children): the clipped group slides right, the inner group
-// counter-slides the glyphs. The knockout copy rides the same window, plus a
-// black cursor, so the hole in the field follows the front.
+// Typewriter: every figlet row advances in lockstep, whole columns per reveal
+// tick, left to right over `seconds`, with a cursor block riding the front. The
+// window works like scramble's (Firefox ignores transforms on a clipPath's
+// children): the clipped group slides right, the inner group counter-slides the
+// glyphs. The knockout copy rides the same window plus a black cursor, so the
+// hole in the field follows the front.
 import { EMPTY, animate, keyframes } from "./common.mjs";
-
-// Control characters can't go into XML; one code point fills one column.
-const CONTROL_CHARS = /[\x00-\x1F\x7F]/;
 
 export default {
   defaults: {
-    cursor: "█", // cursor glyph riding the front (full block); "" = no cursor
-    blink: 0, // 0 = the cursor leaves when the line settles; > 0 = blink period in seconds during the hold
+    cursor: "█",
+    blink: 0, // period in seconds; 0 = the cursor leaves when the line settles
   },
 
   validate(o, v) {
-    v.check([...o.cursor].length <= 1 && !CONTROL_CHARS.test(o.cursor), "cursor",
+    // One code point fills one column; control characters can't go into XML.
+    v.check([...o.cursor].length <= 1 && !/[\x00-\x1F\x7F]/.test(o.cursor), "cursor",
       `must be one character or "", got ${JSON.stringify(o.cursor)}`);
     v.nonNeg("blink");
     v.check(o.blink === 0 || o.blink >= 0.1, "blink", `must be 0 or at least 0.1 s, got ${o.blink}`);
@@ -40,19 +38,16 @@ export default {
     const settle = [];
     figs.forEach((rows, p) => {
       const cols = rows[0].length;
-      // Columns shown after tick k (k = NT also opens the right margin) and
-      // the cursor's column.
+      // The cursor's column and the columns shown after tick k; tick NT also
+      // opens the right margin.
       const caret = (k) => (k < NT ? Math.round((k * cols) / NT) : cols);
       const front = (k) => (k === 0 ? 0 : k < NT ? MC + caret(k) : cols + 2 * MC);
-      const win = [["0", "transform:none"]];
-      const inner = [["0", "transform:none"]];
-      for (let k = 1; k <= NT; k++)
-        if (front(k) !== front(k - 1)) {
-          win.push([pct(tickT(k)), tx(front(k) * TPX)]);
-          inner.push([pct(tickT(k)), tx(-front(k) * TPX)]);
-        }
-      for (const s of [win, inner]) s.push([pct(SLOT_T), "transform:none"], ["100", "transform:none"]);
-      css += animate(`tw${p}`, `tw${p}`, TDUR) + animate(`twi${p}`, `twi${p}`, TDUR) + keyframes(`tw${p}`, win) + keyframes(`twi${p}`, inner);
+      const slideKeyframes = (name, sign) => {
+        const stops = [["0", "transform:none"]];
+        for (let k = 1; k <= NT; k++) if (front(k) !== front(k - 1)) stops.push([pct(tickT(k)), tx(sign * front(k) * TPX)]);
+        return keyframes(name, [...stops, [pct(SLOT_T), "transform:none"], ["100", "transform:none"]]);
+      };
+      css += animate(`tw${p}`, TDUR) + animate(`twi${p}`, TDUR) + slideKeyframes(`tw${p}`, 1) + slideKeyframes(`twi${p}`, -1);
       if (p === 0) settle.push(`.tw0{${tx(front(NT) * TPX)}}.twi0{${tx(-front(NT) * TPX)}}`);
 
       let cursor = "";
@@ -65,17 +60,16 @@ export default {
           for (let j = 1, t = S + o.blink / 2; t < SLOT_T - 1e-9; j++, t = S + (j * o.blink) / 2)
             stops.push([pct(t), `opacity:${j % 2 ? 0 : 1}`]);
         stops.push([pct(SLOT_T), "opacity:0"], ["100", "opacity:0"]);
-        css += animate(`twc${p}`, `twc${p}`, TDUR) + keyframes(`twc${p}`, stops);
-        // One <text> per tagline: the glyph repeated down every row, each copy
-        // placed by the x/y position lists.
+        css += animate(`twc${p}`, TDUR) + keyframes(`twc${p}`, stops);
+        // One <text> for the whole column: the x/y lists place a glyph per row.
         const block = (cls) =>
           `<g class="twc twc${p} twd${p}"><text class="${cls}" x="${Array(TROWS).fill(0).join(" ")}" y="${rows.map((_, i) => num(rowY(i))).join(" ")}">${esc(o.cursor.repeat(TROWS))}</text></g>`;
         cursor = block("tg tx");
         knockCursor = block("tg");
       }
-      const window = (body) => `<g class="tw${p} twd${p}" clip-path="url(#tw)"><g class="twi${p} twd${p}">${body}</g></g>`;
-      overlay.push(wrap(p, window(textRows(p)) + cursor));
-      if (CUT > 0) cuts.push(wrap(p, window(knockRows(p)) + knockCursor));
+      const win = (body) => `<g class="tw${p} twd${p}" clip-path="url(#tw)"><g class="twi${p} twd${p}">${body}</g></g>`;
+      overlay.push(wrap(p, win(textRows(p)) + cursor));
+      if (CUT > 0) cuts.push(wrap(p, win(knockRows(p)) + knockCursor));
     });
     return {
       defs,

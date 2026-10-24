@@ -1,5 +1,4 @@
-// Small helpers shared by the reveal presets. Scramble keeps its original
-// code so the default banner stays byte-identical.
+// Helpers shared by the reveal presets.
 
 /** What a preset returns when there is no tagline to reveal. */
 export const EMPTY = Object.freeze({
@@ -12,30 +11,36 @@ export const EMPTY = Object.freeze({
  */
 export const keyframes = (name, stops) => `@keyframes ${name}{${stops.map(([at, decl]) => `${at}%{${decl}}`).join("")}}`;
 
-/** `.cls{animation:name T step-end infinite}` — every preset timeline holds between stops. */
-export const animate = (cls, name, TDUR) => `.${cls}{animation:${name} ${+TDUR.toFixed(2)}s step-end infinite}`;
+/**
+ * `.name{animation:name …}`, step-end so every stop holds until the next. There
+ * is no fill mode: before its slot's delay runs out, and under reduced motion,
+ * an element shows its base rule, which therefore has to be the hidden state.
+ */
+export const animate = (name, TDUR) => `.${name}{animation:${name} ${+TDUR.toFixed(2)}s step-end infinite}`;
+
+/** Hidden = moved off the canvas. Never visibility: a nested group can show through a hidden parent. */
+export const offCanvas = (H) => `transform:translateY(${-H}px)`;
 
 /**
- * Live/settled swap for reveals drawn through a <mask> (wipe, dissolve): a
- * masked group composites through an offscreen surface and lands ±1 per
- * channel off directly drawn text, so at `seconds` the masked live layer
- * (class `${px}l`) leaves the canvas and a plain copy of the rows (`${px}s`)
- * takes over — at rest every preset draws the same pixels. Off the canvas =
- * hidden: transforms only, no visibility toggles. Emit before the delays.
+ * Live/settled swap for reveals drawn through a <mask> (wipe, dissolve). A
+ * masked group composites through an offscreen surface and lands ±1 per channel
+ * off directly drawn text, so at `seconds` the masked layer (`${px}l`) leaves the
+ * canvas and a plain copy (`${px}s`) takes over: at rest every preset draws the
+ * same pixels. Emit before the delays.
  */
 export function swapCss(ctx, px) {
-  const { pct, H, cfg, layout } = ctx;
-  const HIDE = `transform:translateY(${-H}px)`;
+  const { H, cfg, layout, pct } = ctx;
+  const HIDE = offCanvas(H);
   const S = cfg.reveal.seconds;
   return `.${px}l,.${px}s{${HIDE}}` +
-    animate(`${px}l`, `${px}l`, layout.TDUR) + keyframes(`${px}l`, [["0", "transform:none"], [pct(S), HIDE], ["100", HIDE]]) +
-    animate(`${px}s`, `${px}s`, layout.TDUR) +
+    animate(`${px}l`, layout.TDUR) + keyframes(`${px}l`, [["0", "transform:none"], [pct(S), HIDE], ["100", HIDE]]) +
+    animate(`${px}s`, layout.TDUR) +
     keyframes(`${px}s`, [["0", HIDE], [pct(S), "transform:none"], [pct(layout.SLOT_T), HIDE], ["100", HIDE]]);
 }
 
 /**
  * Margin around a tagline's letters, px: one cell of glyph overflow plus the
- * knockout stroke, so a window that "covers the text" also covers its hole.
+ * knockout stroke, so a window that covers the text also covers its hole.
  */
 export const margins = (layout, CUT) => ({ MX: layout.TPX + CUT, MY: layout.TPY / 2 + CUT });
 
@@ -44,4 +49,21 @@ export const rowsBox = (layout, MY) => {
   const top = layout.rowY(0) - layout.TPY / 2 - MY;
   const bottom = layout.rowY(layout.TROWS - 1) + layout.TPY / 2 + MY;
   return { top, bottom, height: bottom - top };
+};
+
+/** Permutation of 0..n-1 (Fisher-Yates); rand(i) in [0, 1) draws the swap for position i. */
+export const shuffle = (n, rand) => {
+  const a = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(rand(i) * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+/** The row with every inked cell swapped for a pool glyph; rand(c) in [0, 1) picks column c's. */
+export const noiseRow = (row, pool, rand) => {
+  let s = "";
+  for (let c = 0; c < row.length; c++) s += row[c] === " " ? " " : pool[Math.floor(rand(c) * pool.length)];
+  return s;
 };

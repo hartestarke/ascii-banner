@@ -1,11 +1,10 @@
-// Reveal presets: how a tagline appears in its slot. name → { defaults,
-// validate(options, v), render(ctx) }; ctx and the render result are
-// documented at svg.mjs renderReveal. `reveal.options` merges over `defaults`
-// (same rules as the config: no unknown keys, types must match), then
-// `validate` range-checks it through `v` (config.mjs optionChecks, shared with
-// field presets). Each preset prefixes its classes/ids (tw, wp, dv,
-// dp, gx, op; scramble keeps its original names) so presets never collide with
-// each other or with the field (.f, .b<n>, k).
+// Reveal presets: how a tagline appears in its slot. Each is { defaults,
+// validate(o, v), render(ctx) }: `reveal.options` merges over `defaults` with
+// the config's rules (no unknown keys, matching types), then `validate`
+// range-checks it through `v` (config.mjs optionChecks). ctx and the render
+// result are documented at svg.mjs renderReveal. Classes and ids carry a
+// per-preset prefix (tw, wp, dv, dp, gx, op) clear of the field's (.f, .b<n>,
+// k); scramble's unprefixed names are part of the default banner's bytes.
 import scramble from "./scramble.mjs";
 import typewriter from "./typewriter.mjs";
 import wipe from "./wipe.mjs";

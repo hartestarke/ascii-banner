@@ -1,12 +1,8 @@
-// Tagline layout shared by every reveal preset: pads the figlet rows to a
-// common height, sizes the tagline font, places the rows and sets the slot
-// timeline. Pure numbers; the preset in reveals/ turns them into markup.
+// Tagline layout shared by every reveal preset: row count, font size, row
+// positions and the slot timeline. Pure numbers; the preset turns them into markup.
 import { num } from "./svg.mjs";
 
-/**
- * @param cfg  resolved config
- * @param figs figlet rows per tagline (figlet.mjs); padded in place
- */
+/** Side effect: pads every tagline in figs, in place, to the same row count. */
 export function layoutTaglines(cfg, figs) {
   const { width: W, height: H } = cfg.size;
   const t = cfg.tagline;

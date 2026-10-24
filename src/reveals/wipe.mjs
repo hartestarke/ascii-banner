@@ -1,25 +1,23 @@
 // Wipe: one window per tagline sweeps over the line. The window is a <mask>
-// rect that scales from 0 to full size about the edge (or centre) the wipe
-// starts from — a scale needs no per-line distances, so one keyframes set
-// serves every line. The knockout copy uses the same mask, so the hole in the
-// field opens with the window; at `seconds` plain copies take over (swapCss).
+// rect scaling from zero about the edge (or centre) the wipe starts from; a
+// scale needs no per-line distances, so one keyframes set serves every line.
+// The knockout copy shares the mask, so the hole in the field opens with the
+// window; at `seconds` plain copies take over (swapCss).
 import { EMPTY, animate, keyframes, margins, rowsBox, swapCss } from "./common.mjs";
-
-const DIRECTIONS = ["right", "left", "down", "up", "center", "edges"];
 
 export default {
   defaults: {
-    direction: "right", // way the edge travels: "right" | "left" | "down" | "up" | "center" (opens outwards) | "edges" (closes inwards)
-    steps: 0, // 0 = smooth linear sweep; n > 0 = n discrete steps
+    direction: "right",
+    steps: 0, // 0 = linear sweep
   },
 
   validate(o, v) {
-    v.oneOf("direction", DIRECTIONS);
-    v.check(Number.isInteger(o.steps) && o.steps >= 0, "steps", `must be an integer >= 0, got ${o.steps}`);
+    v.oneOf("direction", ["right", "left", "down", "up", "center", "edges"]);
+    v.int("steps", 0);
   },
 
   render(ctx) {
-    const { o, cfg, layout, figs, CUT, pct, num2, wrap, textRows, knockRows, delays } = ctx;
+    const { o, cfg, layout, figs, CUT, num2, pct, wrap, textRows, knockRows, delays } = ctx;
     if (!figs.length) return EMPTY;
     const { TPX, SLOT_T, TDUR } = layout;
     const S = cfg.reveal.seconds;
@@ -50,7 +48,6 @@ export default {
         edges: rect(p, x0, 0, 0, top, half, h) + rect(p, x1, 0, -half, top, half, h),
       }[o.direction];
       defs += `<mask id="wp${p}" maskUnits="userSpaceOnUse"><g fill="#fff">${body}</g></mask>`;
-      // Masked live layer during the sweep, plain settled copy from `seconds` (swapCss).
       const layers = (rowsOf) => `<g class="wpl wpd${p}" mask="url(#wp${p})">${rowsOf(p)}</g><g class="wps wpd${p}">${rowsOf(p)}</g>`;
       overlay.push(wrap(p, layers(textRows)));
       if (CUT > 0) cuts.push(wrap(p, layers(knockRows)));
@@ -58,7 +55,7 @@ export default {
 
     const sweep = o.steps ? `steps(${o.steps})` : "linear";
     const css =
-      `\n.wp{transform:${ZERO}}${animate("wp", "wp", TDUR)}` +
+      `\n.wp{transform:${ZERO}}${animate("wp", TDUR)}` +
       keyframes("wp", [
         ["0", `transform:${ZERO};animation-timing-function:${sweep}`],
         [pct(S), "transform:none"],

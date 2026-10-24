@@ -4,12 +4,12 @@
 // so the hole in the field opens as the letters appear.
 import { EMPTY, animate, keyframes } from "./common.mjs";
 
-const ROW_SPAN = 0.5; // rows mode: fraction of `seconds` one row takes to fade in
+const ROW_SPAN = 0.5; // rows mode: share of `seconds` one row takes to fade in
 
 export default {
   defaults: {
-    flicker: 0, // 0..1: strength of the stepped random opacity before it settles; 0 = smooth ease-in
-    rows: false, // true = rows fade in one after another, top to bottom
+    flicker: 0, // 0 = smooth ease-in
+    rows: false,
   },
 
   validate(o, v) {
@@ -17,7 +17,7 @@ export default {
   },
 
   render(ctx) {
-    const { o, cfg, layout, figs, CUT, pct, num2, jitter, wrap, rowText, rowKnock, textRows, knockRows, delays } = ctx;
+    const { o, cfg, layout, figs, CUT, num2, pct, jitter, wrap, rowText, rowKnock, textRows, knockRows, delays } = ctx;
     if (!figs.length) return EMPTY;
     const { TROWS, SLOT_T, TDUR, NT, tickT } = layout;
     const S = cfg.reveal.seconds;
@@ -53,7 +53,7 @@ export default {
       const span = TROWS > 1 ? S * ROW_SPAN : S;
       for (let i = 0; i < TROWS; i++) {
         const a = TROWS > 1 ? ((S - span) * i) / (TROWS - 1) : 0;
-        css += animate(`op${i}`, `op${i}`, TDUR) + timeline(`op${i}`, a, a + span, i + 1);
+        css += animate(`op${i}`, TDUR) + timeline(`op${i}`, a, a + span, i + 1);
       }
       const rowGroups = (p, row) => figs[p].map((_, i) => (row(p, i) ? `<g class="op${i} opd${p}">${row(p, i)}</g>` : "")).join("");
       figs.forEach((_, p) => {
@@ -61,7 +61,7 @@ export default {
         if (CUT > 0) cuts.push(wrap(p, rowGroups(p, rowKnock)));
       });
     } else {
-      css += animate("op", "op", TDUR) + timeline("op", 0, S, 0);
+      css += animate("op", TDUR) + timeline("op", 0, S, 0);
       figs.forEach((_, p) => {
         overlay.push(wrap(p, `<g class="op opd${p}">${textRows(p)}</g>`));
         if (CUT > 0) cuts.push(wrap(p, `<g class="op opd${p}">${knockRows(p)}</g>`));
@@ -69,8 +69,6 @@ export default {
     }
     return {
       defs: "",
-      // Hidden by default: before its first slot (animation delay, no fill)
-      // and under reduced motion every line rests transparent.
       css: `\n[class^=op]{opacity:0}\n${css}\n${delays("opd")}`,
       overlay: overlay.join("\n"),
       knockout: cuts.join(""),

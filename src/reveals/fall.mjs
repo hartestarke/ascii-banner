@@ -1,22 +1,18 @@
 // Fall: glyph groups drop into place with an ease-out, their start times
-// staggered left to right. Each group is its own <g> (transforms on plain
-// groups are fine in Firefox, only clipPath children ignore them), sliding in
-// from off the canvas, which also keeps it hidden before and after. Once every
-// group has landed, at `seconds`, the groups swap for the canonical settled
-// rows, so the settled line is identical to every other preset's. The
-// knockout copies ride the same transforms.
-import { EMPTY, animate, keyframes, margins, rowsBox } from "./common.mjs";
+// staggered left to right. Each group is its own <g> sliding in from off the
+// canvas, which also hides it before and after (transforms on plain groups work
+// in Firefox; only clipPath children ignore them). At `seconds` the groups swap
+// for the shared settled rows, so the settled line is the same whichever
+// preset drew it. The knockout copies ride the same transforms.
+import { EMPTY, animate, keyframes, margins, offCanvas, rowsBox } from "./common.mjs";
 
-const FROM = ["top", "bottom", "scatter"];
-const GROUPS = ["letter", "column"];
-const CHUNK_COLS = 6; // "letter" fallback group width when the font butts letters together
-const SCATTER_LEVELS = 3; // scatter: drop distances 1×, 1.5×, 2× the minimum
+const CHUNK_COLS = 6; // "letter" group width for fonts that butt letters together
+const SCATTER_LEVELS = 3; // scatter drop distances: 1×, 1.5×, 2× the minimum
 
 /**
- * Column ranges [a, b) of the glyph groups of one tagline. "letter" = runs of
- * non-blank columns between all-blank ones; when the font leaves no gap
- * between letters (fewer runs than letters) the runs are cut into CHUNK_COLS
- * pieces instead. "column" = every non-blank column on its own.
+ * Column ranges [a, b) of one tagline's glyph groups. "letter": runs of inked
+ * columns between blank ones, cut into CHUNK_COLS pieces when the font leaves
+ * fewer runs than letters. "column": every inked column on its own.
  */
 function groups(rows, mode, text) {
   const cols = rows[0].length;
@@ -38,14 +34,14 @@ function groups(rows, mode, text) {
 
 export default {
   defaults: {
-    from: "top", // "top" | "bottom" | "scatter" (per-group direction and distance)
-    group: "letter", // "letter" = gap-separated runs (6-column chunks for gapless fonts) | "column"
-    stagger: 0.6, // fraction of `seconds` over which the groups' start times spread
+    from: "top",
+    group: "letter",
+    stagger: 0.6, // fraction of `seconds`
   },
 
   validate(o, v) {
-    v.oneOf("from", FROM);
-    v.oneOf("group", GROUPS);
+    v.oneOf("from", ["top", "bottom", "scatter"]);
+    v.oneOf("group", ["letter", "column"]);
     v.unit("stagger");
   },
 
@@ -58,7 +54,7 @@ export default {
     const { top, bottom } = rowsBox(layout, MY);
     // Smallest drops that start fully off the canvas, glyphs and knockout included.
     const DROP = { top: -bottom, bottom: H - top };
-    const HIDE = `transform:translateY(${-H}px)`;
+    const HIDE = offCanvas(H);
 
     // Start ticks spread over stagger·seconds; every group falls for D ticks and
     // lands by tick NT-1, so the swap at `seconds` never cuts a fall short.
@@ -75,7 +71,7 @@ export default {
         if (D) stops.push([pct(tickT(s)), `${off};animation-timing-function:ease-out`]);
         stops.push([pct(tickT(s + D)), "transform:none"], [pct(S), off], [pct(SLOT_T), off], ["100", off]);
         variants.set(key, i);
-        css.push(animate(`dp${i}`, `dp${i}`, TDUR) + keyframes(`dp${i}`, stops));
+        css.push(animate(`dp${i}`, TDUR) + keyframes(`dp${i}`, stops));
       }
       return variants.get(key);
     };
@@ -96,7 +92,6 @@ export default {
           scale = 1 + Math.floor((r * 2 % 1) * SCATTER_LEVELS) / 2;
         }
         const i = variant(s, DROP[from] * scale);
-        // One <text> per group, a positioned tspan per inked row segment.
         let spans = "";
         let kspans = "";
         rows.forEach((r, ri) => {
@@ -113,8 +108,7 @@ export default {
       overlay.push(wrap(p, `${body}<g class="dps dpd${p}">${textRows(p)}</g>`));
       if (CUT > 0) cuts.push(wrap(p, `${knock}<g class="dps dpd${p}">${knockRows(p)}</g>`));
     });
-    // The settled rows: off the canvas until `seconds`, in place until the slot ends.
-    const settled = animate("dps", "dps", TDUR) +
+    const settled = animate("dps", TDUR) +
       keyframes("dps", [["0", HIDE], [pct(S), "transform:none"], [pct(SLOT_T), HIDE], ["100", HIDE]]);
     return {
       defs: "",
