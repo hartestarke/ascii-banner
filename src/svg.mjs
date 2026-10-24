@@ -67,7 +67,8 @@ function runs(row, isShadow) {
  * settle }, extraGlyphs }. css follows the shared `.tx`/`.s` rules (start it with
  * "\n" for a new line); stop = selectors whose animation reduced motion turns off,
  * settle = rules that show tagline 0 settled; extraGlyphs = characters the
- * reveal draws beyond the taglines.
+ * reveal draws beyond the taglines, pool noise included, which the build
+ * checks against the embedded font.
  */
 export function renderReveal(cfg, layout, figs, pool) {
   const { width: W, height: H } = cfg.size;

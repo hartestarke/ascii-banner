@@ -134,7 +134,7 @@ export default {
         stop: ["g[clip-path]", "g[clip-path]>g", ".st"],
         settle: `.e{transform:translateX(${num2(END)}px)}.ei{transform:translateX(${num2(-END)}px)}`,
       },
-      extraGlyphs: "",
+      extraGlyphs: figs.length ? pool.join("") : "",
     };
   },
 };

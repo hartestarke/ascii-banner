@@ -16,7 +16,8 @@ export const jitter = (i) => {
  * Split ramp levels 1..L into n runs { lo, hi, rep, a }, one fill each: glyph
  * weight already carries most of the gradient. `a` places the run on
  * field.alpha lo → hi: 3 or more runs at their middle level (9 levels: 1–3 as
- * 2, 4–6 as 5, 7–9 as 8), 2 runs at lo and hi, 1 run at hi.
+ * 2, 4–6 as 5, 7–9 as 8), 2 runs at lo and hi, 1 run at hi. n must not exceed
+ * L (resolveConfig caps field.bands), or some runs hold no level.
  */
 function bands(levels, n) {
   const L = levels - 1;

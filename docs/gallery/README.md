@@ -62,7 +62,7 @@ Every field preset, reveal preset, bundled tagline font and glyph set, plus thre
 | `blocks-thin` | <img src="font-blocks-thin.svg" width="440" alt="blocks-thin font sample"> | 75,619 |
 | `pixel` | <img src="font-pixel.svg" width="440" alt="pixel font sample"> | 67,127 |
 | `blocks-3d` | <img src="font-blocks-3d.svg" width="440" alt="blocks-3d font sample"> | 89,180 |
-| `blocks-iso` | <img src="font-blocks-iso.svg" width="440" alt="blocks-iso font sample"> | 87,629 |
+| `blocks-iso` | <img src="font-blocks-iso.svg" width="440" alt="blocks-iso font sample"> | 88,338 |
 
 ## Glyph sets
 
@@ -76,7 +76,7 @@ Every field preset, reveal preset, bundled tagline font and glyph set, plus thre
 | `squares` | <img src="set-squares.svg" width="440" alt="squares set sample"> | 81,411 |
 | `shapes` | <img src="set-shapes.svg" width="440" alt="shapes set sample"> | 81,411 |
 | `shade` | <img src="set-shade.svg" width="440" alt="shade set sample"> | 81,411 |
-| `binary` | <img src="set-binary.svg" width="440" alt="binary set sample"> | 65,789 |
+| `binary` | <img src="set-binary.svg" width="440" alt="binary set sample"> | 65,758 |
 | `lines` | <img src="set-lines.svg" width="440" alt="lines set sample"> | 81,411 |
 
 ## Colours

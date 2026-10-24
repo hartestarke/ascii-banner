@@ -92,7 +92,8 @@ export default {
     colors: null, // 1–3 #rrggbb, dimmest band first, the last filling the rest; null = [accent]
     gradient: null, // 2–8 #rrggbb stops, left → right across the width, at the band alphas; not with colors
     // Alpha bands the ramp levels fold into: 3 = lo / mid / hi, 2 = lo / hi,
-    // 1 = all at hi (smallest file). null = the preset's default.
+    // 1 = all at hi (smallest file). null = the preset's default. Capped at the
+    // ramp's level count ("binary" has 2), so every band, and its colour, draws.
     bands: null,
     // Brightness ramp, dim → bright: levels separated by spaces, the characters
     // of a level interchangeable; level 0 (empty) is implicit. Or a glyph set:

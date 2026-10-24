@@ -18,6 +18,9 @@ const MIN_TAGLINE_PX = 6;
 // reads as continuous motion; beyond it the loop visibly jumps.
 const SEAM_TOLERANCE = 0.02;
 
+// Highest one-byte code point in UTF-8; ramp glyphs above it cost 2-4 bytes per cell.
+const ASCII_MAX = 0x7f;
+
 const show = (chars) => [...chars].map((c) => JSON.stringify(c)).join(" ");
 
 /** Resolve, check and render a config; relative font paths resolve against `baseDir` (default cwd). */
@@ -46,13 +49,18 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
 
   // Every character the SVG draws must exist in the embedded font, or the
   // browser falls back to a system monospace with a different advance and the
-  // grid drifts out of register.
+  // grid drifts out of register. A reveal's extraGlyphs include the pool noise
+  // it actually draws; a null reveal.pool resolved to field.ramp, so that is
+  // the key such glyphs are blamed on unless the user gave a pool of their own.
+  const inPool = new Set(pool);
+  const extra = [...reveal.extraGlyphs];
   const drawnBy = {
     "field.ramp": field.ramp.flat(),
-    "reveal.pool": pool,
+    "reveal.pool": [],
     "the tagline font": figs.flat().flatMap((r) => [...r]).filter((c) => c !== " "),
-    "reveal.options": [...reveal.extraGlyphs],
+    "reveal.options": extra.filter((c) => !inPool.has(c)),
   };
+  drawnBy[cfg.reveal.pool === cfg.field.ramp ? "field.ramp" : "reveal.pool"].push(...extra.filter((c) => inPool.has(c)));
   const drawn = new Set(Object.values(drawnBy).flat());
   if (paths.fontBundled) {
     const have = new Set(readFileSync(BUNDLED_GLYPHS, "utf8").replace(/[\r\n]/g, ""));
@@ -80,13 +88,19 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
 
   const raw = Buffer.byteLength(svg);
   const max = cfg.budget.maxBytes;
-  if (max > 0 && raw > max)
+  if (max > 0 && raw > max) {
+    const wide = [...new Set(field.ramp.flat())].filter((c) => c.codePointAt(0) > ASCII_MAX);
     throw new ConfigError(
       `banner is ${raw} bytes, over budget.maxBytes (${max}). Raw size ∝ frames × rows × columns: ` +
       `lower field.fps or field.loopSeconds, shrink size, or raise field.fontSize (fewer cells). ` +
       `Set budget.maxBytes: 0 to disable the check.` +
+      (wide.length
+        ? ` field.ramp has glyphs outside ASCII (${show(wide)}), which cost up to ` +
+          `${Math.max(...wide.map((c) => Buffer.byteLength(c)))} bytes each against 1: field.bands: 1 or field.fps: 0 brings the size down.`
+        : "") +
       (warnings.length ? `\nWarnings before this error:\n${warnings.map((w) => `  ${w}`).join("\n")}` : ""),
     );
+  }
 
   const stats = {
     rawBytes: raw,

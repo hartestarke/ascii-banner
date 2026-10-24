@@ -53,7 +53,9 @@ field: {
 - **`bands`**: how many fill classes the levels fold into. 3 = lo / mid / hi
   (each band coloured as its middle level, the original look). 2 = `alpha.lo` /
   `alpha.hi`. 1 = everything at `alpha.hi`, the smallest file. `null` takes the
-  preset's default.
+  preset's default. The count is capped at the ramp's number of levels, so
+  `binary` (two levels) gets at most 2 bands and `colors` is checked against,
+  and drawn on, the bands that exist.
 - **`gamma`**: `pow(v, gamma)` on the preset's value; > 1 deepens the darks.
 - **`dither`**: `0` quantises as `floor((v ± 0.05 jitter) × levels)`. A
   matrix size `n` replaces the jitter with an n × n Bayer threshold,

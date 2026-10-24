@@ -133,6 +133,8 @@ const oneOf = (v, path, values) =>
   check(values.includes(v), path, `must be one of ${values.map((x) => JSON.stringify(x)).join(", ")}, got ${JSON.stringify(v)}`);
 const hexColour = (v, path) =>
   check(typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v), path, `must be a #rrggbb hex colour, got ${describe(v)}`);
+const plainText = (v, path) =>
+  check(!CONTROL_CHARS.test(v), path, `must not contain control characters (not allowed in XML), got ${describe(v)}`);
 const colourList = (v, path, min, max) => {
   check(v.length >= min && v.length <= max, path, `must hold ${min} to ${max} #rrggbb colours, got ${v.length}`);
   v.forEach((x, i) => hexColour(x, `${path}[${i}]`));
@@ -266,7 +268,7 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   hexColour(c.accent, "accent");
   c.taglines.forEach((line, i) => {
     check(typeof line === "string" && line.trim() !== "", `taglines[${i}]`, `must be a non-empty string, got ${describe(line)}`);
-    check(!CONTROL_CHARS.test(line), `taglines[${i}]`, `must not contain control characters (not allowed in XML), got ${describe(line)}`);
+    plainText(line, `taglines[${i}]`);
   });
 
   const t = c.tagline;
@@ -319,17 +321,25 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
     (key, takes) => `field.options.${key}: unknown option for preset "${f.preset}" (it takes ${takes || "no options"})`, { field: f });
   f.ramp = glyphSet(f.ramp ?? preset.ramp, "field.ramp");
   f.bands ??= preset.bands;
+  plainText(f.ramp, "field.ramp");
   check(parseRamp(f.ramp).length >= 2, "field.ramp", "needs at least one level of glyphs");
   d.pool = d.pool === null ? f.ramp : glyphSet(d.pool, "reveal.pool");
+  plainText(d.pool, "reveal.pool");
   check(parseRamp(d.pool).length >= 2, "reveal.pool", "needs at least one glyph");
   check([1, 2, 3].includes(f.bands), "field.bands", `must be one of 1, 2, 3 (or null), got ${f.bands}`);
+  // Bands split the ramp's levels; past one band per level some would hold no
+  // level, and the colours handed to them would never draw.
+  const levels = parseRamp(f.ramp).length - 1;
+  const capped = f.bands > levels;
+  if (capped) f.bands = levels;
   oneOf(f.dither, "field.dither", [0, 2, 4, 8]);
   positive(f.gamma, "field.gamma");
   if (f.colors !== null && f.gradient !== null) throw new ConfigError("give either field.colors or field.gradient, not both");
   if (f.colors !== null) {
     colourList(f.colors, "field.colors", 1, 3);
     check(f.colors.length <= f.bands, "field.colors",
-      `${f.colors.length} colours for ${f.bands} band${f.bands > 1 ? "s" : ""} (field.bands); give at most one per band`);
+      `${f.colors.length} colours for ${f.bands} band${f.bands > 1 ? "s" : ""} ` +
+      `(field.bands${capped ? `, capped at the ramp's ${levels} level${levels > 1 ? "s" : ""}` : ""}); give at most one per band`);
   }
   if (f.gradient !== null) colourList(f.gradient, "field.gradient", 2, 8);
   else f.colors ??= [c.accent];

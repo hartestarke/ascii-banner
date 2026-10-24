@@ -85,7 +85,7 @@ export default {
       overlay: overlay.join("\n"),
       knockout: cuts.join(""),
       reducedMotionCss: { stop: ["[class^=gx]"], settle: ".gx.gxd0,.gxk.gxd0{transform:none}" },
-      extraGlyphs: "",
+      extraGlyphs: flashTicks.length ? pool.join("") : "", // noise only shows on flash ticks
     };
   },
 };
