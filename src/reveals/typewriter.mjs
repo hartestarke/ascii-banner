@@ -19,6 +19,7 @@ export default {
     v.check([...o.cursor].length <= 1 && !CONTROL_CHARS.test(o.cursor), "cursor",
       `must be one character or "", got ${JSON.stringify(o.cursor)}`);
     v.nonNeg("blink");
+    v.check(o.blink === 0 || o.blink >= 0.1, "blink", `must be 0 or at least 0.1 s, got ${o.blink}`);
   },
 
   render(ctx) {

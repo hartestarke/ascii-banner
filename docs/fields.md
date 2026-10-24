@@ -172,6 +172,10 @@ field: {
   // x, y = cell centre in banner px; t = seconds into the loop.
   // Must be periodic over loopSeconds (here 20 s) or the seam warning fires.
   sample: (x, y, t) => 0.5 + 0.5 * Math.sin(x / 60 + (2 * Math.PI * t) / 20),
+  // A function that lights every cell writes more bytes than the waves preset
+  // (this one is ~1.25 MB at the template size with three bands): one band
+  // or a shorter loop keeps it under the budget.
+  bands: 1,
 }
 ```
 

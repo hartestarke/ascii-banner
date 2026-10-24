@@ -13,7 +13,7 @@ export const EMPTY = Object.freeze({
 export const keyframes = (name, stops) => `@keyframes ${name}{${stops.map(([at, decl]) => `${at}%{${decl}}`).join("")}}`;
 
 /** `.cls{animation:name T step-end infinite}` — every preset timeline holds between stops. */
-export const animate = (cls, name, TDUR) => `.${cls}{animation:${name} ${TDUR}s step-end infinite}`;
+export const animate = (cls, name, TDUR) => `.${cls}{animation:${name} ${+TDUR.toFixed(2)}s step-end infinite}`;
 
 /**
  * Live/settled swap for reveals drawn through a <mask> (wipe, dissolve): a

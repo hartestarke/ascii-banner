@@ -111,6 +111,8 @@ export default {
     // Make it periodic in t over loopSeconds, or the loop seam will jump (the
     // build warns). Example:
     //   sample: (x, y, t) => 0.5 + 0.5 * Math.sin(x / 60 + (2 * Math.PI * t) / 20),
+    // A function that lights every cell costs more bytes than the waves preset:
+    // pair it with bands: 1 or a shorter loopSeconds to stay under the budget.
     sample: null,
   },
 

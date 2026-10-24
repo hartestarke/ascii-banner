@@ -138,7 +138,15 @@ function fonts(argv) {
   }
   for (const f of list) {
     const missing = new Set();
-    const rows = figlet(f.font, flags.sample, missing, "--sample");
+    let rows;
+    try {
+      rows = figlet(f.font, flags.sample, missing, "--sample");
+    } catch (e) {
+      // A font that draws every character of the sample blank (ansi-shadow has no + = | { }).
+      if (!(e instanceof ConfigError)) throw e;
+      console.log(`${line(f)}  [renders blank: ${e.message}]\n`);
+      continue;
+    }
     const lacks = missing.size ? `  [no glyph for ${[...missing].map((c) => JSON.stringify(c)).join(" ")}: drawn as "?"]` : "";
     console.log(`${line(f)}${lacks}\n${rows.map((r) => r.trimEnd()).join("\n")}\n`);
   }

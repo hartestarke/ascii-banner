@@ -62,7 +62,7 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
     const lack = [...drawn].filter((c) => !have.has(c));
     if (lack.length)
       throw new ConfigError(
-        `the bundled font has no glyph for ${show(lack)} (from field.ramp or the tagline font). ` +
+        `the bundled font has no glyph for ${show(lack)} (from field.ramp, the tagline font or reveal.options). ` +
         `Remove them, or subset your own font with those glyphs and pass it as font.file (see README "Custom font").`,
       );
   } else {
@@ -86,7 +86,8 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
     throw new ConfigError(
       `banner is ${raw} bytes, over budget.maxBytes (${max}). Raw size ∝ frames × rows × columns: ` +
       `lower field.fps or field.loopSeconds, shrink size, or raise field.fontSize (fewer cells). ` +
-      `Set budget.maxBytes: 0 to disable the check.`,
+      `Set budget.maxBytes: 0 to disable the check.` +
+      (warnings.length ? `\nWarnings before this error:\n${warnings.map((w) => `  ${w}`).join("\n")}` : ""),
     );
 
   const stats = {

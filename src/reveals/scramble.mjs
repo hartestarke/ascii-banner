@@ -149,7 +149,7 @@ export default {
     // with its slot's delay — no visibility toggles, so nested groups can't
     // leak through a hidden parent. The d<p> rules must follow the r/q ones:
     // the `animation` shorthand resets the delay.
-    const TDUR = layout.TDUR;
+    const TDUR = +layout.TDUR.toFixed(2);
     const frontCss = fronts.map((steps, i) =>
       `.r${i}{animation:r${i} ${TDUR}s step-end infinite}.q${i}{animation:q${i} ${TDUR}s step-end infinite}` +
       frontKeyframes(`r${i}`, steps, 1) + frontKeyframes(`q${i}`, steps, -1),

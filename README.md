@@ -40,7 +40,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - run: npx --yes github:hartestarke/ascii-banner#v0.1.0 build
+      - run: npx --yes github:hartestarke/ascii-banner#v0.2.0 build
       - run: |
           git add banner.svg
           git diff --cached --quiet -- banner.svg && exit 0
