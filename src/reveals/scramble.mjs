@@ -6,7 +6,7 @@
 // The class and id names carry no prefix and are part of the default banner's
 // bytes: r#/q# windows, d# delays, e/ei reduced-motion pins, st/nz noise strip,
 // clips s/n#/m#, keyframes r#/q#/nk.
-import { animate, keyframes, noiseRow, shuffle } from "./common.mjs";
+import { animate, noiseRow, shuffle, slideKeyframes } from "./common.mjs";
 
 export default {
   defaults: {
@@ -30,8 +30,8 @@ export default {
   },
 
   render(ctx) {
-    const { o, cfg, layout, figs, pool, H, CUT, esc, num, num2, pct, rgb, jitter, runs, wrap, delays } = ctx;
-    const { TROWS, maxCols, TFONT, TPX, TPY, rowY, SLOT_T, TDUR, NT, tickT } = layout;
+    const { o, cfg, layout, figs, pool, H, CUT, esc, num, num2, rgb, jitter, runs, wrap, delays } = ctx;
+    const { TROWS, maxCols, TFONT, TPX, TPY, rowY, TDUR, NT } = layout;
 
     // Geometry in whole tagline columns, so a window never slices a glyph.
     // Every tagline starts at local x=0 (wrap), so one set of keyframes serves
@@ -70,16 +70,8 @@ export default {
     // clip: one animation per row instead of one per frame. Two row pitches
     // keep the neighbouring frames' glyphs clear of the band.
     const STRIP = Math.ceil(2 * TPY);
-    const BAND = 1.5 * TFONT; // band clip height; the em box spans 1.32em
-
-    // Keyframes hold between stops, so ticks where the row stalls need none:
-    // decode, hold to the slot's end, snap back to hidden.
-    const slideKeyframes = (name, steps, sign) => {
-      const stops = [["0", "transform:none"]];
-      for (let k = 1; k <= NT; k++)
-        if (steps[k] !== steps[k - 1]) stops.push([pct(tickT(k)), `transform:translateX(${num2(sign * steps[k] * TPX)}px)`]);
-      return keyframes(name, [...stops, [pct(SLOT_T), "transform:none"], ["100", "transform:none"]]);
-    };
+    const BAND = 1.5 * TFONT; // band clip height; █ spans -0.3..1.02em, i.e. 1.32em
+    const tx = (x) => (x ? `transform:translateX(${num2(x)}px)` : "transform:none");
 
     const overlay = [];
     const cuts = [];
@@ -124,8 +116,11 @@ export default {
         (CUT > 0 ? `<clipPath id="m${i}">${rect(-FAR, FAR - START + (lead + 1) * TPX)}</clipPath>` : ""),
       ).join("");
 
+    // Decode, hold to the slot's end, snap back to hidden.
     const frontCss = fronts.map((steps, i) =>
-      animate(`r${i}`, TDUR) + animate(`q${i}`, TDUR) + slideKeyframes(`r${i}`, steps, 1) + slideKeyframes(`q${i}`, steps, -1),
+      animate(`r${i}`, TDUR) + animate(`q${i}`, TDUR) +
+      slideKeyframes(ctx, `r${i}`, (k) => tx(steps[k] * TPX), "transform:none") +
+      slideKeyframes(ctx, `q${i}`, (k) => tx(-steps[k] * TPX), "transform:none"),
     ).join("\n");
     return {
       defs: clips,

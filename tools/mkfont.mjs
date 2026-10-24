@@ -38,8 +38,7 @@ const fail = (msg) => {
 
 // render(bits) turns one glyph's pixels (DESIGN_ROWS rows of booleans, gap
 // column included) into text rows, the same number for every glyph of a face.
-// baseline(height) defaults to height. Which glyphs a face dims is declared in
-// src/fonts.mjs, not here.
+// Which glyphs a face dims is declared in src/fonts.mjs, not here.
 const FACES = {
   blocks: {
     about: "two full blocks per pixel (square pixels), 7 rows",

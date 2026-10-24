@@ -18,6 +18,22 @@ export const keyframes = (name, stops) => `@keyframes ${name}{${stops.map(([at, 
  */
 export const animate = (name, TDUR) => `.${name}{animation:${name} ${+TDUR.toFixed(2)}s step-end infinite}`;
 
+/**
+ * Keyframes for a declaration sampled at the reveal ticks, at(k) for k = 0..NT:
+ * a stop only where it changes, since step-end holds each one, then `tail` from
+ * the slot's end. Without a tail the last tick's declaration holds.
+ */
+export function slideKeyframes(ctx, name, at, tail) {
+  const { pct, layout: { NT, tickT, SLOT_T } } = ctx;
+  const stops = [["0", at(0)]];
+  for (let k = 1; k <= NT; k++) {
+    const decl = at(k);
+    if (decl !== stops.at(-1)[1]) stops.push([pct(tickT(k)), decl]);
+  }
+  if (tail) stops.push([pct(SLOT_T), tail], ["100", tail]);
+  return keyframes(name, stops);
+}
+
 /** Hidden = moved off the canvas. Never visibility: a nested group can show through a hidden parent. */
 export const offCanvas = (H) => `transform:translateY(${-H}px)`;
 

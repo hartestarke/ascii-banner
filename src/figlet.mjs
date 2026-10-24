@@ -49,7 +49,8 @@ function parseHeader(line, path) {
 function headerSmushMode({ oldLayout, fullLayout }) {
   if (fullLayout !== undefined) return fullLayout & (SM_RULES | SM_KERN | SM_SMUSH);
   if (oldLayout < 0) return 0;
-  // old_layout carries rules 1-5 only: figlet.c and pyfiglet mask it with 31.
+  // figlet.c and pyfiglet mask old_layout with 31, so rule 6 only arrives
+  // through full_layout; matched so fonts render as figlet renders them.
   return oldLayout === 0 ? SM_KERN : (oldLayout & 31) | SM_SMUSH;
 }
 

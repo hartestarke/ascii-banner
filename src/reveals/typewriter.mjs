@@ -4,7 +4,7 @@
 // children): the clipped group slides right, the inner group counter-slides the
 // glyphs. The knockout copy rides the same window plus a black cursor, so the
 // hole in the field follows the front.
-import { EMPTY, animate, keyframes } from "./common.mjs";
+import { EMPTY, animate, keyframes, slideKeyframes } from "./common.mjs";
 
 export default {
   defaults: {
@@ -42,12 +42,9 @@ export default {
       // opens the right margin.
       const caret = (k) => (k < NT ? Math.round((k * cols) / NT) : cols);
       const front = (k) => (k === 0 ? 0 : k < NT ? MC + caret(k) : cols + 2 * MC);
-      const slideKeyframes = (name, sign) => {
-        const stops = [["0", "transform:none"]];
-        for (let k = 1; k <= NT; k++) if (front(k) !== front(k - 1)) stops.push([pct(tickT(k)), tx(sign * front(k) * TPX)]);
-        return keyframes(name, [...stops, [pct(SLOT_T), "transform:none"], ["100", "transform:none"]]);
-      };
-      css += animate(`tw${p}`, TDUR) + animate(`twi${p}`, TDUR) + slideKeyframes(`tw${p}`, 1) + slideKeyframes(`twi${p}`, -1);
+      css += animate(`tw${p}`, TDUR) + animate(`twi${p}`, TDUR) +
+        slideKeyframes(ctx, `tw${p}`, (k) => tx(front(k) * TPX), "transform:none") +
+        slideKeyframes(ctx, `twi${p}`, (k) => tx(-front(k) * TPX), "transform:none");
       if (p === 0) settle.push(`.tw0{${tx(front(NT) * TPX)}}.twi0{${tx(-front(NT) * TPX)}}`);
 
       let cursor = "";

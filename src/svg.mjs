@@ -11,7 +11,7 @@ const escAttr = (s) => esc(s).replace(/"/g, "&quot;");
 export const num = (v) => (Math.round(v * 10) / 10).toString();
 /** Two decimals: tagline offsets are whole columns, and the column pitch needs two. */
 export const num2 = (v) => +v.toFixed(2);
-/** Fewest decimals (1..3) that carry 1/fps exactly, so frame delays stay distinct. */
+/** Fewest decimals that carry 1/fps exactly, else 3, which keeps frame delays distinct below 1000 fps. */
 const delayDecimals = (fps) => [1, 2].find((d) => Number.isInteger(10 ** d / fps)) ?? 3;
 
 const rgbOf = (hex) => {

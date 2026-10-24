@@ -259,7 +259,7 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   check(Object.hasOwn(FIELD_PRESETS, f.preset), "field.preset",
     `must be one of ${Object.keys(FIELD_PRESETS).join(", ")}; got ${describe(f.preset)}`);
   f.options = presetOptions(FIELD_PRESETS[f.preset], withAliases(f.preset, field.options, field.aliases), "field.options",
-    (key, takes) => `field.options.${key}: unknown option for preset "${f.preset}" (it takes ${takes})`, { field: f });
+    (key, takes) => `field.options.${key}: unknown option for preset "${f.preset}" (it takes ${takes || "no options"})`, { field: f });
   f.ramp ??= FIELD_PRESETS[f.preset].ramp;
   f.bands ??= FIELD_PRESETS[f.preset].bands;
   check(parseRamp(f.ramp).length >= 2, "field.ramp", "needs at least one level of glyphs");

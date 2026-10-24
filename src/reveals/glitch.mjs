@@ -5,7 +5,7 @@
 // during flashes and outside its slot. The knockout copy rides the same row
 // offsets but stays open through the flashes. At rest every offset is zero, so
 // the line settles exactly on the grid.
-import { EMPTY, animate, keyframes, noiseRow, offCanvas, shuffle } from "./common.mjs";
+import { EMPTY, animate, keyframes, noiseRow, offCanvas, shuffle, slideKeyframes } from "./common.mjs";
 
 export default {
   defaults: {
@@ -47,16 +47,11 @@ export default {
 
     let css = "";
     offsets.forEach((steps, r) => {
-      const stops = [["0", offsetCss(steps[0])]];
-      for (let k = 1; k <= NT; k++) if (steps[k] !== steps[k - 1]) stops.push([pct(tickT(k)), offsetCss(steps[k])]);
-      css += animate(`gx${r}`, TDUR) + keyframes(`gx${r}`, stops);
+      css += animate(`gx${r}`, TDUR) + slideKeyframes(ctx, `gx${r}`, (k) => offsetCss(steps[k]));
     });
     // Parent: shown through the slot except on flash ticks.
-    const show = [["0", flashing(0) ? HIDE : "transform:none"]];
-    for (let k = 1; k <= NT; k++)
-      if (flashing(k) !== flashing(k - 1)) show.push([pct(tickT(k)), flashing(k) ? HIDE : "transform:none"]);
-    show.push([pct(SLOT_T), HIDE], ["100", HIDE]);
-    css += `\n.gx,.gxk{${HIDE}}${animate("gx", TDUR)}${keyframes("gx", show)}`;
+    const show = slideKeyframes(ctx, "gx", (k) => (flashing(k) ? HIDE : "transform:none"), HIDE);
+    css += `\n.gx,.gxk{${HIDE}}${animate("gx", TDUR)}${show}`;
     // Knockout parent: open through the whole slot, flashes included, so the
     // noise reads against a cleared field like scramble's band does.
     css += animate("gxk", TDUR) + keyframes("gxk", [["0", "transform:none"], [pct(SLOT_T), HIDE], ["100", HIDE]]);

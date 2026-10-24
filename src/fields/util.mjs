@@ -10,7 +10,7 @@ export const rnd = (...parts) => {
   let h = 0x811c9dc5;
   for (const p of parts) h = Math.imul(h ^ (p | 0), 0x01000193);
   // jitter() multiplies in doubles: below 2^20 its first product stays under
-  // 2^53, so the low bits the hash keeps are exact
+  // 2^53, so the low 32 bits its mixing uses survive
   return jitter((h >>> 0) % (1 << 20));
 };
 
