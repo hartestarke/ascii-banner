@@ -1,6 +1,6 @@
 // ripples: rings expanding from a few points, fading with distance and
 // interfering where they meet.
-import { TAU, isInt, need, rnd, space } from "./util.mjs";
+import { TAU, rnd, space } from "./util.mjs";
 
 // Centres stay inside this inset of the banner (fraction of each side).
 const INSET = 0.12;
@@ -19,12 +19,12 @@ export default {
   },
   ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
   bands: 3,
-  check(o, path) {
-    need(isInt(o.centers) && o.centers >= 1, `${path}.centers`, `must be an integer >= 1, got ${o.centers}`);
-    need(o.wavelength > 0, `${path}.wavelength`, `must be > 0, got ${o.wavelength}`);
-    need(o.decay >= 0, `${path}.decay`, `must be >= 0, got ${o.decay}`);
-    need(isInt(o.rings), `${path}.rings`, `must be an integer (rings per loop), got ${o.rings}`);
-    need(isInt(o.seed), `${path}.seed`, `must be an integer, got ${o.seed}`);
+  validate(o, v) {
+    v.posInt("centers");
+    v.positive("wavelength");
+    v.nonNeg("decay");
+    v.int("rings", null, "rings per loop");
+    v.int("seed");
   },
   make(g, o) {
     const sp = space(g);

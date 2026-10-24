@@ -185,13 +185,13 @@ The value is used as is: no gamma, clamped to [0, 1] by the quantiser.
 `src/fields/index.mjs`:
 
 ```js
-import { TAU, need, space } from "./util.mjs";
+import { TAU, space } from "./util.mjs";
 export default {
   defaults: { speed: 1 },          // field.options are merged over these
   ramp: ". : + *",                 // default ramp (inside the font subset)
   bands: 3,                        // default band count
-  check(o, path) {                 // optional: range checks, throw via need()
-    need(Number.isInteger(o.speed), `${path}.speed`, "must be an integer");
+  validate(o, v) {                 // optional: range checks through v, as in reveal presets
+    v.int("speed");                // error names the path: field.options.speed
   },
   make(g, o, cfg) {                // g = fieldGrid: PX, PY, COLS, ROWS, NF, y0, W, H
     const sp = space(g);           // cell centres in banner widths

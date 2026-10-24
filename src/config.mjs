@@ -148,6 +148,30 @@ const unit = (v, path) => check(v >= 0 && v <= 1, path, `must be within [0, 1], 
 const posInt = (v, path) => check(Number.isInteger(v) && v >= 1, path, `must be an integer >= 1, got ${v}`);
 
 /**
+ * The `v` that field and reveal presets alike get in validate(o, v): each
+ * helper checks o[key] and throws a ConfigError naming `${path}.${key}`.
+ * `extra` adds context a preset needs (field presets get `field`, the resolved
+ * field config).
+ */
+function optionChecks(o, path, extra) {
+  const at = (key) => `${path}.${key}`;
+  return {
+    ...extra,
+    check: (ok, key, msg) => check(ok, at(key), msg),
+    positive: (key) => positive(o[key], at(key)),
+    nonNeg: (key) => check(o[key] >= 0, at(key), `must be >= 0, got ${o[key]}`),
+    unit: (key) => unit(o[key], at(key)),
+    fraction: (key) => check(o[key] > 0 && o[key] <= 1, at(key), `must be within (0, 1], got ${o[key]}`),
+    posInt: (key) => posInt(o[key], at(key)),
+    // min: optional lower bound; hint: optional unit for the message, e.g. "cycles per loop"
+    int: (key, min, hint) => check(Number.isInteger(o[key]) && (min == null || o[key] >= min), at(key),
+      `must be an integer${min == null ? "" : ` >= ${min}`}${hint ? ` (${hint})` : ""}, got ${o[key]}`),
+    oneOf: (key, values) => check(values.includes(o[key]), at(key),
+      `must be one of ${values.map((x) => JSON.stringify(x)).join(", ")}, got ${JSON.stringify(o[key])}`),
+  };
+}
+
+/**
  * Pull the reveal options out of a user config (they merge over the chosen
  * preset's defaults, not over DEFAULTS) and map the legacy top-level
  * `decode: {...}` to preset "scramble": seconds/hold/fps → reveal, the rest →
@@ -179,16 +203,7 @@ function revealOptions(preset, user, path) {
         `(it takes ${Object.keys(defaults).join(", ") || "no options"})`,
       );
   const o = merge(defaults, user, path);
-  const at = (key) => `${path}.${key}`;
-  validate?.(o, {
-    check: (ok, key, msg) => check(ok, at(key), msg),
-    positive: (key) => positive(o[key], at(key)),
-    nonNeg: (key) => check(o[key] >= 0, at(key), `must be >= 0, got ${o[key]}`),
-    unit: (key) => unit(o[key], at(key)),
-    posInt: (key) => posInt(o[key], at(key)),
-    oneOf: (key, values) => check(values.includes(o[key]), at(key),
-      `must be one of ${values.map((x) => JSON.stringify(x)).join(", ")}, got ${JSON.stringify(o[key])}`),
-  });
+  validate?.(o, optionChecks(o, path));
   return o;
 }
 
@@ -217,7 +232,7 @@ function presetOptions(name, user, legacy, field) {
     check(Object.hasOwn(preset.defaults, key), `${path}.${key}`,
       `unknown option for preset "${name}" (it takes ${Object.keys(preset.defaults).join(", ")})`);
   const out = merge(preset.defaults, opts, path);
-  preset.check?.(out, path, field);
+  preset.validate?.(out, optionChecks(out, path, { field }));
   return out;
 }
 

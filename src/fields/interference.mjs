@@ -1,7 +1,7 @@
 // interference: two ring gratings whose centres orbit the middle in
 // opposition; their product beats into moiré bands that open as the centres
 // part and close as they meet. Only the positive lobes of the product light up.
-import { TAU, isInt, need, space } from "./util.mjs";
+import { TAU, space } from "./util.mjs";
 
 // Vertical extent of the orbit relative to its horizontal radius: the banner
 // is wide and short, so the centres sweep a flat ellipse.
@@ -17,10 +17,10 @@ export default {
   },
   ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
   bands: 3,
-  check(o, path) {
-    need(o.spacing > 0, `${path}.spacing`, `must be > 0, got ${o.spacing}`);
-    need(o.orbit >= 0, `${path}.orbit`, `must be >= 0, got ${o.orbit}`);
-    need(isInt(o.cycles), `${path}.cycles`, `must be an integer (orbits per loop), got ${o.cycles}`);
+  validate(o, v) {
+    v.positive("spacing");
+    v.nonNeg("orbit");
+    v.int("cycles", null, "orbits per loop");
   },
   make(g, o) {
     const sp = space(g);

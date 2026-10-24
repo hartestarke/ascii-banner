@@ -1,7 +1,6 @@
 // Shared helpers for field presets. Every preset is a pure function of
 // (col, row, frame); randomness comes only from field.mjs `jitter`, so the
 // output is deterministic.
-import { ConfigError } from "../config.mjs";
 import { jitter } from "../field.mjs";
 
 export const TAU = Math.PI * 2;
@@ -44,9 +43,3 @@ export function perFrame(g, build) {
     return buf[row * g.COLS + col];
   };
 }
-
-/** Option validation: throws a ConfigError naming the option path. */
-export const need = (ok, path, msg) => {
-  if (!ok) throw new ConfigError(`${path}: ${msg}`);
-};
-export const isInt = (v) => Number.isInteger(v);

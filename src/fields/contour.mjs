@@ -1,6 +1,6 @@
 // contour: survey lines over slowly drifting terrain, every `index`-th line
 // drawn bright like an index contour on a map.
-import { TAU, isInt, need, space } from "./util.mjs";
+import { TAU, space } from "./util.mjs";
 
 // Terrain: three sines, fx/fy in cycles per banner width, k in cycles per loop
 // (integers, distinct, so the relief morphs rather than slides).
@@ -24,10 +24,10 @@ export default {
   // steep line read as scattered dashes
   ramp: ". : + #",
   bands: 2,
-  check(o, path) {
-    need(o.step > 0 && o.step <= 1, `${path}.step`, `must be within (0, 1], got ${o.step}`);
-    need(o.thickness > 0 && o.thickness <= 1, `${path}.thickness`, `must be within (0, 1], got ${o.thickness}`);
-    need(isInt(o.index) && o.index >= 0, `${path}.index`, `must be an integer >= 0, got ${o.index}`);
+  validate(o, v) {
+    v.fraction("step");
+    v.fraction("thickness");
+    v.int("index", 0);
   },
   make(g, o) {
     const sp = space(g);

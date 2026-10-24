@@ -123,7 +123,7 @@ The line's opacity eases in over `seconds`, and the knockout fades with it.
 
 ## Writing a preset
 
-A preset is a module in `src/reveals/` registered in `src/reveals/index.mjs`. It exports `{ defaults, validate(options, v), render(ctx) }`.
+A preset is a module in `src/reveals/` registered in `src/reveals/index.mjs`. It exports `{ defaults, validate(options, v), render(ctx) }`. Field presets validate the same way: `v` comes from `optionChecks` in `src/config.mjs` (`check`, `positive`, `nonNeg`, `unit`, `fraction`, `posInt`, `int`, `oneOf`), and every error names the option's full path.
 
 - `render` returns `{ defs, css, overlay, knockout, reducedMotionCss: { stop, settle }, extraGlyphs }`.
 - `ctx` is documented at `renderReveal` in `src/svg.mjs`.

@@ -1,6 +1,6 @@
 // waves: a few travelling plane waves interfering into one or two giant soft
 // lobes (the original, and default, field).
-import { TAU, isInt, need } from "./util.mjs";
+import { TAU } from "./util.mjs";
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 
@@ -22,16 +22,16 @@ export default {
   },
   ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
   bands: 3,
-  check({ waves, drive }, path, field) {
-    need(waves.length > 0 || field.sample, `${path}.waves`, "needs at least one wave (or a field.sample function)");
+  validate({ waves }, v) {
+    v.check(waves.length > 0 || v.field.sample, "waves", "needs at least one wave (or a field.sample function)");
     waves.forEach((w, i) => {
-      const p = `${path}.waves[${i}]`;
-      need(isObj(w), p, `expected { fx, fy, k }, got ${w === null ? "null" : Array.isArray(w) ? "array" : typeof w}`);
-      for (const k of Object.keys(w)) need(["fx", "fy", "k"].includes(k), `${p}.${k}`, "unknown config key");
-      need(Number.isFinite(w.fx) && Number.isFinite(w.fy), p, "fx and fy must be finite numbers");
-      need(isInt(w.k), `${p}.k`, `must be an integer (cycles per loop) or the loop seam jumps, got ${w.k}`);
+      const p = `waves[${i}]`;
+      v.check(isObj(w), p, `expected { fx, fy, k }, got ${w === null ? "null" : Array.isArray(w) ? "array" : typeof w}`);
+      for (const k of Object.keys(w)) v.check(["fx", "fy", "k"].includes(k), `${p}.${k}`, "unknown config key");
+      v.check(Number.isFinite(w.fx) && Number.isFinite(w.fy), p, "fx and fy must be finite numbers");
+      v.check(Number.isInteger(w.k), `${p}.k`, `must be an integer (cycles per loop) or the loop seam jumps, got ${w.k}`);
     });
-    need(drive > 0, `${path}.drive`, `must be > 0, got ${drive}`);
+    v.positive("drive");
   },
   // x, y in units of banner width, measured from the field's top-left cell
   // edge (no y0 offset: kept as the original generator had it).

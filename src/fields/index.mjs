@@ -3,7 +3,8 @@
 //             type mismatches are config errors)
 //   ramp      default glyph ramp (field.ramp: null picks it), dim → bright
 //   bands     default alpha band count (field.bands: null picks it)
-//   check     optional (opts, path, field) => void; throws ConfigError on bad values
+//   validate  optional (opts, v) => void; range-checks opts through v (config.mjs
+//             optionChecks, shared with reveal presets; v.field = the field config)
 //   make      (g, opts, cfg) => (col, row, f) => brightness in [0, 1]
 //             g = fieldGrid(cfg); f = frame 0..NF-1, t = f / NF. The sampler must
 //             be exactly periodic: frame NF must equal frame 0 (integer cycle

@@ -1,6 +1,6 @@
 // halo: a breathing corona around the centre. Inside the ring the field stays
 // dim, so taglines sit in a quiet pocket; outside it glows off softly.
-import { TAU, isInt, need, rnd, space } from "./util.mjs";
+import { TAU, rnd, space } from "./util.mjs";
 
 // Rise of the inner glow towards the ring: brightness ∝ (r / R)^INNER_POWER.
 const INNER_POWER = 4;
@@ -17,11 +17,11 @@ export default {
   },
   ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
   bands: 3,
-  check(o, path) {
-    need(o.radius > 0, `${path}.radius`, `must be > 0, got ${o.radius}`);
-    need(o.breath >= 0 && o.breath < 1, `${path}.breath`, `must be within [0, 1), got ${o.breath}`);
-    need(isInt(o.cycles), `${path}.cycles`, `must be an integer (breaths per loop), got ${o.cycles}`);
-    need(o.softness > 0, `${path}.softness`, `must be > 0, got ${o.softness}`);
+  validate(o, v) {
+    v.positive("radius");
+    v.check(o.breath >= 0 && o.breath < 1, "breath", `must be within [0, 1), got ${o.breath}`);
+    v.int("cycles", null, "breaths per loop");
+    v.positive("softness");
   },
   make(g, o) {
     const sp = space(g);

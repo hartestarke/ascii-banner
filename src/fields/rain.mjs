@@ -1,5 +1,5 @@
 // rain: streaks falling at three depths, a bright head over a fading tail.
-import { isInt, need, rnd } from "./util.mjs";
+import { rnd } from "./util.mjs";
 
 // Per depth (far → near): speed multiplier and head brightness.
 const DEPTHS = [
@@ -18,11 +18,11 @@ export default {
   // dashed light verticals for the tail, solid then heavy for the head
   ramp: "┊ ┆ ╎ │ ┃",
   bands: 3,
-  check(o, path) {
-    need(o.columns > 0 && o.columns <= 1, `${path}.columns`, `must be within (0, 1], got ${o.columns}`);
-    need(isInt(o.speed) && o.speed >= 1, `${path}.speed`, `must be an integer >= 1 (falls per loop), got ${o.speed}`);
-    need(isInt(o.tail) && o.tail >= 1, `${path}.tail`, `must be an integer >= 1, got ${o.tail}`);
-    need(isInt(o.seed), `${path}.seed`, `must be an integer, got ${o.seed}`);
+  validate(o, v) {
+    v.fraction("columns");
+    v.int("speed", 1, "falls per loop");
+    v.posInt("tail");
+    v.int("seed");
   },
   make(g, o) {
     const { ROWS, NF } = g;

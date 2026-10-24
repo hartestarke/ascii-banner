@@ -1,7 +1,7 @@
 // caustics: classic plasma — four sines along x, y, the diagonal and the
 // radius — shown as the bright network where the sum crosses zero, like light
 // on a pool floor.
-import { TAU, isInt, need, space } from "./util.mjs";
+import { TAU, space } from "./util.mjs";
 
 // Per term: spatial cycles per banner width (× scale) and cycles per loop (× speed).
 // Distinct speeds keep the network reshaping instead of sliding rigidly.
@@ -19,9 +19,9 @@ export default {
   },
   ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
   bands: 3,
-  check(o, path) {
-    need(o.scale > 0, `${path}.scale`, `must be > 0, got ${o.scale}`);
-    need(isInt(o.speed), `${path}.speed`, `must be an integer (cycles per loop), got ${o.speed}`);
+  validate(o, v) {
+    v.positive("scale");
+    v.int("speed", null, "cycles per loop");
   },
   make(g, { scale, speed }) {
     const sp = space(g);

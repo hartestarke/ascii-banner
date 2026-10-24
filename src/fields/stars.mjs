@@ -1,6 +1,6 @@
 // stars: a sparse twinkling starfield, optionally drifting sideways at two
 // depths (parallax).
-import { TAU, frac, isInt, need, perFrame, rnd } from "./util.mjs";
+import { TAU, frac, perFrame, rnd } from "./util.mjs";
 
 // Share of stars on the near (faster, brighter) layer.
 const NEAR_SHARE = 0.4;
@@ -16,11 +16,11 @@ export default {
   },
   ramp: ". : + *",
   bands: 3,
-  check(o, path) {
-    need(o.density > 0 && o.density <= 1, `${path}.density`, `must be within (0, 1], got ${o.density}`);
-    need(isInt(o.twinkle) && o.twinkle >= 1, `${path}.twinkle`, `must be an integer >= 1, got ${o.twinkle}`);
-    need(isInt(o.drift) && o.drift >= 0, `${path}.drift`, `must be an integer >= 0 (columns per loop), got ${o.drift}`);
-    need(isInt(o.seed), `${path}.seed`, `must be an integer, got ${o.seed}`);
+  validate(o, v) {
+    v.fraction("density");
+    v.posInt("twinkle");
+    v.int("drift", 0, "columns per loop");
+    v.int("seed");
   },
   make(g, o) {
     const { COLS, ROWS } = g;

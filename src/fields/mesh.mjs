@@ -1,6 +1,6 @@
 // mesh: soft lights travelling closed Lissajous paths; their glows add up
 // to a slowly drifting gradient, like a design-tool mesh gradient.
-import { TAU, isInt, need, rnd, space } from "./util.mjs";
+import { TAU, rnd, space } from "./util.mjs";
 
 // Path amplitude, fraction of the banner's half-width / half-height.
 const SWEEP = { x: 0.85, y: 0.9 };
@@ -17,10 +17,10 @@ export default {
   },
   ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
   bands: 3,
-  check(o, path) {
-    need(isInt(o.lights) && o.lights >= 1, `${path}.lights`, `must be an integer >= 1, got ${o.lights}`);
-    need(o.radius > 0, `${path}.radius`, `must be > 0, got ${o.radius}`);
-    need(isInt(o.seed), `${path}.seed`, `must be an integer, got ${o.seed}`);
+  validate(o, v) {
+    v.posInt("lights");
+    v.positive("radius");
+    v.int("seed");
   },
   make(g, o) {
     const sp = space(g);

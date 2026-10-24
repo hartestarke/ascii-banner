@@ -1,6 +1,6 @@
 // vortex: a polar spiral, sin(angle·arms + ln(r)·twist − 2π·cycles·t),
 // turning about the banner centre.
-import { TAU, isInt, need, space } from "./util.mjs";
+import { TAU, space } from "./util.mjs";
 
 // Radius (banner widths) inside which the arms wind too tightly for the grid;
 // the field fades to dark there instead of aliasing into noise.
@@ -18,10 +18,10 @@ export default {
   },
   ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
   bands: 3,
-  check(o, path) {
-    need(isInt(o.arms) && o.arms >= 1, `${path}.arms`, `must be an integer >= 1, got ${o.arms}`);
-    need(Number.isFinite(o.twist), `${path}.twist`, `must be a finite number, got ${o.twist}`);
-    need(isInt(o.cycles), `${path}.cycles`, `must be an integer (turns per loop), got ${o.cycles}`);
+  validate(o, v) {
+    v.posInt("arms");
+    v.check(Number.isFinite(o.twist), "twist", `must be a finite number, got ${o.twist}`);
+    v.int("cycles", null, "turns per loop");
   },
   make(g, o) {
     const sp = space(g);

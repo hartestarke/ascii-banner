@@ -1,5 +1,5 @@
 // static: TV noise, a fresh hash per cell per frame.
-import { need, rnd } from "./util.mjs";
+import { rnd } from "./util.mjs";
 
 // Hash keys: whether a cell is lit this frame, and how bright.
 const KEY_ON = 0x5741, KEY_LEVEL = 0x5742;
@@ -14,8 +14,8 @@ export default {
   ramp: "░ ▒ ▓ █",
   // one band: per-cell band changes would need a <tspan> per cell
   bands: 1,
-  check(o, path) {
-    need(o.density > 0 && o.density <= 1, `${path}.density`, `must be within (0, 1], got ${o.density}`);
+  validate(o, v) {
+    v.fraction("density");
   },
   make(g, o) {
     return (col, row, f) => {
