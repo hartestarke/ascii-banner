@@ -44,7 +44,8 @@ export default {
   // it settled for `hold` and opens the knockout with the letters. A top-level
   // `decode: {...}` block is an alias of preset "scramble" with those knobs.
   reveal: {
-    // "scramble" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch"
+    // "scramble" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch", or
+    // "none": each line just shows for its slot, no animation
     preset: "scramble",
     seconds: 2.2, // s a line spends revealing
     hold: 5.8, // s a settled line holds before the next one starts
@@ -65,6 +66,7 @@ export default {
     //               stagger (0.6 = fraction of seconds the start times spread over)
     //   glitch:     slices (3 rows jumped per tick), shift (2 = max jump, columns),
     //               flashes (4 noise flashes), noiseAlpha (0.65)
+    //   none:       no options
     options: {
       noiseFrames: 6, // distinct scramble frames cycled during the reveal
       lead: 16, // columns of scramble running ahead of the settled text
@@ -79,9 +81,11 @@ export default {
   field: {
     fontSize: 14, // px, field glyph size; bigger = fewer cells = smaller file
     rowPitch: 16, // px between field rows
-    fps: 10, // flipbook rate; ~half a column of motion per flip, the finest the grid shows
+    // Flipbook rate; ~half a column of motion per flip, the finest the grid
+    // shows. 0 = a still field: one frame, the one at stillAt.
+    fps: 10,
     loopSeconds: 20, // s, loop length; the file holds fps × loopSeconds frames
-    stillAt: 7, // s into the loop, the frame prefers-reduced-motion visitors see
+    stillAt: 7, // s into the loop, the frame prefers-reduced-motion visitors see (and fps 0 shows)
     alpha: { lo: 0.3, hi: 0.95 }, // field alpha of the dimmest and the brightest band
     colors: null, // 1–3 #rrggbb, dimmest band first, the last filling the rest; null = [accent]
     gradient: null, // 2–8 #rrggbb stops, left → right across the width, at the band alphas; not with colors
@@ -99,7 +103,8 @@ export default {
     // (Bayer) dither of that size, which turns gradients into regular patterns.
     dither: 0,
     // The brightness field: waves, stars, rain, caustics, ripples, interference,
-    // halo, mesh, contour or vortex (see docs/fields.md). `options` tunes
+    // halo, mesh, contour or vortex (see docs/fields.md), or "none" for
+    // taglines without a field (no options). `options` tunes
     // the chosen preset: omitted keys keep its defaults, unknown keys are an
     // error. Shown: waves' options, with their defaults.
     preset: "waves",

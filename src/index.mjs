@@ -9,7 +9,7 @@ import { figlet, loadFlf } from "./figlet.mjs";
 import { layoutTaglines } from "./layout.mjs";
 import { renderReveal, renderSvg } from "./svg.mjs";
 
-export { ConfigError, DEFAULTS, resolveConfig } from "./config.mjs";
+export { ConfigError, DEFAULTS, NO_FIELD, resolveConfig } from "./config.mjs";
 
 // Below this the block letters stop reading as letters at README scale.
 const MIN_TAGLINE_PX = 6;

@@ -6,7 +6,7 @@ import { isAbsolute, resolve } from "node:path";
 import { BUNDLED_FONTS, LAYOUTS, PATH_FONT_DEFAULTS, isBundledFont, packagePath } from "./fonts.mjs";
 import { FIELD_PRESETS } from "./fields/index.mjs";
 import { GLYPH_SETS } from "./glyphsets.mjs";
-import { REVEAL_PRESETS } from "./reveals/index.mjs";
+import { REVEALS } from "./reveals/index.mjs";
 
 /** The embedded JetBrains Mono subset and the characters it covers. */
 export const BUNDLED_FONT = packagePath("fonts/jetbrains-mono.woff2");
@@ -42,7 +42,7 @@ export const DEFAULTS = {
     shadowGlyphs: null, // figlet glyphs drawn at shadowAlpha; null = the font's default
   },
   reveal: {
-    preset: "scramble", // REVEAL_PRESETS name
+    preset: "scramble", // REVEALS name; "none" = each line shown settled for its slot
     seconds: 2.2, // seconds a line spends revealing
     hold: 5.8, // seconds a settled line holds before the next one starts
     fps: 20, // step rate of stepped reveals; scramble reads as noise below ~15
@@ -54,7 +54,7 @@ export const DEFAULTS = {
   field: {
     fontSize: 14, // field glyph font-size, px
     rowPitch: 16, // row pitch, px
-    fps: 10, // flipbook rate; about half a column of motion per flip, the finest the grid can show
+    fps: 10, // flipbook rate; about half a column of motion per flip, the finest the grid can show; 0 = one still frame at stillAt
     loopSeconds: 20, // loop length — wave speeds are integer cycles per loop, so the seam is exact
     stillAt: 7, // second of the loop shown under prefers-reduced-motion
     alpha: { lo: 0.3, hi: 0.95 }, // field alpha across the ramp
@@ -67,7 +67,7 @@ export const DEFAULTS = {
     ramp: null,
     gamma: 1.35, // >1 deepens the dark side of the gradient (presets only)
     dither: 0, // 0 = quantise with a little per-cell jitter; 2 / 4 / 8 = Bayer matrix size
-    preset: "waves", // FIELD_PRESETS name
+    preset: "waves", // FIELD_PRESETS name, or "none" (NO_FIELD) for taglines only
     // Merged over the preset's defaults. field.waves and field.drive are legacy
     // aliases of the waves options.
     options: {},
@@ -82,6 +82,17 @@ export const DEFAULTS = {
   budget: {
     maxBytes: 1048576, // fail the build above this many raw bytes; 0 = no limit
   },
+};
+
+/** field.preset value that draws no field: taglines only, no knockout. */
+export const NO_FIELD = "none";
+
+// What field.preset "none" validates field.options, ramp and bands against: no
+// options, and the default preset's look, so a null reveal.pool keeps its noise.
+const NO_FIELD_PRESET = {
+  defaults: {},
+  ramp: FIELD_PRESETS[DEFAULTS.field.preset].ramp,
+  bands: FIELD_PRESETS[DEFAULTS.field.preset].bands,
 };
 
 // Keys whose default is null, with the type they may hold instead.
@@ -265,6 +276,9 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   unit(t.shadowAlpha, "tagline.shadowAlpha");
   nonNeg(t.knockout, "tagline.knockout");
   check(t.font !== "", "tagline.font", "must name a bundled figlet font or a .flf path");
+  // A bare word can only be meant as a bundled name: a path has a slash or a dot.
+  check(isBundledFont(t.font) || /[/\\.]/.test(t.font), "tagline.font",
+    `must be one of ${Object.keys(BUNDLED_FONTS).join(", ")}, or a path to a .flf; got ${describe(t.font)}`);
   check(t.layout === null || LAYOUTS.includes(t.layout), "tagline.layout",
     `must be one of ${LAYOUTS.map((l) => JSON.stringify(l)).join(", ")} or null, got ${describe(t.layout)}`);
   if (t.color !== null) hexColour(t.color, "tagline.color");
@@ -274,32 +288,37 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
 
   const d = c.reveal;
   const at = reveal.path === "decode" ? "decode" : "reveal"; // errors name the key the user wrote
-  oneOf(d.preset, "reveal.preset", Object.keys(REVEAL_PRESETS));
+  oneOf(d.preset, "reveal.preset", Object.keys(REVEALS));
   positive(d.seconds, `${at}.seconds`);
   nonNeg(d.hold, `${at}.hold`);
   positive(d.fps, `${at}.fps`);
   check(Math.round(d.seconds * d.fps) >= 1, `${at}.fps`,
     `seconds × fps must round to at least one reveal tick, got ${d.seconds * d.fps}`);
-  d.options = presetOptions(REVEAL_PRESETS[d.preset], reveal.options, reveal.path, (key, takes) =>
+  d.options = presetOptions(REVEALS[d.preset], reveal.options, reveal.path, (key, takes) =>
     `unknown option "${reveal.path}.${key}" for reveal preset "${d.preset}" (it takes ${takes || "no options"})`);
 
   const f = c.field;
   positive(f.fontSize, "field.fontSize");
   positive(f.rowPitch, "field.rowPitch");
   check(f.rowPitch <= c.size.height, "field.rowPitch", `must fit at least one row into size.height (${c.size.height})`);
-  positive(f.fps, "field.fps");
+  nonNeg(f.fps, "field.fps");
   positive(f.loopSeconds, "field.loopSeconds");
-  check(Number.isInteger(f.fps * f.loopSeconds), "field.fps", `fps × loopSeconds must be a whole frame count, got ${f.fps * f.loopSeconds}`);
+  // fps 0 bakes one still frame, so there is no frame count to keep whole.
+  check(f.fps === 0 || Number.isInteger(f.fps * f.loopSeconds), "field.fps",
+    `fps × loopSeconds must be a whole frame count, got ${f.fps * f.loopSeconds}`);
   check(f.stillAt >= 0 && f.stillAt < f.loopSeconds, "field.stillAt",
     `must be within [0, loopSeconds) = [0, ${f.loopSeconds}), got ${f.stillAt}`);
   unit(f.alpha.lo, "field.alpha.lo");
   unit(f.alpha.hi, "field.alpha.hi");
-  check(Object.hasOwn(FIELD_PRESETS, f.preset), "field.preset",
-    `must be one of ${Object.keys(FIELD_PRESETS).join(", ")}; got ${describe(f.preset)}`);
-  f.options = presetOptions(FIELD_PRESETS[f.preset], withAliases(f.preset, field.options, field.aliases), "field.options",
+  const fieldNames = [...Object.keys(FIELD_PRESETS), NO_FIELD];
+  check(fieldNames.includes(f.preset), "field.preset", `must be one of ${fieldNames.join(", ")}; got ${describe(f.preset)}`);
+  check(f.preset !== NO_FIELD || c.taglines.length > 0, "field.preset",
+    `"${NO_FIELD}" with taglines: [] leaves nothing to draw; give a tagline or a field preset`);
+  const preset = f.preset === NO_FIELD ? NO_FIELD_PRESET : FIELD_PRESETS[f.preset];
+  f.options = presetOptions(preset, withAliases(f.preset, field.options, field.aliases), "field.options",
     (key, takes) => `field.options.${key}: unknown option for preset "${f.preset}" (it takes ${takes || "no options"})`, { field: f });
-  f.ramp = glyphSet(f.ramp ?? FIELD_PRESETS[f.preset].ramp, "field.ramp");
-  f.bands ??= FIELD_PRESETS[f.preset].bands;
+  f.ramp = glyphSet(f.ramp ?? preset.ramp, "field.ramp");
+  f.bands ??= preset.bands;
   check(parseRamp(f.ramp).length >= 2, "field.ramp", "needs at least one level of glyphs");
   d.pool = d.pool === null ? f.ramp : glyphSet(d.pool, "reveal.pool");
   check(parseRamp(d.pool).length >= 2, "reveal.pool", "needs at least one glyph");

@@ -18,7 +18,7 @@ default budget is 1 MiB (1,048,576 bytes).
 field: {
   fontSize: 14,       // glyph size, px (bigger = fewer cells = smaller file)
   rowPitch: 16,       // px between rows
-  fps: 10,            // flipbook rate
+  fps: 10,            // flipbook rate; 0 = one still frame, at stillAt
   loopSeconds: 20,    // loop length; frames = fps × loopSeconds
   stillAt: 7,         // second shown under prefers-reduced-motion
   alpha: { lo: 0.3, hi: 0.95 },
@@ -28,7 +28,7 @@ field: {
   ramp: null,         // glyph ramp string or glyph set name; null = the preset's default
   gamma: 1.35,        // applied to every preset's output (not to `sample`)
   dither: 0,          // 0 = jittered quantising; 2 | 4 | 8 = Bayer ordered dither
-  preset: "waves",
+  preset: "waves",    // or "none": no field, taglines only
   options: {},        // merged over the preset's defaults
   sample: null,       // (x, y, t) => [0, 1]; replaces the preset
 }
@@ -74,6 +74,23 @@ One layout is a `<text>` per band. The other is a single `<text>` with a
 `<tspan>` per glyph run. Dense, banded presets favour the first, sparse ones
 the second. Raw size grows with lit cells and with band changes along a row.
 `bands: 1` roughly halves a dense field.
+
+## Text only, field only, a still field
+
+- **Text only**: `field: { preset: "none" }`. No frames and no knockout mask
+  (there is nothing to cut). The other `field` keys are still checked but do
+  nothing, and a null `reveal.pool` takes the `classic` set. `taglines: []`
+  with it is an error: nothing would be drawn.
+- **Field only**: `taglines: []`.
+- **A still field**: `field: { fps: 0 }`. One frame, the loop at `stillAt`
+  seconds: pixel for pixel the frame reduced-motion visitors see. No flipbook
+  animation and no seam check; `stillAt` must still lie within `loopSeconds`.
+  The template config shrinks to 69 KB (one frame instead of 200).
+
+Text only or a still field, with one tagline and `reveal: { preset: "none" }`
+([reveals.md](reveals.md#none)), is a static image: no `@keyframes` and no CSS
+animation at all. `{ taglines: ["hello world"], field: { preset: "none" },
+reveal: { preset: "none" } }` is 14 KB, most of it the embedded font.
 
 ## Colours
 

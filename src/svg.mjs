@@ -1,8 +1,9 @@
 // SVG assembly: embedded font, band fills, field frames, knockout mask, the
 // reveal's markup and every keyframe. All number formatting lives here and the
 // output is byte-stable for a given config, so keep the formats as they are.
+import { NO_FIELD } from "./config.mjs";
 import { jitter } from "./field.mjs";
-import { REVEAL_PRESETS } from "./reveals/index.mjs";
+import { REVEALS } from "./reveals/index.mjs";
 
 // `>` too: a literal "]]>" is not allowed in XML character data.
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -52,7 +53,7 @@ function runs(row, isShadow) {
  *   layout          layoutTaglines(): TROWS, maxCols, TFONT, TPX, TPY, rowY(i),
  *                   SLOT_T, TDUR, NT (= round(seconds × fps) ticks), tickT(k)
  *   figs, pool      figlet rows per tagline, padded to TROWS; noise glyphs (reveal.pool, flattened)
- *   W, H, CUT       viewBox size; knockout stroke px, 0 = no knockout
+ *   W, H, CUT       viewBox size; knockout stroke px, 0 = no knockout (always 0 with no field)
  *   esc, num, num2  XML text escape; 1 and 2 decimal numbers
  *   rgb(a), jitter  tagline.color at alpha a; jitter(i) in [0, 1), the only RNG
  *   pct(s)          seconds → keyframe percent of TDUR (3 decimals, no "%")
@@ -83,7 +84,8 @@ export function renderReveal(cfg, layout, figs, pool) {
     return row ? `<text class="tg" y="${num(rowY(i))}">${esc(row)}</text>` : "";
   };
   const ctx = {
-    cfg, o: cfg.reveal.options, layout, figs, pool, W, H, CUT: cfg.tagline.knockout,
+    cfg, o: cfg.reveal.options, layout, figs, pool, W, H,
+    CUT: cfg.field.preset === NO_FIELD ? 0 : cfg.tagline.knockout, // nothing to cut without a field
     esc, num, num2, rgb: rgbOf(cfg.tagline.color), jitter,
     pct: (s) => ((s / TDUR) * 100).toFixed(3),
     runs: (row) => runs(row, isShadow),
@@ -94,16 +96,22 @@ export function renderReveal(cfg, layout, figs, pool) {
     knockRows: (p) => figs[p].map((_, i) => rowKnock(p, i)).join(""),
     delays: (cls) => figs.slice(1).map((_, i) => `.${cls}${i + 1}{animation-delay:${num2((i + 1) * SLOT_T)}s}`).join(""),
   };
-  return REVEAL_PRESETS[cfg.reveal.preset].render(ctx);
+  return REVEALS[cfg.reveal.preset].render(ctx);
 }
 
-/** The banner document: field frames under the knockout mask, the reveal's overlay on top. */
+/**
+ * The banner document: field frames under the knockout mask, the reveal's
+ * overlay on top. NO_FIELD leaves out the field and its mask; fps 0 leaves out
+ * the flipbook animation, so with a static reveal no CSS animation is left.
+ */
 export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
   const { width: W, height: H } = cfg.size;
   const { fontSize: FONT, fps: FPS, loopSeconds: DUR, alpha: ALPHA, colors: COLORS, gradient: GRADIENT } = cfg.field;
   const { shadowAlpha: SHADOW_A, knockout: CUT, color: TCOLOR, shadowColor: SCOLOR } = cfg.tagline;
   const { PY, NF, STILL, y0 } = grid;
   const { TFONT } = layout;
+  const hasField = cfg.field.preset !== NO_FIELD;
+  const flips = hasField && FPS > 0;
 
   // Attributes repeat on thousands of text nodes, so each is trimmed: x
   // defaults to 0, xml:space comes from the root, y drops its decimal on whole pixels.
@@ -142,11 +150,13 @@ export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
   };
   const frames = field.frames.map((rows, f) => {
     const body = rows.map(fieldRow).join("");
-    return `<g class="f${f === STILL ? " f-still" : ""}" style="animation-delay:${(f / FPS).toFixed(DELAY_DP)}s">${body}</g>`;
+    return flips
+      ? `<g class="f${f === STILL ? " f-still" : ""}" style="animation-delay:${(f / FPS).toFixed(DELAY_DP)}s">${body}</g>`
+      : `<g class="f">${body}</g>`;
   });
   const bandAlpha = (b) => ALPHA.lo + (ALPHA.hi - ALPHA.lo) * b.a;
   // userSpaceOnUse: one gradient across the banner, not one per <text> box.
-  const gradient = GRADIENT
+  const gradient = hasField && GRADIENT
     ? `<linearGradient id="fg" gradientUnits="userSpaceOnUse" x1="0" x2="${W}">${GRADIENT.map(
         (c, i) => `<stop offset="${+(i / (GRADIENT.length - 1)).toFixed(3)}" stop-color="${c}"/>`).join("")}</linearGradient>`
     : "";
@@ -163,6 +173,23 @@ export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
     ? `<mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/>${reveal.knockout}</mask>`
     : "";
   const rm = reveal.reducedMotionCss;
+  const stop = [...(flips ? [".f"] : []), ...rm.stop];
+  const reduced = (stop.length ? `${stop.join(",")}{animation:none}` : "") +
+    (flips ? ".f-still{visibility:visible}" : "") + rm.settle;
+  const style = [
+    `@font-face{font-family:B;src:url(data:font/woff2;base64,${fontB64}) format('woff2')}`,
+    "text{font-family:B,monospace;text-rendering:optimizeSpeed;font-variant-ligatures:none;white-space:pre;dominant-baseline:central}",
+    ...(hasField ? [`.f text{font-size:${FONT}px}`, bandFills] : []),
+    ...(flips ? [
+      `.f{visibility:hidden;animation:k ${DUR}s step-end infinite}`,
+      `@keyframes k{0%{visibility:visible}${(100 / NF).toFixed(3)}%{visibility:hidden}100%{visibility:hidden}}`,
+    ] : []),
+    `.tg{font-size:${TFONT}px}`,
+    `.tx{fill:${TCOLOR}}.s{fill:${rgbOf(SCOLOR)(SHADOW_A)}}${reveal.css}`,
+    ...(hasField ? [`mask text{fill:#000;stroke:#000;stroke-width:${CUT};stroke-linejoin:round}`] : []),
+    ...(reduced ? [`@media (prefers-reduced-motion:reduce){${reduced}}`] : []),
+  ];
+  const fieldGroup = hasField ? `<g${mask ? ' mask="url(#cut)"' : ""}>\n${frames.join("\n")}\n</g>\n` : "";
   // No background: GitHub's <picture>/prefers-color-scheme follows the OS, not
   // the GitHub theme, so a transparent banner in theme-neutral accent alphas
   // blends with every theme instead. The embedded font has its layout tables
@@ -170,22 +197,10 @@ export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xml:space="preserve" role="img" aria-label="${LABEL}">
 <title>${LABEL}</title>
 <style>
-@font-face{font-family:B;src:url(data:font/woff2;base64,${fontB64}) format('woff2')}
-text{font-family:B,monospace;text-rendering:optimizeSpeed;font-variant-ligatures:none;white-space:pre;dominant-baseline:central}
-.f text{font-size:${FONT}px}
-${bandFills}
-.f{visibility:hidden;animation:k ${DUR}s step-end infinite}
-@keyframes k{0%{visibility:visible}${(100 / NF).toFixed(3)}%{visibility:hidden}100%{visibility:hidden}}
-.tg{font-size:${TFONT}px}
-.tx{fill:${TCOLOR}}.s{fill:${rgbOf(SCOLOR)(SHADOW_A)}}${reveal.css}
-mask text{fill:#000;stroke:#000;stroke-width:${CUT};stroke-linejoin:round}
-@media (prefers-reduced-motion:reduce){${[".f", ...rm.stop].join(",")}{animation:none}.f-still{visibility:visible}${rm.settle}}
+${style.join("\n")}
 </style>
 <defs>${gradient}${reveal.defs}${mask}</defs>
-<g${mask ? ' mask="url(#cut)"' : ""}>
-${frames.join("\n")}
-</g>
-${reveal.overlay}
+${fieldGroup}${reveal.overlay}
 </svg>
 `;
 }

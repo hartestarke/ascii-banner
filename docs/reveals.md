@@ -12,7 +12,7 @@ How each tagline appears is a pluggable **reveal preset**; the [gallery](gallery
 
 ```js
 reveal: {
-  preset: "scramble", // "scramble" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch"
+  preset: "scramble", // "scramble" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch" | "none"
   seconds: 2.2,       // seconds a line spends revealing
   hold: 5.8,          // seconds a settled line holds before the next one starts
   fps: 20,            // step rate of stepped reveals (round(seconds × fps) ticks)
@@ -113,6 +113,12 @@ The line appears at once. Then, for `seconds`, a few rows per tick jump sideways
 | `noiseAlpha` | `0.65` | alpha of the noise glyphs |
 
 856,924 bytes, 12 keyframes.
+
+## none
+
+No reveal: each line shows settled for its whole slot (`seconds + hold`, the same rhythm as the other presets) and cuts straight to the next, its knockout open with it. A single tagline never animates, so over no field or a still one the banner is a static image ([Text only, field only, a still field](fields.md#text-only-field-only-a-still-field)). No options; `pool` is unused.
+
+On the template (three taglines) it adds 16.1 KB and one @keyframes to the bare field; a single tagline adds neither keyframes nor animation.
 
 ## Writing a preset
 

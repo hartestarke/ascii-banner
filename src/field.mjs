@@ -2,7 +2,7 @@
 // field.sample) pushed through a glyph ramp, sampled once per flipbook frame.
 // Output is plain data — per frame, per row, one glyph and one colour band per
 // cell; svg.mjs turns it into markup.
-import { ConfigError, parseRamp } from "./config.mjs";
+import { ConfigError, NO_FIELD, parseRamp } from "./config.mjs";
 import { FIELD_PRESETS } from "./fields/index.mjs";
 
 /** Deterministic integer hash → [0, 1) in 1/1024 steps. Every "random" choice uses it. */
@@ -39,19 +39,21 @@ function bayer(n) {
   return m.map((r) => r.map((v) => v / (n * n)));
 }
 
-/** Grid geometry of the field. */
+/** Grid geometry of the field: no cells and no frames for NO_FIELD, one frame for fps 0. */
 export function fieldGrid(cfg) {
   const { width: W, height: H } = cfg.size;
   const f = cfg.field;
+  const on = f.preset !== NO_FIELD;
   const PX = f.fontSize * cfg.font.advance; // column pitch = the font's advance
-  const ROWS = Math.floor(H / f.rowPitch);
+  const ROWS = on ? Math.floor(H / f.rowPitch) : 0;
+  const NF = !on ? 0 : f.fps ? f.fps * f.loopSeconds : 1;
   return {
     PX,
     PY: f.rowPitch,
-    COLS: Math.ceil(W / PX),
+    COLS: on ? Math.ceil(W / PX) : 0,
     ROWS,
-    NF: f.fps * f.loopSeconds,
-    STILL: Math.round(f.stillAt * f.fps) % (f.fps * f.loopSeconds),
+    NF,
+    STILL: on && f.fps ? Math.round(f.stillAt * f.fps) % NF : 0,
     y0: (H - ROWS * f.rowPitch) / 2,
     W,
     H,
@@ -63,17 +65,17 @@ export function fieldGrid(cfg) {
  * A preset's sampler (see src/fields/index.mjs) gets field.gamma applied on
  * top; a user `field.sample` gets the cell centre in banner px (the field
  * starts at x=0 and is centred vertically, offset y0) and seconds instead, and
- * its value is used as is.
+ * its value is used as is. At fps 0 the one frame is the loop at stillAt.
  */
 function sampler(cfg, g) {
-  const { gamma, sample, fps, preset, options } = cfg.field;
+  const { gamma, sample, fps, preset, options, stillAt, loopSeconds } = cfg.field;
   if (sample)
     return (col, row, f) => {
       const x = (col + 0.5) * g.PX;
       const y = g.y0 + (row + 0.5) * g.PY;
       let v;
       try {
-        v = sample(x, y, f / fps);
+        v = sample(x, y, fps ? f / fps : stillAt);
       } catch (e) {
         throw new ConfigError(`field.sample threw: ${e?.message ?? e}`);
       }
@@ -81,7 +83,10 @@ function sampler(cfg, g) {
       return v;
     };
   const raw = FIELD_PRESETS[preset].make(g, options, cfg);
-  return (col, row, f) => Math.pow(Math.min(1, Math.max(0, raw(col, row, f))), gamma);
+  // Presets read the loop phase as f / NF, and NF is 1 at fps 0, so there f
+  // carries the phase itself.
+  const still = fps ? null : stillAt / loopSeconds;
+  return (col, row, f) => Math.pow(Math.min(1, Math.max(0, raw(col, row, still ?? f))), gamma);
 }
 
 /**
@@ -89,9 +94,10 @@ function sampler(cfg, g) {
  * rows, chars = one glyph per column (" " for blank), bands = each cell's
  * colour band (-1 for blank), both right-trimmed. Also `seam`: the largest
  * brightness jump between frame 0 and one full loop later (0 for an exactly
- * periodic sampler).
+ * periodic sampler, and for a still field, which never wraps).
  */
 export function bakeField(cfg, g) {
+  if (cfg.field.preset === NO_FIELD) return { frames: [], ramp: [], bands: [], seam: 0 };
   const RAMP = parseRamp(cfg.field.ramp);
   const N = RAMP.length;
   const BANDS = bands(N, cfg.field.bands);
@@ -131,7 +137,8 @@ export function bakeField(cfg, g) {
     frames.push(out);
   }
   let seam = 0;
-  for (let row = 0; row < ROWS; row++)
-    for (let col = 0; col < COLS; col++) seam = Math.max(seam, Math.abs(at(col, row, NF) - at(col, row, 0)));
+  if (cfg.field.fps)
+    for (let row = 0; row < ROWS; row++)
+      for (let col = 0; col < COLS; col++) seam = Math.max(seam, Math.abs(at(col, row, NF) - at(col, row, 0)));
   return { frames, ramp: RAMP, bands: BANDS, seam };
 }
