@@ -1,6 +1,7 @@
 // vortex: a polar spiral, sin(angle·arms + ln(r)·twist − 2π·cycles·t),
 // turning about the banner centre.
 import { TAU, space } from "./util.mjs";
+import { GLYPH_SETS } from "../glyphsets.mjs";
 
 export default {
   defaults: {
@@ -8,7 +9,7 @@ export default {
     twist: 5, // radians of phase per e-fold of radius; 0 = straight spokes
     cycles: 1, // turns per loop
   },
-  ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
+  ramp: GLYPH_SETS.classic,
   bands: 3,
   validate(o, v) {
     v.posInt("arms");

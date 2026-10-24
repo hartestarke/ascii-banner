@@ -1,6 +1,6 @@
 // Scramble: each line decodes left to right behind a torn front. Every figlet
 // row has its own clip windows, stepping in whole columns along a shared uneven
-// pace plus a bounded per-row wander, and a band of cycling ramp glyphs (`lead`
+// pace plus a bounded per-row wander, and a band of cycling pool glyphs (`lead`
 // columns wide) runs ahead of the settled text.
 //
 // The class and id names carry no prefix and are part of the default banner's

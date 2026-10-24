@@ -9,6 +9,7 @@ import { buildBanner, ConfigError, DEFAULTS } from "../src/index.mjs";
 import { describeLayout, figlet, loadFlf } from "../src/figlet.mjs";
 import { listFonts } from "../src/fonts.mjs";
 import { FIELD_PRESETS } from "../src/fields/index.mjs";
+import { GLYPH_SETS } from "../src/glyphsets.mjs";
 import { REVEAL_PRESETS } from "../src/reveals/index.mjs";
 
 const CONFIG_NAME = "banner.config.mjs";
@@ -157,7 +158,7 @@ function presets(argv) {
   );
   const reveals = Object.fromEntries(Object.entries(REVEAL_PRESETS).map(([name, p]) => [name, { options: p.defaults }]));
   if (flags.json) {
-    console.log(JSON.stringify({ fields, reveals }, null, 2));
+    console.log(JSON.stringify({ fields, reveals, glyphSets: GLYPH_SETS }, null, 2));
     return;
   }
 
@@ -168,6 +169,7 @@ function presets(argv) {
     console.log(`  ${name.padEnd(width)}  ramp ${JSON.stringify(p.ramp)}, bands ${p.bands}\n      ${options(p.options)}`);
   console.log(`\nReveal presets (reveal.preset). reveal.options overrides the defaults shown.\n`);
   for (const [name, p] of Object.entries(reveals)) console.log(`  ${name}\n      ${options(p.options)}`);
+  console.log(`\nGlyph sets (field.ramp, reveal.pool): ${Object.keys(GLYPH_SETS).join(", ")}`);
   console.log(`\nWhat each option does: docs/fields.md and docs/reveals.md. As JSON: ascii-banner presets --json`);
 }
 

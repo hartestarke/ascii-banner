@@ -16,6 +16,7 @@ reveal: {
   seconds: 2.2,       // seconds a line spends revealing
   hold: 5.8,          // seconds a settled line holds before the next one starts
   fps: 20,            // step rate of stepped reveals (round(seconds × fps) ticks)
+  pool: null,         // noise glyphs of scramble and glitch; null = the field's ramp
   options: {},        // the preset's own knobs, merged over its defaults
 },
 ```
@@ -23,6 +24,8 @@ reveal: {
 `options` takes only the chosen preset's keys: an unknown key is an error that names the preset, and each value must have the default's type. Leave a key out to keep its default.
 
 **Colour.** `tagline.color` (`#rrggbb`, `null` = `accent`) paints the letters and everything a preset draws in letter colour: the scramble noise, glitch's noise flashes and the typewriter cursor. `tagline.shadowColor` (`null` = `tagline.color`) paints the shadow strokes (`tagline.shadowGlyphs`), still at `tagline.shadowAlpha`. Left at `null`, the whole banner stays in the one `accent` hue, which is what keeps it theme-neutral on GitHub ([Fields → Colours](fields.md#colours)).
+
+**Noise glyphs.** `pool` is what scramble's noise band and glitch's flashes draw from: a glyph set name (`classic`, `digits`, `dots`, `squares`, `shapes`, `shade`, `binary`, `lines`; see [fields.md](fields.md#the-field-block)) or a string of your own glyphs, spaces ignored, each one in the font. `null` takes the field's ramp, so the noise matches the field: over `field.preset: "rain"` that is vertical bars only, and `pool: "classic"` gives the line the mixed ASCII noise of the default banner instead. The other presets draw no noise and ignore it.
 
 **Legacy `decode`.** Configs written before presets existed used a top-level `decode: { seconds, hold, fps, noiseFrames, lead, leadVar, rag, ragTicks, burst, noiseAlpha }`. It still works and means `preset: "scramble"`: `seconds`/`hold`/`fps` go to `reveal`, the rest to `options`. Giving both `decode` and `reveal` is an error.
 
@@ -39,7 +42,7 @@ Sizes below are for the template config (3 taglines, 880 × 240, default options
 
 ## scramble (default)
 
-The line decodes left to right behind a torn front. Each figlet row steps in whole columns along a shared, uneven pace with its own bounded wander. A band of cycling ramp glyphs runs ahead of the settled text.
+The line decodes left to right behind a torn front. Each figlet row steps in whole columns along a shared, uneven pace with its own bounded wander. A band of cycling noise glyphs (`pool`) runs ahead of the settled text.
 
 | option | default | meaning |
 | --- | --- | --- |

@@ -25,7 +25,7 @@ field: {
   colors: null,       // 1–3 #rrggbb, dimmest band first; null = [accent]
   gradient: null,     // 2–8 #rrggbb stops, left → right; not with colors
   bands: null,        // 1 | 2 | 3 alpha bands; null = the preset's default
-  ramp: null,         // glyph ramp string; null = the preset's default
+  ramp: null,         // glyph ramp string or glyph set name; null = the preset's default
   gamma: 1.35,        // applied to every preset's output (not to `sample`)
   dither: 0,          // 0 = jittered quantising; 2 | 4 | 8 = Bayer ordered dither
   preset: "waves",
@@ -36,9 +36,19 @@ field: {
 
 - **`ramp`**: levels dim → bright, separated by spaces. Characters within a
   level are interchangeable variants, fixed per cell. Level 0 (blank) is
-  implicit. Every glyph must be in the bundled font subset (ASCII, Box
-  Drawing U+2500–257F, Block Elements U+2580–259F), or the build fails and
-  names the missing glyphs. `null` takes the preset's ramp.
+  implicit. Instead of a string you can name a glyph set: `classic` (the
+  waves ramp below), `digits` `7 4 1 2 6 3 9 5 0 8`, `dots` `· • ○ ◉ ●`,
+  `squares` `▫ ▪ □ ■`, `shapes` `◇ △ ◆ ▲`, `shade` `░ ▒ ▓ █`, `binary` `0 1`,
+  `lines` `┊ ┆ │ ┃` (`ascii-banner presets` lists them). A single lowercase
+  word is read as a set name, so a misspelt one is an error. A glyph beyond
+  ASCII takes 3 bytes of the file: on a field that lights most cells, like
+  waves at the template size, every set but `classic`, `digits` and `binary`
+  goes over the 1 MiB budget (1.28–1.34 MB) unless `bands: 1` (888–917 KB).
+  Every glyph must
+  be in the bundled font subset (ASCII, `°` `·` `•` `∘` `∙`, Box Drawing
+  U+2500–257F, Block Elements U+2580–259F, and the Geometric Shapes
+  U+25A0–25FF that JetBrains Mono has), or the build fails and names the
+  missing glyphs. `null` takes the preset's ramp.
 - **`bands`**: how many fill classes the levels fold into. 3 = lo / mid / hi
   (each band coloured as its middle level, the original look). 2 = `alpha.lo` /
   `alpha.hi`. 1 = everything at `alpha.hi`, the smallest file. `null` takes the

@@ -49,6 +49,10 @@ export default {
     seconds: 2.2, // s a line spends revealing
     hold: 5.8, // s a settled line holds before the next one starts
     fps: 20, // steps per second of stepped reveals; scramble reads as noise below ~15
+    // Glyphs of the scramble / glitch noise: a glyph set (see field.ramp) or
+    // your own string, spaces ignored. null = the field's ramp glyphs; for the
+    // rain field those are all bars, and pool: "classic" mixes the noise up.
+    pool: null,
     // The preset's own knobs: omitted ones keep its defaults, unknown ones are
     // an error, so replace these when you switch preset. Shown: scramble's.
     // The others, with their defaults:
@@ -85,8 +89,10 @@ export default {
     // 1 = all at hi (smallest file). null = the preset's default.
     bands: null,
     // Brightness ramp, dim → bright: levels separated by spaces, the characters
-    // of a level interchangeable; level 0 (empty) is implicit. null = the
-    // preset's ramp (waves: ":. !/ \\| 1? 7* 25 %0 &# 8@").
+    // of a level interchangeable; level 0 (empty) is implicit. Or a glyph set:
+    // "classic", "digits", "dots", "squares", "shapes", "shade", "binary" or
+    // "lines". null = the preset's ramp (waves: "classic"). Non-ASCII glyphs
+    // cost 3 bytes each, so on a dense field like waves pair them with bands: 1.
     ramp: null,
     gamma: 1.35, // > 1 deepens the dark side of the gradient (not applied to `sample`)
     // 0 = plain quantising with a little per-cell jitter; 2, 4 or 8 = ordered

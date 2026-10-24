@@ -1,6 +1,7 @@
 // waves, the default field: a few travelling plane waves interfering into one
 // or two giant soft lobes.
 import { TAU } from "./util.mjs";
+import { GLYPH_SETS } from "../glyphsets.mjs";
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 
@@ -18,7 +19,7 @@ export default {
     // and letting the clamp cut the rest gives saturated highlights and troughs.
     drive: 2.4,
   },
-  ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
+  ramp: GLYPH_SETS.classic,
   bands: 3,
   validate(o, v) {
     v.check(o.waves.length > 0 || v.field.sample, "waves", "needs at least one wave (or a field.sample function)");

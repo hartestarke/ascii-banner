@@ -1,6 +1,7 @@
 // ripples: rings expanding from a few points, fading with distance and
 // interfering where they meet.
 import { TAU, rnd, space } from "./util.mjs";
+import { GLYPH_SETS } from "../glyphsets.mjs";
 
 export default {
   defaults: {
@@ -10,7 +11,7 @@ export default {
     rings: 3, // per loop, from the first centre
     seed: 1,
   },
-  ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
+  ramp: GLYPH_SETS.classic,
   bands: 3,
   validate(o, v) {
     v.posInt("centers");

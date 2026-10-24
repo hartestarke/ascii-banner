@@ -2,13 +2,14 @@
 // off-centre radius, shown only as the bright network where their sum crosses
 // zero, like light on a pool floor.
 import { TAU, space } from "./util.mjs";
+import { GLYPH_SETS } from "../glyphsets.mjs";
 
 export default {
   defaults: {
     scale: 1,
     speed: 1, // integer, multiplies every term's cycles per loop
   },
-  ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
+  ramp: GLYPH_SETS.classic,
   bands: 3,
   validate(o, v) {
     v.positive("scale");

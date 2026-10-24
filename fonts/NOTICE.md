@@ -9,11 +9,18 @@
 
 ## Subset
 
-Covered Unicode ranges (255 code points, all present):
+Covered Unicode ranges (303 code points):
 
 - `U+0020–007E` — printable ASCII, including space
+- `U+00B0`, `U+00B7` — degree sign, middle dot
+- `U+2022` — bullet
+- `U+2218`, `U+2219` — ring operator, bullet operator
 - `U+2500–257F` — Box Drawing
 - `U+2580–259F` — Block Elements
+- `U+25A0–25FF` — Geometric Shapes: only the 43 that JetBrains Mono has (pyftsubset
+  keeps what exists); `glyphs.txt` lists them
+
+Every other range is present in full.
 
 Every mapped glyph has an advance of 600 at 1000 units per em (0.6 em column pitch).
 All OpenType layout features (ligatures, contextual alternates, kerning) are removed,
@@ -22,7 +29,7 @@ so runs such as `//`, `||` and `??` render as individual glyphs.
 Command used (fonttools 4.66.1, with brotli):
 
 ```
-pyftsubset JetBrainsMono-Regular.ttf --unicodes='U+0020-007E,U+2500-257F,U+2580-259F' --flavor=woff2 --no-hinting --layout-features='' --output-file=jetbrains-mono.woff2
+pyftsubset JetBrainsMono-Regular.ttf --unicodes='U+0020-007E,U+00B0,U+00B7,U+2022,U+2218,U+2219,U+2500-257F,U+2580-259F,U+25A0-25FF' --flavor=woff2 --no-hinting --layout-features='' --output-file=jetbrains-mono.woff2
 ```
 
 `glyphs.txt` lists every code point in the subset as its character, sorted, on one line.

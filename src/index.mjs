@@ -3,7 +3,7 @@
 // the config names; writes nothing.
 import { readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
-import { ConfigError, BUNDLED_GLYPHS, assetPaths, resolveConfig } from "./config.mjs";
+import { ConfigError, BUNDLED_GLYPHS, assetPaths, parseRamp, resolveConfig } from "./config.mjs";
 import { bakeField, fieldGrid } from "./field.mjs";
 import { figlet, loadFlf } from "./figlet.mjs";
 import { layoutTaglines } from "./layout.mjs";
@@ -29,7 +29,7 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
 
   const g = fieldGrid(cfg);
   const field = bakeField(cfg, g);
-  const pool = field.ramp.flat();
+  const pool = parseRamp(cfg.reveal.pool).flat();
   if (field.seam > SEAM_TOLERANCE)
     warnings.push(
       `${cfg.field.sample ? "field.sample" : `field preset "${cfg.field.preset}"`} is not periodic over the loop: ` +
@@ -47,15 +47,20 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
   // Every character the SVG draws must exist in the embedded font, or the
   // browser falls back to a system monospace with a different advance and the
   // grid drifts out of register.
-  const drawn = new Set(pool);
-  for (const rows of figs) for (const r of rows) for (const c of r) if (c !== " ") drawn.add(c);
-  for (const c of reveal.extraGlyphs) drawn.add(c);
+  const drawnBy = {
+    "field.ramp": field.ramp.flat(),
+    "reveal.pool": pool,
+    "the tagline font": figs.flat().flatMap((r) => [...r]).filter((c) => c !== " "),
+    "reveal.options": [...reveal.extraGlyphs],
+  };
+  const drawn = new Set(Object.values(drawnBy).flat());
   if (paths.fontBundled) {
     const have = new Set(readFileSync(BUNDLED_GLYPHS, "utf8").replace(/[\r\n]/g, ""));
     const lack = [...drawn].filter((c) => !have.has(c));
+    const from = Object.keys(drawnBy).filter((k) => drawnBy[k].some((c) => !have.has(c)));
     if (lack.length)
       throw new ConfigError(
-        `the bundled font has no glyph for ${show(lack)} (from field.ramp, the tagline font or reveal.options). ` +
+        `the bundled font has no glyph for ${show(lack)} (from ${from.join(", ")}). ` +
         `Remove them, or subset your own font with those glyphs and pass it as font.file (see README "Custom font").`,
       );
   } else {

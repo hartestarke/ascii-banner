@@ -51,7 +51,7 @@ function runs(row, isShadow) {
  *   cfg, o          resolved config; o = cfg.reveal.options over the preset's defaults
  *   layout          layoutTaglines(): TROWS, maxCols, TFONT, TPX, TPY, rowY(i),
  *                   SLOT_T, TDUR, NT (= round(seconds × fps) ticks), tickT(k)
- *   figs, pool      figlet rows per tagline, padded to TROWS; noise glyphs (the flattened ramp)
+ *   figs, pool      figlet rows per tagline, padded to TROWS; noise glyphs (reveal.pool, flattened)
  *   W, H, CUT       viewBox size; knockout stroke px, 0 = no knockout
  *   esc, num, num2  XML text escape; 1 and 2 decimal numbers
  *   rgb(a), jitter  tagline.color at alpha a; jitter(i) in [0, 1), the only RNG

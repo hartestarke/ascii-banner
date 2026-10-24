@@ -1,6 +1,7 @@
 // mesh: soft lights travelling closed Lissajous paths; their glows add up to
 // a slowly drifting gradient, like a design-tool mesh gradient.
 import { TAU, rnd, space } from "./util.mjs";
+import { GLYPH_SETS } from "../glyphsets.mjs";
 
 export default {
   defaults: {
@@ -8,7 +9,7 @@ export default {
     radius: 0.22, // 1/e glow radius, banner widths
     seed: 1,
   },
-  ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
+  ramp: GLYPH_SETS.classic,
   bands: 3,
   validate(o, v) {
     v.posInt("lights");

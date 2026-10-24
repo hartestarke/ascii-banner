@@ -5,6 +5,7 @@
 import { isAbsolute, resolve } from "node:path";
 import { BUNDLED_FONTS, LAYOUTS, PATH_FONT_DEFAULTS, isBundledFont, packagePath } from "./fonts.mjs";
 import { FIELD_PRESETS } from "./fields/index.mjs";
+import { GLYPH_SETS } from "./glyphsets.mjs";
 import { REVEAL_PRESETS } from "./reveals/index.mjs";
 
 /** The embedded JetBrains Mono subset and the characters it covers. */
@@ -45,6 +46,7 @@ export const DEFAULTS = {
     seconds: 2.2, // seconds a line spends revealing
     hold: 5.8, // seconds a settled line holds before the next one starts
     fps: 20, // step rate of stepped reveals; scramble reads as noise below ~15
+    pool: null, // glyphs of the scramble / glitch noise: a GLYPH_SETS name or your own string; null = the field's ramp
     // Merged over the preset's defaults. A top-level `decode: {...}` is the
     // legacy spelling of preset "scramble" with these options.
     options: {},
@@ -61,7 +63,7 @@ export const DEFAULTS = {
     bands: null, // alpha bands the ramp folds into: 3 = lo / mid / hi, 2 = lo / hi, 1 = hi; null = the preset's
     // Brightness ramp, dim → bright: space-separated levels whose characters are
     // interchangeable, so bands don't degrade into rings of one character.
-    // Level 0 (empty) is implicit; null = the preset's ramp.
+    // Level 0 (empty) is implicit. A GLYPH_SETS name stands for its ramp; null = the preset's ramp.
     ramp: null,
     gamma: 1.35, // >1 deepens the dark side of the gradient (presets only)
     dither: 0, // 0 = quantise with a little per-cell jitter; 2 / 4 / 8 = Bayer matrix size
@@ -86,6 +88,7 @@ export const DEFAULTS = {
 const NULLABLE = {
   "field.sample": "function",
   "field.ramp": "string",
+  "reveal.pool": "string",
   "field.bands": "number",
   "font.file": "string",
   "tagline.layout": "string",
@@ -223,6 +226,20 @@ export function parseRamp(ramp) {
   return [[], ...ramp.trim().split(/\s+/).filter(Boolean).map((lv) => [...lv])];
 }
 
+// A lone lowercase word is read as a set name, so a misspelt name fails instead
+// of drawing its letters as a one-level ramp; a single glyph stays the user's own.
+const SET_NAME = /^[a-z]{2,}$/;
+
+/** A GLYPH_SETS name → that set's ramp string; any other string is returned as given. */
+function glyphSet(value, path) {
+  const name = value.trim();
+  if (!SET_NAME.test(name)) return value;
+  check(Object.hasOwn(GLYPH_SETS, name), path,
+    `unknown glyph set ${JSON.stringify(name)}; use one of ${Object.keys(GLYPH_SETS).join(", ")} ` +
+    `or a string of your own glyphs (a single lowercase word is read as a set name)`);
+  return GLYPH_SETS[name];
+}
+
 /**
  * Deep-merge `user` over DEFAULTS and validate. Relative paths (font.file,
  * tagline.font) resolve against `baseDir`. Nulls with a default are filled in
@@ -281,9 +298,11 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
     `must be one of ${Object.keys(FIELD_PRESETS).join(", ")}; got ${describe(f.preset)}`);
   f.options = presetOptions(FIELD_PRESETS[f.preset], withAliases(f.preset, field.options, field.aliases), "field.options",
     (key, takes) => `field.options.${key}: unknown option for preset "${f.preset}" (it takes ${takes || "no options"})`, { field: f });
-  f.ramp ??= FIELD_PRESETS[f.preset].ramp;
+  f.ramp = glyphSet(f.ramp ?? FIELD_PRESETS[f.preset].ramp, "field.ramp");
   f.bands ??= FIELD_PRESETS[f.preset].bands;
   check(parseRamp(f.ramp).length >= 2, "field.ramp", "needs at least one level of glyphs");
+  d.pool = d.pool === null ? f.ramp : glyphSet(d.pool, "reveal.pool");
+  check(parseRamp(d.pool).length >= 2, "reveal.pool", "needs at least one glyph");
   check([1, 2, 3].includes(f.bands), "field.bands", `must be one of 1, 2, 3 (or null), got ${f.bands}`);
   oneOf(f.dither, "field.dither", [0, 2, 4, 8]);
   positive(f.gamma, "field.gamma");

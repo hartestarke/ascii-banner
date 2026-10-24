@@ -2,6 +2,7 @@
 // image; their product beats into moiré bands that open as the centres part
 // and close as they meet.
 import { TAU, space } from "./util.mjs";
+import { GLYPH_SETS } from "../glyphsets.mjs";
 
 export default {
   defaults: {
@@ -9,7 +10,7 @@ export default {
     orbit: 0.15, // orbit radius, banner widths
     cycles: 1, // orbits per loop
   },
-  ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
+  ramp: GLYPH_SETS.classic,
   bands: 3,
   validate(o, v) {
     v.positive("spacing");

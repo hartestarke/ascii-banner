@@ -1,6 +1,7 @@
 // halo: a breathing corona around the centre. Inside the ring the field stays
 // dim, so taglines sit in a quiet pocket; outside it glows off softly.
 import { TAU, rnd, space } from "./util.mjs";
+import { GLYPH_SETS } from "../glyphsets.mjs";
 
 export default {
   defaults: {
@@ -9,7 +10,7 @@ export default {
     cycles: 2, // breaths per loop
     softness: 0.35, // outward falloff, banner widths
   },
-  ramp: ":. !/ \\| 1? 7* 25 %0 &# 8@",
+  ramp: GLYPH_SETS.classic,
   bands: 3,
   validate(o, v) {
     v.positive("radius");
