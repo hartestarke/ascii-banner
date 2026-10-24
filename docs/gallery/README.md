@@ -12,16 +12,16 @@ Every field preset, reveal preset and bundled tagline font, rendered small. Rebu
 
 | `field.preset` | preview | bytes |
 | --- | --- | ---: |
-| `waves` | <img src="field-waves.svg" width="440" alt="waves field sample"> | 72,755 |
-| `stars` | <img src="field-stars.svg" width="440" alt="stars field sample"> | 52,039 |
-| `rain` | <img src="field-rain.svg" width="440" alt="rain field sample"> | 73,390 |
-| `caustics` | <img src="field-caustics.svg" width="440" alt="caustics field sample"> | 71,223 |
-| `ripples` | <img src="field-ripples.svg" width="440" alt="ripples field sample"> | 75,081 |
-| `interference` | <img src="field-interference.svg" width="440" alt="interference field sample"> | 70,499 |
-| `halo` | <img src="field-halo.svg" width="440" alt="halo field sample"> | 80,464 |
-| `mesh` | <img src="field-mesh.svg" width="440" alt="mesh field sample"> | 72,316 |
-| `contour` | <img src="field-contour.svg" width="440" alt="contour field sample"> | 64,402 |
-| `vortex` | <img src="field-vortex.svg" width="440" alt="vortex field sample"> | 72,794 |
+| `waves` | <img src="field-waves.svg" width="440" alt="waves field sample"> | 74,087 |
+| `stars` | <img src="field-stars.svg" width="440" alt="stars field sample"> | 53,371 |
+| `rain` | <img src="field-rain.svg" width="440" alt="rain field sample"> | 74,722 |
+| `caustics` | <img src="field-caustics.svg" width="440" alt="caustics field sample"> | 72,555 |
+| `ripples` | <img src="field-ripples.svg" width="440" alt="ripples field sample"> | 76,413 |
+| `interference` | <img src="field-interference.svg" width="440" alt="interference field sample"> | 71,831 |
+| `halo` | <img src="field-halo.svg" width="440" alt="halo field sample"> | 81,796 |
+| `mesh` | <img src="field-mesh.svg" width="440" alt="mesh field sample"> | 73,648 |
+| `contour` | <img src="field-contour.svg" width="440" alt="contour field sample"> | 65,734 |
+| `vortex` | <img src="field-vortex.svg" width="440" alt="vortex field sample"> | 74,126 |
 
 ## Reveals
 
@@ -29,12 +29,12 @@ Every field preset, reveal preset and bundled tagline font, rendered small. Rebu
 
 | `reveal.preset` | preview | bytes |
 | --- | --- | ---: |
-| `scramble` | <img src="reveal-scramble.svg" width="440" alt="scramble reveal sample"> | 83,623 |
-| `typewriter` | <img src="reveal-typewriter.svg" width="440" alt="typewriter reveal sample"> | 69,330 |
-| `wipe` | <img src="reveal-wipe.svg" width="440" alt="wipe reveal sample"> | 66,829 |
-| `dissolve` | <img src="reveal-dissolve.svg" width="440" alt="dissolve reveal sample"> | 70,913 |
-| `fall` | <img src="reveal-fall.svg" width="440" alt="fall reveal sample"> | 76,065 |
-| `glitch` | <img src="reveal-glitch.svg" width="440" alt="glitch reveal sample"> | 71,184 |
+| `scramble` | <img src="reveal-scramble.svg" width="440" alt="scramble reveal sample"> | 84,955 |
+| `typewriter` | <img src="reveal-typewriter.svg" width="440" alt="typewriter reveal sample"> | 70,662 |
+| `wipe` | <img src="reveal-wipe.svg" width="440" alt="wipe reveal sample"> | 68,161 |
+| `dissolve` | <img src="reveal-dissolve.svg" width="440" alt="dissolve reveal sample"> | 72,245 |
+| `fall` | <img src="reveal-fall.svg" width="440" alt="fall reveal sample"> | 77,397 |
+| `glitch` | <img src="reveal-glitch.svg" width="440" alt="glitch reveal sample"> | 72,516 |
 
 ## Fonts
 
@@ -42,21 +42,21 @@ Every field preset, reveal preset and bundled tagline font, rendered small. Rebu
 
 | `tagline.font` | preview | bytes |
 | --- | --- | ---: |
-| `ansi-shadow` | <img src="font-ansi-shadow.svg" width="440" alt="ansi-shadow font sample"> | 74,081 |
-| `standard` | <img src="font-standard.svg" width="440" alt="standard font sample"> | 67,430 |
-| `big` | <img src="font-big.svg" width="440" alt="big font sample"> | 70,381 |
-| `slant` | <img src="font-slant.svg" width="440" alt="slant font sample"> | 67,251 |
-| `small` | <img src="font-small.svg" width="440" alt="small font sample"> | 64,964 |
-| `shadow` | <img src="font-shadow.svg" width="440" alt="shadow font sample"> | 65,132 |
-| `block` | <img src="font-block.svg" width="440" alt="block font sample"> | 71,505 |
-| `lean` | <img src="font-lean.svg" width="440" alt="lean font sample"> | 71,346 |
-| `mini` | <img src="font-mini.svg" width="440" alt="mini font sample"> | 61,688 |
-| `script` | <img src="font-script.svg" width="440" alt="script font sample"> | 67,337 |
-| `banner` | <img src="font-banner.svg" width="440" alt="banner font sample"> | 74,672 |
-| `smslant` | <img src="font-smslant.svg" width="440" alt="smslant font sample"> | 64,816 |
-| `smshadow` | <img src="font-smshadow.svg" width="440" alt="smshadow font sample"> | 62,696 |
-| `smscript` | <img src="font-smscript.svg" width="440" alt="smscript font sample"> | 64,688 |
-| `blocks` | <img src="font-blocks.svg" width="440" alt="blocks font sample"> | 77,759 |
-| `blocks-shadow` | <img src="font-blocks-shadow.svg" width="440" alt="blocks-shadow font sample"> | 82,156 |
-| `blocks-thin` | <img src="font-blocks-thin.svg" width="440" alt="blocks-thin font sample"> | 74,287 |
-| `pixel` | <img src="font-pixel.svg" width="440" alt="pixel font sample"> | 65,795 |
+| `ansi-shadow` | <img src="font-ansi-shadow.svg" width="440" alt="ansi-shadow font sample"> | 75,413 |
+| `standard` | <img src="font-standard.svg" width="440" alt="standard font sample"> | 68,762 |
+| `big` | <img src="font-big.svg" width="440" alt="big font sample"> | 71,713 |
+| `slant` | <img src="font-slant.svg" width="440" alt="slant font sample"> | 68,583 |
+| `small` | <img src="font-small.svg" width="440" alt="small font sample"> | 66,296 |
+| `shadow` | <img src="font-shadow.svg" width="440" alt="shadow font sample"> | 66,464 |
+| `block` | <img src="font-block.svg" width="440" alt="block font sample"> | 72,837 |
+| `lean` | <img src="font-lean.svg" width="440" alt="lean font sample"> | 72,678 |
+| `mini` | <img src="font-mini.svg" width="440" alt="mini font sample"> | 63,020 |
+| `script` | <img src="font-script.svg" width="440" alt="script font sample"> | 68,669 |
+| `banner` | <img src="font-banner.svg" width="440" alt="banner font sample"> | 76,004 |
+| `smslant` | <img src="font-smslant.svg" width="440" alt="smslant font sample"> | 66,148 |
+| `smshadow` | <img src="font-smshadow.svg" width="440" alt="smshadow font sample"> | 64,028 |
+| `smscript` | <img src="font-smscript.svg" width="440" alt="smscript font sample"> | 66,020 |
+| `blocks` | <img src="font-blocks.svg" width="440" alt="blocks font sample"> | 79,091 |
+| `blocks-shadow` | <img src="font-blocks-shadow.svg" width="440" alt="blocks-shadow font sample"> | 83,488 |
+| `blocks-thin` | <img src="font-blocks-thin.svg" width="440" alt="blocks-thin font sample"> | 75,619 |
+| `pixel` | <img src="font-pixel.svg" width="440" alt="pixel font sample"> | 67,127 |
