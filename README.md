@@ -4,6 +4,58 @@
 
 An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Ten field presets (or your own function, or none), six reveals (or none), twenty bundled fonts and eight glyph sets, all picked in one config file. Zero dependencies, Node ≥ 20.
 
+## Examples
+
+Four looks from [`docs/examples/`](docs/examples), each with its config; `npm run examples` rebuilds them.
+
+<img src="docs/examples/stars-3d.svg" width="880" alt="stars field drawn in dots under a four-colour gradient, two-tone blocks-3d taglines falling in">
+
+```js
+export default {
+  taglines: ["counting stars", "blocks 3d"],
+  tagline: { font: "blocks-3d", maxHeight: 0.45, color: "#2D8CE6", shadowColor: "#8A5CF6" },
+  field: {
+    preset: "stars", loopSeconds: 12, ramp: "dots", bands: 1, options: { density: 0.08, drift: 2 },
+    gradient: ["#14A38B", "#2D8CE6", "#8A5CF6", "#E62D42"],
+  },
+  reveal: { preset: "fall", seconds: 1.8, hold: 3.6 },
+};
+```
+
+<img src="docs/examples/caustics-wipe.svg" width="880" alt="caustics field in three shades of cyan, slanted taglines wiped in from the centre">
+
+```js
+export default {
+  taglines: ["caustics", "wipe center"],
+  tagline: { font: "slant", color: "#2D8CE6" },
+  field: { preset: "caustics", loopSeconds: 12, colors: ["#0E7490", "#0891B2", "#06B6D4"] },
+  reveal: { preset: "wipe", seconds: 1.4, hold: 3.6, options: { direction: "center" } },
+};
+```
+
+<img src="docs/examples/rain-pool.svg" width="880" alt="green rain field, taglines scrambled in with classic ASCII noise">
+
+```js
+export default {
+  accent: "#3FB950",
+  taglines: ["rain field", "classic pool"],
+  tagline: { font: "standard" },
+  field: { preset: "rain", loopSeconds: 12 },
+  reveal: { preset: "scramble", seconds: 2, hold: 3.6, pool: "classic" },
+};
+```
+
+<img src="docs/examples/vortex-glitch.svg" width="880" alt="vortex field in the default red, big taglines glitching in">
+
+```js
+export default {
+  taglines: ["vortex", "glitch out"],
+  tagline: { font: "big" },
+  field: { preset: "vortex", loopSeconds: 12 },
+  reveal: { preset: "glitch", seconds: 1.8, hold: 3.6 },
+};
+```
+
 ## Quick start A: template repo
 
 1. Click **Use this template** on this repo.

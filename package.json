@@ -8,7 +8,8 @@
   },
   "exports": "./src/index.mjs",
   "scripts": {
-    "gallery": "node tools/gallery.mjs"
+    "gallery": "node tools/gallery.mjs",
+    "examples": "node tools/examples.mjs"
   },
   "files": [
     "bin",
