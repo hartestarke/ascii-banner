@@ -5,6 +5,10 @@ Notable changes per version, newest first. Versions are git tags `vX.Y.Z` and fo
 ## [Unreleased]
 
 - Four worked examples at the top of the README, each with its config under `docs/examples/`; `npm run examples` rebuilds them.
+- New reveal `decrypt`: from the first tick the whole line is cycling noise, and the cells lock into their glyphs in a left-to-right sweep that is ragged cell by cell (`lanes`, `spread`, `wander`, `burst`, `noiseFrames`, `noiseAlpha`).
+- `typewriter` types letter by letter: each tagline character is one keystroke showing its whole figlet glyph, keystrokes land at uneven intervals (new option `jitter`) and the cursor sits after the last typed letter. `figletLaid()` in `src/figlet.mjs` reports every character's column span, and reveal presets get it as `ctx.spans`.
+- New field preset `sharks`: sharks seen from above cruise across the banner, each at its own depth, lane and speed, eight species or `mix`, optional one-cell fish. Outlines after [ascii-sharks](https://github.com/stackedlol/ascii-sharks) by drewdi, MIT (`THIRD-PARTY.md`).
+- Docs: the byte figures in `docs/reveals.md` and `docs/fields.md` are re-measured on the current build (each was 1,332 bytes low).
 
 ## [0.3.0] - 2026-10-24
 

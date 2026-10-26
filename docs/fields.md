@@ -126,7 +126,7 @@ slow liquid gradient.
   `fx`/`fy` are cycles per banner width on both axes, `k` is integer cycles
   per loop. Keep every `k` distinct.
 - `drive`: 2.4, the wave-sum divisor; lower = more saturated.
-- ramp `:. !/ \| 1? 7* 25 %0 &# 8@`, bands 3. **877,686 bytes**.
+- ramp `:. !/ \| 1? 7* 25 %0 &# 8@`, bands 3. **879,018 bytes**.
 
 ### stars
 A sparse starfield, each star twinkling on its own cycle; optional sideways
@@ -137,7 +137,7 @@ parallax drift at two depths.
   far layer drifts half that, rounded. A drifting star fades in and out over
   its slide, so the loop stays exact and the sky never tiles.
 - `seed`: 1.
-- ramp `. : + *`, bands 3. **651,034 bytes**.
+- ramp `. : + *`, bands 3. **652,366 bytes**.
 
 ### rain
 Streaks falling at three depths (speed ×1, ×2, ×3; nearer = brighter), with
@@ -146,7 +146,7 @@ a heavy head and a dashed fading tail.
 - `speed`: 2, falls per loop of the slowest depth (integer).
 - `tail`: 6 rows.
 - `seed`: 1.
-- ramp `┊ ┆ ╎ │ ┃`, bands 3. **870,582 bytes**.
+- ramp `┊ ┆ ╎ │ ┃`, bands 3. **871,914 bytes**.
 
 ### caustics
 Classic plasma: sines along x, y, the diagonal and an off-centre radius, all
@@ -154,7 +154,7 @@ with integer cycles. Only the bright network where the sum crosses zero
 shows, like light on a pool floor.
 - `scale`: 1, the spatial frequency multiplier.
 - `speed`: 1, an integer multiplier of every term's cycles per loop.
-- ramp = waves', bands 3. **974,363 bytes**.
+- ramp = waves', bands 3. **975,695 bytes**.
 
 ### ripples
 Rings expanding from a few seeded points, fading with distance. Only the
@@ -164,7 +164,7 @@ crests are lit, and they cross where the ring sets meet.
 - `decay`: 1.5; amplitude is `exp(-decay × distance in widths)`.
 - `rings`: 3 rings per loop from the first centre; centre i emits rings + i.
 - `seed`: 1.
-- ramp = waves', bands 3. **944,525 bytes**.
+- ramp = waves', bands 3. **945,857 bytes**.
 
 ### interference
 Two ring gratings whose centres orbit the middle in mirror image. Their
@@ -173,7 +173,7 @@ they meet.
 - `spacing`: 0.08 of the width (ring spacing).
 - `orbit`: 0.15 of the width (orbit radius).
 - `cycles`: 1 orbit per loop.
-- ramp = waves', bands 3. **928,827 bytes**.
+- ramp = waves', bands 3. **930,159 bytes**.
 
 ### halo
 A breathing corona: dim inside the ring (taglines sit there), brightest on
@@ -183,7 +183,7 @@ ring shows as two bright arcs at the ends.
 - `breath`: 0.12, the radius swing as a fraction of the radius.
 - `cycles`: 2 breaths per loop.
 - `softness`: 0.35, the outward falloff in widths.
-- ramp = waves', bands 3. **941,464 bytes**.
+- ramp = waves', bands 3. **942,796 bytes**.
 
 ### mesh
 Soft lights on closed Lissajous paths (integer frequencies) sum into a slowly
@@ -191,7 +191,7 @@ drifting gradient, like a design-tool mesh gradient.
 - `lights`: 4.
 - `radius`: 0.22, the glow radius in widths.
 - `seed`: 1.
-- ramp = waves', bands 3. **888,734 bytes**.
+- ramp = waves', bands 3. **890,066 bytes**.
 
 ### contour
 Survey lines over slowly morphing terrain (three integer-cycle sines), with
@@ -201,7 +201,7 @@ unbroken.
 - `thickness`: 0.25, the line width as a fraction of the interval.
 - `index`: 5 (0 = no index lines).
 - ramp `. : + #`, bands 2 (minor lines at `alpha.lo`, index lines at
-  `alpha.hi`). **721,387 bytes**.
+  `alpha.hi`). **722,719 bytes**.
 
 ### vortex
 A polar spiral, `sin(angle·arms + ln(r)·twist − 2π·cycles·t)`, turning about
@@ -210,7 +210,7 @@ banner ends.
 - `arms`: 3 (integer).
 - `twist`: 5, radians of winding per e-fold of radius.
 - `cycles`: 1 turn per loop.
-- ramp = waves', bands 3. **872,285 bytes**.
+- ramp = waves', bands 3. **873,617 bytes**.
 
 ### sharks
 Sharks seen from above cruise across the banner, alternating left → right and

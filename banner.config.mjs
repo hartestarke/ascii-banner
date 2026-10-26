@@ -46,7 +46,7 @@ export default {
   // it settled for `hold` and opens the knockout with the letters. A top-level
   // `decode: {...}` block is an alias of preset "scramble" with those knobs.
   reveal: {
-    // "scramble" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch", or
+    // "scramble" | "decrypt" | "typewriter" | "wipe" | "dissolve" | "fall" | "glitch", or
     // "none": each line just shows for its slot, no animation
     preset: "scramble",
     seconds: 2.2, // s a line spends revealing
@@ -59,8 +59,12 @@ export default {
     // The preset's own knobs: omitted ones keep its defaults, unknown ones are
     // an error, so replace these when you switch preset. Shown: scramble's.
     // The others, with their defaults:
+    //   decrypt:    lanes (3 interleaved lanes a cell can belong to), spread (10 columns
+    //               from the first lane's front to the last's), wander (2), burst (0.5),
+    //               noiseFrames (6), noiseAlpha (0.65)
     //   typewriter: cursor ("█"; "" = none), blink (0 = the cursor leaves at
-    //               settle; > 0 = blink period in s during the hold)
+    //               settle; > 0 = blink period in s during the hold), jitter (0.5 =
+    //               spread of the keystroke intervals: 0 even, 1 wildly uneven)
     //   wipe:       direction ("right" | "left" | "down" | "up" | "center" | "edges"),
     //               steps (0 = smooth; n > 0 = n discrete steps)
     //   dissolve:   matrix (4; 2 | 4 | 8 dither tile), order ("bayer" | "random")
@@ -106,7 +110,7 @@ export default {
     // (Bayer) dither of that size, which turns gradients into regular patterns.
     dither: 0,
     // The brightness field: waves, stars, rain, caustics, ripples, interference,
-    // halo, mesh, contour or vortex (see docs/fields.md), or "none" for
+    // halo, mesh, contour, vortex or sharks (see docs/fields.md), or "none" for
     // taglines without a field (no options). `options` tunes
     // the chosen preset: omitted keys keep its defaults, unknown keys are an
     // error. Shown: waves' options, with their defaults.
