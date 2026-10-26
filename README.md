@@ -246,7 +246,7 @@ export default {
 | `field.ramp` | `null` | glyph ramp, dim → bright, levels separated by spaces, the characters of one level interchangeable variants. Or a glyph set: `classic`, `digits`, `dots`, `squares`, `shapes`, `shade`, `binary`, `lines` (a single lowercase word is read as a set name). A glyph beyond ASCII costs 3 bytes: on a dense field pair those sets with `bands: 1`. `null` = the preset's (waves: `classic`, `":. !/ \\\| 1? 7* 25 %0 &# 8@"`) |
 | `field.gamma` | `1.35` | > 1 deepens the dark side of the gradient (not applied to `sample`) |
 | `field.dither` | `0` | `0` = plain quantising with a little per-cell jitter; `2`, `4` or `8` = ordered (Bayer) dither of that size |
-| `field.preset` | `"waves"` | `waves`, `stars`, `rain`, `caustics`, `ripples`, `interference`, `halo`, `mesh`, `contour` or `vortex`; `"none"` = no field and no knockout mask, taglines only |
+| `field.preset` | `"waves"` | `waves`, `stars`, `rain`, `caustics`, `ripples`, `interference`, `halo`, `mesh`, `contour`, `vortex` or `sharks`; `"none"` = no field and no knockout mask, taglines only |
 | `field.options` | the preset's | the preset's own knobs, merged over its defaults; unknown keys are an error. `ascii-banner presets` lists them, [docs/fields.md](docs/fields.md) explains them |
 | `field.sample` | `null` | `(x, y, t) => [0, 1]` replacing the preset; x, y = cell centre in px, t = seconds into the loop. Keep it periodic over `loopSeconds` or the build warns |
 
@@ -330,6 +330,7 @@ pyftsubset YourMono.ttf --text-file=glyphs.txt --flavor=woff2 \
 - `fonts/figlet/*.flf`: thirteen fonts verbatim from the official FIGlet distribution, BSD-3-Clause (`fonts/figlet/LICENSE`); `fonts/figlet/NOTICE.md` records the source commit and every author named in the headers.
 - `fonts/block/*.flf`: `blocks`, `blocks-shadow`, `blocks-thin`, `pixel`, `blocks-3d` and `blocks-iso`, drawn for this project and generated from `fonts/block/src/hairline.txt` by `tools/mkfont.mjs`; MIT like the rest of the repo (`fonts/block/NOTICE.md`).
 - `fonts/ansi-shadow.flf`: figlet "ANSI Shadow", author unknown, no explicit licence found; see `fonts/ANSI-SHADOW-NOTICE.md`. Swap it via `tagline.font`.
+- `src/fields/sharks.mjs`: shark outlines after [ascii-sharks](https://github.com/stackedlol/ascii-sharks) by drewdi, MIT (`THIRD-PARTY.md`).
 
 ## License
 

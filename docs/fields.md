@@ -212,6 +212,25 @@ banner ends.
 - `cycles`: 1 turn per loop.
 - ramp = waves', bands 3. **872,285 bytes**.
 
+### sharks
+Sharks seen from above cruise across the banner, alternating left → right and
+right → left, each in its own lane and at its own depth: farther ones are
+smaller, dimmer and at most as fast. A tail-beat wave runs down each body.
+Edge cells dim with coverage, the first dorsal shows as a bright ridge and
+the fins sit a little dimmer than the back. Outlines after
+[ascii-sharks](https://github.com/stackedlol/ascii-sharks) (MIT).
+- `sharks`: 3, the count (integer ≥ 1).
+- `length`: 0.45, the nearest shark's length as a fraction of the width; the
+  others are 0.85 down to 0.6 of it, dimming to 0.55 brightness.
+- `speed`: 1, crossings per loop of the nearest shark (integer); farther ones
+  make at most as many, still whole.
+- `species`: `"classic"`, or `hammerhead`, `tiger`, `zebra`, `greathammer`,
+  `mako`, `thresher`, `nurse`; `"mix"` = a different one per shark.
+- `fish`: 0, the fraction of cells holding a one-cell fish drifting right →
+  left, against the nearest shark (try 0.015).
+- `seed`: 1.
+- ramp `: ; t % S X 8 # @`, bands 3. **557,854 bytes**.
+
 ## Writing your own
 
 **A `sample` function** (in your config, no code changes):
