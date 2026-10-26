@@ -28,8 +28,7 @@ const SIZE = { width: 440, height: 120 };
 const FIELD = { fps: 6, loopSeconds: 6, stillAt: 3 };
 // At 120 px the letter height, not the width, bounds the tagline: the default
 // maxHeight (0.34) sets 6- to 8-row fonts at 4.3-5.7 px, under the build's 6 px
-// legibility warning. 0.5 keeps them at 6 px or more; the 9-row extruded faces
-// (blocks-3d, blocks-iso) land at 5.6 px and warn.
+// legibility warning. 0.5 keeps them at 6 px or more.
 const TAGLINE = { font: "ansi-shadow", maxHeight: 0.5 };
 const REVEAL_TIMING = { seconds: 1.6, hold: 2.4 };
 const BASE = {

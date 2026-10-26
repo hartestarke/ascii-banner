@@ -29,8 +29,6 @@ const FULL = "█";
 const UPPER = "▀";
 const LOWER = "▄";
 const SHADE = "░";
-const MEDIUM_SHADE = "▒";
-const DARK_SHADE = "▓";
 const LEFT_SEVEN_EIGHTHS = "▉";
 const LOWER_SEVEN_EIGHTHS = "▇";
 const HALF = [" ", LOWER, UPPER, FULL]; // indexed by top * 2 + bottom
@@ -42,17 +40,6 @@ const BLOCK = FULL + FULL; // one square design pixel of the full-block faces
 // left clear along each face's far edge. Deeper or wider looked worse: a
 // depth as wide as the one-pixel strokes outweighs the letters.
 const VOXEL = { dx: 0.5, dy: 1, top: LOWER_SEVEN_EIGHTHS, right: LEFT_SEVEN_EIGHTHS };
-// Depth of blocks-iso, nearest level first, one design pixel (two text
-// columns, one row) per level.
-const DEPTH_GLYPHS = [DARK_SHADE, MEDIUM_SHADE];
-// Full-width layout cannot overlap glyphs, so each blocks-iso glyph carries
-// its own lean as (height - 1) * ISO_SHEAR plain blank columns, depth rows
-// included, which a "fit" layout closes up again (its registry default).
-const ISO_SHEAR = 1; // text columns each row sits right of the row below it
-// blocks-iso is extruded upright and leant afterwards, so its letter gap moves
-// with the depth as blocks-3d's does. ISO_SHEAR columns right per row down
-// cancel the lean: the depth falls straight down.
-const EXTRUDE_ISO = { dx: ISO_SHEAR, dy: 1, glyphs: DEPTH_GLYPHS };
 
 // A design pixel is on (true), off (false) or GAP: blank like off, but written
 // as hardblanks, which render as spaces yet count as drawn when "fit" and
@@ -71,8 +58,8 @@ const fail = (msg) => {
 // render(bits) turns one glyph's pixels (DESIGN_ROWS rows of true / false /
 // GAP, gap column included) into text rows, the same number for every glyph
 // of a face. Which glyphs a face dims is declared in src/fonts.mjs, not here.
-// `gap` is how many hardblank columns every row must end in, before any
-// plain-blank lean: what keeps the next letter clear under "fit" (checkGap).
+// `gap` is how many hardblank columns every row must end in: what keeps the
+// next letter clear under "fit" (checkGap).
 const FACES = {
   blocks: {
     about: "two full blocks per pixel (square pixels), 7 rows",
@@ -100,12 +87,6 @@ const FACES = {
     gap: GAP_COLS * BLOCK.length,
     render: (bits) => voxel(bits, VOXEL),
   },
-  "blocks-iso": {
-    about: "blocks leaning right one column per row, extruded two rows down, dark then medium shade, 9 rows",
-    gap: GAP_COLS * BLOCK.length,
-    baseline: (height) => height - EXTRUDE_ISO.glyphs.length * EXTRUDE_ISO.dy,
-    render: (bits) => shear(extrude(FACES.blocks.render(bits), EXTRUDE_ISO), ISO_SHEAR),
-  },
 };
 
 /** A row as wide as `row`, blank but for `row`'s trailing hardblank run: the letter gap carried into a row added below the glyph. */
@@ -113,36 +94,6 @@ function blankBelow(row) {
   let run = 0;
   while (run < row.length && row[row.length - 1 - run] === HARDBLANK) run++;
   return " ".repeat(row.length - run) + HARDBLANK.repeat(run);
-}
-
-/**
- * blocks-iso's depth: the glyph plus one copy of its silhouette per level,
- * level n moved n * dx columns right and n * dy rows down and drawn in
- * glyphs[n - 1] where nothing nearer is drawn. The canvas grows to hold the
- * deepest level; a row that ends in hardblank spacing grows in hardblanks,
- * and the rows added below carry that run, so the spacing stays behind the
- * depth and "fit" cannot pull the next letter onto it.
- */
-function extrude(rows, { dx, dy, glyphs }) {
-  if (dx < 0 || dy < 0) fail(`extrude: the depth recedes right and down; dx and dy must be >= 0`);
-  const depth = glyphs.length;
-  const grow = depth * dx;
-  const grown = rows.map((r) => r + (r.endsWith(HARDBLANK) ? HARDBLANK : " ").repeat(grow));
-  const out = [...grown, ...Array(depth * dy).fill(blankBelow(grown.at(-1)))].map((r) => [...r]);
-  for (let level = 1; level <= depth; level++)
-    rows.forEach((r, y) =>
-      [...r].forEach((ch, x) => {
-        const row = out[y + level * dy];
-        if (!isBlank(ch) && isBlank(row[x + level * dx])) row[x + level * dx] = glyphs[level - 1];
-      }),
-    );
-  return out.map((r) => r.join(""));
-}
-
-/** Each row `step` columns right of the row below it, so the glyph leans right; every row keeps the same width. */
-function shear(rows, step) {
-  const last = rows.length - 1;
-  return rows.map((r, y) => " ".repeat((last - y) * step) + r + " ".repeat(y * step));
 }
 
 const NONE = 0;
@@ -311,10 +262,9 @@ function buildFlf(glyphs, faceName, source) {
 }
 
 /**
- * Fail unless every row of every glyph, once its plain-blank lean is set
- * aside, ends in `gap` hardblanks: fitted layouts kern up to the first
- * non-space, so ink or depth in those columns would sit flush against the
- * next letter.
+ * Fail unless every row of every glyph, trailing plain blanks set aside, ends
+ * in `gap` hardblanks: fitted layouts kern up to the first non-space, so ink
+ * or depth in those columns would sit flush against the next letter.
  */
 function checkGap(chars, faceName, gap) {
   const clear = HARDBLANK.repeat(gap);

@@ -2,7 +2,7 @@
 
 # ascii-banner
 
-An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Eleven field presets (or your own function, or none), seven reveals (or none), twenty bundled fonts and eight glyph sets, all picked in one config file. Zero dependencies, Node ≥ 20.
+An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Eleven field presets (or your own function, or none), seven reveals (or none), nineteen bundled fonts and eight glyph sets, all picked in one config file. Zero dependencies, Node ≥ 20.
 
 ## Examples
 
@@ -103,7 +103,7 @@ jobs:
 
 ## Pick a look
 
-The previews are animated SVGs: 440 × 120, a 6 s field loop at 6 fps, default options, the `ansi-shadow` font. `npm run gallery` rebuilds them; the [gallery page](docs/gallery/README.md) lists their sizes and shows all twenty fonts.
+The previews are animated SVGs: 440 × 120, a 6 s field loop at 6 fps, default options, the `ansi-shadow` font. `npm run gallery` rebuilds them; the [gallery page](docs/gallery/README.md) lists their sizes and shows all nineteen fonts.
 
 **Fields** (`field.preset`; tune with `field.options`, see [docs/fields.md](docs/fields.md)):
 
@@ -220,8 +220,8 @@ export default {
 | `tagline.shadowColor` | `null` | `#rrggbb` of the shadow glyphs, still at `shadowAlpha`; `null` = `tagline.color` |
 | `tagline.knockout` | `6` | px of field cleared around the letters; `0` = off |
 | `tagline.font` | `"ansi-shadow"` | a bundled font (`ascii-banner fonts` lists them) or a path to any `.flf`, relative to the config file; an unknown name fails with the list. `ansi-shadow` and the block faces are caps only |
-| `tagline.layout` | `null` | glyph spacing: `"full"` (butted), `"fit"` (moved until they touch), `"smush"` (merged where they touch), `"header"` (as the `.flf` says); `null` = the font's default: `"fit"` for `blocks-iso`, `"full"` for `ansi-shadow` and the other block faces, `"header"` for the FIGlet fonts and paths |
-| `tagline.shadowGlyphs` | `null` | figlet glyphs drawn at `shadowAlpha`; `null` = the font's set (`"═║╔╗╚╝"` for `ansi-shadow`, `"░"` for `blocks-shadow`, `"▇▉"` for `blocks-3d`, `"▓▒"` for `blocks-iso`, `""` = single tone otherwise) |
+| `tagline.layout` | `null` | glyph spacing: `"full"` (butted), `"fit"` (moved until they touch), `"smush"` (merged where they touch), `"header"` (as the `.flf` says); `null` = the font's default: `"full"` for `ansi-shadow` and the block faces, `"header"` for the FIGlet fonts and paths |
+| `tagline.shadowGlyphs` | `null` | figlet glyphs drawn at `shadowAlpha`; `null` = the font's set (`"═║╔╗╚╝"` for `ansi-shadow`, `"░"` for `blocks-shadow`, `"▇▉"` for `blocks-3d`, `""` = single tone otherwise) |
 
 ### `reveal`
 
@@ -280,7 +280,7 @@ Run it as `npx --yes github:hartestarke/ascii-banner <command>`, or `node bin/as
 - [docs/fields.md](docs/fields.md): every field preset, its options and bytes; glyph sets, colours, no field and a still field; writing a `sample` function or a preset.
 - [docs/reveals.md](docs/reveals.md): the reveal contract, every preset's options and bytes, `tagline.color`, `reveal.pool`; writing a preset.
 - [docs/fonts.md](docs/fonts.md): the bundled fonts, `tagline.font`, `tagline.layout`, `tagline.shadowGlyphs`.
-- [docs/block-fonts.md](docs/block-fonts.md): the six original block faces, their bitmap format and generator.
+- [docs/block-fonts.md](docs/block-fonts.md): the five original block faces, their bitmap format and generator.
 - [docs/gallery/README.md](docs/gallery/README.md): every field, reveal, font and glyph set rendered small, and three colour samples.
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version and what breaks a config on upgrade.
 
@@ -332,7 +332,7 @@ pyftsubset YourMono.ttf --text-file=glyphs.txt --flavor=woff2 \
 
 - `fonts/jetbrains-mono.woff2`: subset of JetBrains Mono, SIL Open Font License 1.1 (`fonts/OFL.txt`, details in `fonts/NOTICE.md`).
 - `fonts/figlet/*.flf`: thirteen fonts verbatim from the official FIGlet distribution, BSD-3-Clause (`fonts/figlet/LICENSE`); `fonts/figlet/NOTICE.md` records the source commit and every author named in the headers.
-- `fonts/block/*.flf`: `blocks`, `blocks-shadow`, `blocks-thin`, `pixel`, `blocks-3d` and `blocks-iso`, drawn for this project and generated from `fonts/block/src/hairline.txt` by `tools/mkfont.mjs`; MIT like the rest of the repo (`fonts/block/NOTICE.md`).
+- `fonts/block/*.flf`: `blocks`, `blocks-shadow`, `blocks-thin`, `pixel` and `blocks-3d`, drawn for this project and generated from `fonts/block/src/hairline.txt` by `tools/mkfont.mjs`; MIT like the rest of the repo (`fonts/block/NOTICE.md`).
 - `fonts/ansi-shadow.flf`: figlet "ANSI Shadow", author unknown, no explicit licence found; see `fonts/ANSI-SHADOW-NOTICE.md`. Swap it via `tagline.font`.
 - `src/fields/sharks.mjs`: shark outlines after [ascii-sharks](https://github.com/stackedlol/ascii-sharks) by drewdi, MIT (`THIRD-PARTY.md`).
 

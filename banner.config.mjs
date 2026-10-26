@@ -32,12 +32,11 @@ export default {
     // Glyph spacing: "full" (butted together), "fit" (moved together until they
     // touch), "smush" (merged where they touch) or "header" (as the .flf says).
     // null = the font's default: "full" for ansi-shadow and the block faces,
-    // whose spacing is drawn in, except "fit" for blocks-iso, which closes up
-    // its lean; "header" for the FIGlet fonts and paths.
+    // whose spacing is drawn in; "header" for the FIGlet fonts and paths.
     layout: null,
     // Figlet glyphs drawn at shadowAlpha; all others are solid. null = the
     // font's default: "═║╔╗╚╝" for ansi-shadow, "░" for blocks-shadow, "▇▉"
-    // for blocks-3d, "▓▒" for blocks-iso, "" (single tone) for every
+    // for blocks-3d, "" (single tone) for every
     // other font and for paths.
     shadowGlyphs: null,
   },

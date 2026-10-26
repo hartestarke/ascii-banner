@@ -1,6 +1,6 @@
 # Tagline fonts
 
-Taglines are set in a figlet (`.flf`) font. Twenty are bundled; `ascii-banner
+Taglines are set in a figlet (`.flf`) font. Nineteen are bundled; `ascii-banner
 fonts` lists them, `ascii-banner fonts --sample "Hello"` renders a sample in
 each, and the [gallery](gallery/README.md#fonts) shows each one in a banner.
 
@@ -25,12 +25,11 @@ each, and the [gallery](gallery/README.md#fonts) shows each one in a banner.
 | `blocks-thin` | One `█` per pixel: tall, narrow letters | this project | MIT | `full` (header: full) | no, draws capitals |
 | `pixel` | Half blocks `▀` `▄`, two pixel rows per text row; the most compact | this project | MIT | `full` (header: full) | no, draws capitals |
 | `blocks-3d` | `blocks` as solid blocks receding up and right, the top of every stroke in `▇` and its right side in `▉` (8 rows) | this project | MIT | `full` (header: full) | no, draws capitals |
-| `blocks-iso` | `blocks` leaning right like an isometric view, extruded down in `▓` `▒` (9 rows) | this project | MIT | `fit` (header: full), closes up the lean padding | no, draws capitals |
 
 The thirteen FIGlet fonts come verbatim from the official FIGlet distribution;
 [`fonts/figlet/NOTICE.md`](../fonts/figlet/NOTICE.md) records the source
 commit, the licence ([`fonts/figlet/LICENSE`](../fonts/figlet/LICENSE)) and
-every author and modifier named in their headers. The six block faces are
+every author and modifier named in their headers. The five block faces are
 original work for this project, generated from one bitmap by
 `tools/mkfont.mjs`; [block-fonts.md](block-fonts.md) describes them.
 
@@ -82,7 +81,7 @@ Set `layout: "fit"` to get figlet's own spacing for it.
 Glyphs drawn at `tagline.shadowAlpha`; every other glyph is drawn solid. `null`
 (the default) takes the bundled font's set: `"═║╔╗╚╝"` for `ansi-shadow`
 (its box-drawing shadow), `"░"` for `blocks-shadow`, `"▇▉"` for `blocks-3d`
-and `"▓▒"` for `blocks-iso` (their depth), `""` (single tone) for
+(its depth), `""` (single tone) for
 the other block faces, the thirteen FIGlet fonts and a font given as a path. The FIGlet `shadow` and `smshadow` fonts draw
 their shadow with the same `_ | / \` strokes as the letter edges, so no glyph
 set separates the two. Set an explicit string to override, `""` to turn the
