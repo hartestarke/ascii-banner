@@ -9,6 +9,7 @@ Notable changes per version, newest first. Versions are git tags `vX.Y.Z` and fo
 - `typewriter` types letter by letter: each tagline character is one keystroke showing its whole figlet glyph, keystrokes land at uneven intervals (new option `jitter`) and the cursor sits after the last typed letter. `figletLaid()` in `src/figlet.mjs` reports every character's column span, and reveal presets get it as `ctx.spans`.
 - New field preset `sharks`: sharks seen from above cruise across the banner, each at its own depth, lane and speed, eight species or `mix`, optional one-cell fish. Outlines after [ascii-sharks](https://github.com/stackedlol/ascii-sharks) by drewdi, MIT (`THIRD-PARTY.md`).
 - Docs: the byte figures in `docs/reveals.md` and `docs/fields.md` are re-measured on the current build (each was 1,332 bytes low).
+- **Breaking:** `blocks-3d` is redrawn. The letters recede one column right and one row up as solid blocks, the top of every stroke in `▇` and its right side in `▉`: 8 rows (was 9), `shadowGlyphs` default `"▇▉"` (was `"▓▒"`), 13 columns per 5-pixel letter (was 16). A config that pinned `shadowGlyphs: "▓▒"` for it now draws the depth solid; drop the key. `tools/mkfont.mjs` gains the voxel renderer behind it.
 
 ## [0.3.0] - 2026-10-24
 

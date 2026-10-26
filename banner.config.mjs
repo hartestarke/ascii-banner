@@ -36,8 +36,8 @@ export default {
     // its lean; "header" for the FIGlet fonts and paths.
     layout: null,
     // Figlet glyphs drawn at shadowAlpha; all others are solid. null = the
-    // font's default: "═║╔╗╚╝" for ansi-shadow, "░" for blocks-shadow, "▓▒"
-    // for the 3D faces (blocks-3d, blocks-iso), "" (single tone) for every
+    // font's default: "═║╔╗╚╝" for ansi-shadow, "░" for blocks-shadow, "▇▉"
+    // for blocks-3d, "▓▒" for blocks-iso, "" (single tone) for every
     // other font and for paths.
     shadowGlyphs: null,
   },

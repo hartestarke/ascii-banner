@@ -221,7 +221,7 @@ export default {
 | `tagline.knockout` | `6` | px of field cleared around the letters; `0` = off |
 | `tagline.font` | `"ansi-shadow"` | a bundled font (`ascii-banner fonts` lists them) or a path to any `.flf`, relative to the config file; an unknown name fails with the list. `ansi-shadow` and the block faces are caps only |
 | `tagline.layout` | `null` | glyph spacing: `"full"` (butted), `"fit"` (moved until they touch), `"smush"` (merged where they touch), `"header"` (as the `.flf` says); `null` = the font's default: `"fit"` for `blocks-iso`, `"full"` for `ansi-shadow` and the other block faces, `"header"` for the FIGlet fonts and paths |
-| `tagline.shadowGlyphs` | `null` | figlet glyphs drawn at `shadowAlpha`; `null` = the font's set (`"═║╔╗╚╝"` for `ansi-shadow`, `"░"` for `blocks-shadow`, `"▓▒"` for `blocks-3d` and `blocks-iso`, `""` = single tone otherwise) |
+| `tagline.shadowGlyphs` | `null` | figlet glyphs drawn at `shadowAlpha`; `null` = the font's set (`"═║╔╗╚╝"` for `ansi-shadow`, `"░"` for `blocks-shadow`, `"▇▉"` for `blocks-3d`, `"▓▒"` for `blocks-iso`, `""` = single tone otherwise) |
 
 ### `reveal`
 

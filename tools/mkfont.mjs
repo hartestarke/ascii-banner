@@ -31,13 +31,20 @@ const LOWER = "▄";
 const SHADE = "░";
 const MEDIUM_SHADE = "▒";
 const DARK_SHADE = "▓";
+const LEFT_SEVEN_EIGHTHS = "▉";
+const LOWER_SEVEN_EIGHTHS = "▇";
 const HALF = [" ", LOWER, UPPER, FULL]; // indexed by top * 2 + bottom
 const BLOCK = FULL + FULL; // one square design pixel of the full-block faces
 
-// Depth of the 3-D faces, nearest level first. Two text columns and one row
-// is one square design pixel, so blocks-3d recedes at 45 degrees.
+// blocks-3d: the letters recede half a design pixel (one column) right and one
+// row up, so every stroke shows its top in LOWER_SEVEN_EIGHTHS and its right
+// side in LEFT_SEVEN_EIGHTHS: solid tones, unlike the shades, with the eighth
+// left clear along each face's far edge. Deeper or wider looked worse: a
+// depth as wide as the one-pixel strokes outweighs the letters.
+const VOXEL = { dx: 0.5, dy: 1, top: LOWER_SEVEN_EIGHTHS, right: LEFT_SEVEN_EIGHTHS };
+// Depth of blocks-iso, nearest level first, one design pixel (two text
+// columns, one row) per level.
 const DEPTH_GLYPHS = [DARK_SHADE, MEDIUM_SHADE];
-const EXTRUDE_3D = { dx: 2, dy: 1, glyphs: DEPTH_GLYPHS };
 // Full-width layout cannot overlap glyphs, so each blocks-iso glyph carries
 // its own lean as (height - 1) * ISO_SHEAR plain blank columns, depth rows
 // included, which a "fit" layout closes up again (its registry default).
@@ -89,10 +96,9 @@ const FACES = {
     render: (bits) => bits.map((row) => row.map((px) => paint(px, FULL)).join("")),
   },
   "blocks-3d": {
-    about: "blocks extruded two pixels back to the lower right, dark then medium shade, 9 rows",
+    about: "blocks receding one column right and one row up, the top of every stroke in a lower seven-eighths block and its right side in a left seven-eighths block, 8 rows",
     gap: GAP_COLS * BLOCK.length,
-    baseline: (height) => height - EXTRUDE_3D.glyphs.length * EXTRUDE_3D.dy, // the depth hangs below
-    render: (bits) => extrude(FACES.blocks.render(bits), EXTRUDE_3D),
+    render: (bits) => voxel(bits, VOXEL),
   },
   "blocks-iso": {
     about: "blocks leaning right one column per row, extruded two rows down, dark then medium shade, 9 rows",
@@ -110,12 +116,12 @@ function blankBelow(row) {
 }
 
 /**
- * The glyph plus one copy of its silhouette per depth level, level n moved
- * n * dx columns right and n * dy rows down and drawn in glyphs[n - 1] where
- * nothing nearer is drawn. The canvas grows to hold the deepest level; a row
- * that ends in hardblank spacing grows in hardblanks, and the rows added below
- * carry that run, so the spacing stays behind the depth and "fit" cannot pull
- * the next letter onto it.
+ * blocks-iso's depth: the glyph plus one copy of its silhouette per level,
+ * level n moved n * dx columns right and n * dy rows down and drawn in
+ * glyphs[n - 1] where nothing nearer is drawn. The canvas grows to hold the
+ * deepest level; a row that ends in hardblank spacing grows in hardblanks,
+ * and the rows added below carry that run, so the spacing stays behind the
+ * depth and "fit" cannot pull the next letter onto it.
  */
 function extrude(rows, { dx, dy, glyphs }) {
   if (dx < 0 || dy < 0) fail(`extrude: the depth recedes right and down; dx and dy must be >= 0`);
@@ -137,6 +143,70 @@ function extrude(rows, { dx, dy, glyphs }) {
 function shear(rows, step) {
   const last = rows.length - 1;
   return rows.map((r, y) => " ".repeat((last - y) * step) + r + " ".repeat(y * step));
+}
+
+const NONE = 0;
+const FRONT = 1;
+const TOP = 2;
+const RIGHT = 3;
+// Where a text cell is sampled, as fractions of its width and height: a cell
+// is half a design pixel wide and one tall, and a face has to cover half the
+// samples to be drawn.
+const VOXEL_SAMPLES = [0.25, 0.75].flatMap((fx) => [0.125, 0.375, 0.625, 0.875].map((fy) => [fx, fy]));
+
+/**
+ * The glyph swept `dx` pixels right and `dy` up, drawn as the faces in view:
+ * the front in full blocks, the tops of the strokes in `top`, their right
+ * sides in `right`. Tracing back from a point along the sweep, the first
+ * pixel entered is the one in view; entered at t = 0 it is the front, through
+ * its top edge (the trace comes down onto it) a top face, through its right
+ * edge a right face. A text cell shows the face most of its samples see. The
+ * letters sit on the last row with the depth rising above them, and the gap
+ * columns stay hardblanks on every row, so "fit" keeps the letter gap.
+ */
+function voxel(bits, { dx, dy, top, right }) {
+  if (!(dx > 0 && dy > 0)) fail("voxel: the depth recedes right and up; dx and dy must be > 0");
+  const H = bits.length;
+  const inkW = bits[0].length - GAP_COLS;
+  const pixels = [];
+  bits.forEach((row, y) => row.forEach((px, x) => px === true && x < inkW && pixels.push([x, y])));
+  const faceAt = (px, py) => {
+    let t = Infinity;
+    let face = NONE;
+    for (const [x, y] of pixels) {
+      // t at which the trace enters the pixel's column and its row, and leaves them
+      const tx = (px - x - 1) / dx;
+      const ty = (y - py) / dy;
+      const tIn = Math.max(tx, ty);
+      const tOut = Math.min((px - x) / dx, (y + 1 - py) / dy);
+      if (tIn >= tOut || tOut <= 0 || tIn > 1 || Math.max(0, tIn) >= t) continue;
+      t = Math.max(0, tIn);
+      face = tIn <= 0 ? FRONT : ty > tx ? TOP : RIGHT;
+    }
+    return face;
+  };
+  const ink = [" ", FULL, top, right];
+  const blank = pixels.length ? " " : HARDBLANK; // a glyph without ink (the space, undrawn characters) is hardblank throughout
+  const cols = BLOCK.length * (inkW + dx + GAP_COLS);
+  if (!Number.isInteger(cols)) fail(`voxel: dx must be a multiple of 1/${BLOCK.length} pixel, got ${dx}`);
+  const out = [];
+  for (let r = 0; r < H + dy; r++) {
+    let line = "";
+    for (let c = 0; c < cols; c++) {
+      const x = c / BLOCK.length;
+      if (x >= inkW + dx) {
+        line += HARDBLANK;
+        continue;
+      }
+      const seen = [0, 0, 0, 0];
+      for (const [fx, fy] of VOXEL_SAMPLES) seen[faceAt(x + fx / BLOCK.length, r - dy + fy)]++;
+      const [none, front, tops, rights] = seen;
+      const face = none > VOXEL_SAMPLES.length / 2 ? NONE : front >= tops && front >= rights ? FRONT : tops >= rights ? TOP : RIGHT;
+      line += face === NONE ? blank : ink[face];
+    }
+    out.push(line);
+  }
+  return out;
 }
 
 /** The glyph plus a SHADE copy one column right and one row down, behind it. */

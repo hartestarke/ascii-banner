@@ -22,7 +22,7 @@ A text cell is 0.6 em wide and 1.2 em tall (1:2), and that shape sets each face'
 | `blocks-shadow` | `fonts/block/blocks-shadow.flf` | 8 | as `blocks`, plus a light-shade drop shadow | `"░"` (U+2591) |
 | `pixel` | `fonts/block/pixel.flf` | 4 | a half block `▀` / `▄`, square; two pixel rows per text row | `""` |
 | `blocks-thin` | `fonts/block/blocks-thin.flf` | 7 | one full block `█`, twice as tall as wide | `""` |
-| `blocks-3d` | `fonts/block/blocks-3d.flf` | 9 | as `blocks`, plus a two-pixel extrusion to the lower right in `▓` then `▒` | `"▓▒"` (U+2593, U+2592) |
+| `blocks-3d` | `fonts/block/blocks-3d.flf` | 8 | as `blocks`, receding one column right and one row up: the top of every stroke in `▇`, its right side in `▉` | `"▇▉"` (U+2587, U+2589) |
 | `blocks-iso` | `fonts/block/blocks-iso.flf` | 9 | as `blocks`, leaning right half a pixel per row, plus a two-row extrusion straight down in `▓` then `▒` | `"▓▒"` (U+2593, U+2592) |
 
 - **blocks**: the bitmap at ANSI Shadow's scale. A one-pixel gap separates the glyphs.
@@ -35,13 +35,17 @@ A text cell is 0.6 em wide and 1.2 em tall (1:2), and that shape sets each face'
   blank bottom row, then paired into 4 text rows (`▀` top pixel, `▄` bottom
   pixel, `█` both).
 - **blocks-thin**: the cheap variant, with tall narrow letters.
-- **blocks-3d**: the glyph's silhouette repeated one design pixel (two
-  columns, one row) further to the lower right per depth level, two levels
-  deep: `▓` for the near level, `▒` for the far one, each drawn only where
-  nothing nearer is. The face stays on top, so the depth shows as the right
-  and lower side of every stroke, receding at 45°. The depth fills the
-  one-pixel glyph gap, and each glyph grows by 4 columns so one blank pixel
-  still separates it from the next letter.
+- **blocks-3d**: the letters as solid blocks receding one column right and
+  one row up, drawn as the faces in view: the front in `█`, the top of every
+  stroke in `▇` (lower seven-eighths block) and its right side in `▉` (left
+  seven-eighths block). Those two are solid tones, unlike the shades, and
+  the eighth they leave clear runs along each face's far edge. The generator
+  traces every text cell back along the depth: the first pixel the trace
+  enters is the one in view, through its top edge for a top face, through
+  its right edge for a right face, and a cell shows the face most of its
+  samples see. The depth rises above the letters, so the baseline stays on
+  the last row, and each glyph grows by one column so one blank pixel still
+  separates it from the next letter.
 - **blocks-iso**: `blocks` sheared so that each text row sits one column
   right of the row below it (about 27°, close to an isometric lean), then the
   same two levels extruded straight down, which under the lean read as the
@@ -52,9 +56,10 @@ A text cell is 0.6 em wide and 1.2 em tall (1:2), and that shape sets each face'
   top. The face therefore defaults to layout `fit`, which closes the padding
   up between letters and keeps the blank pixel after the depth.
 
-List `▓▒` in `tagline.shadowGlyphs` (the bundled default for both 3-D faces)
-so the depth draws at `tagline.shadowAlpha` and reads as a side plane rather
-than as part of the letter.
+List the depth glyphs in `tagline.shadowGlyphs` (the bundled defaults: `▇▉`
+for `blocks-3d`, `▓▒` for `blocks-iso`) so the depth draws at
+`tagline.shadowAlpha` and reads as a side plane rather than as part of the
+letter.
 
 `blocks` and `blocks-shadow` spend two text columns per pixel, and `pixel` and
 `blocks-thin` spend one. At the same banner width the first two therefore set at about
@@ -62,18 +67,18 @@ half the font size. A 26-glyph punctuation line is 240 columns in `blocks` and
 5.6 px on the 880 px template, just under the build's 6 px warning. Short
 taglines are fine.
 
-The 3-D faces cost both ways. Width: a 5-pixel letter takes 16 columns in
+The 3-D faces cost both ways. Width: a 5-pixel letter takes 13 columns in
 `blocks-3d` against 12 in `blocks`, and `blocks-iso` takes 14 plus 6
 columns of lean once per line (22 per letter under `full`); `hello world` is
-172 and 156 columns, which the 880 px template's width alone sets at 7.8 and
-8.6 px. Height:
-they are 9 rows (the face's 7 plus 2 of depth), and `tagline.maxHeight`
-(0.34 of the banner height by default) caps all 9, so a tagline bound by
-height sets its letters at 7/9 of the size `blocks` gets. For a single
-tagline, set `tagline.maxHeight: 0.45` (about 0.34 × 9/7) to give the face
-its height back. That pays off for up to about eight letters in `blocks-3d`
-and nine in `blocks-iso` on the template; longer taglines are bound by the
-width anyway.
+139 and 156 columns, which the 880 px template's width alone sets at 9.7 and
+8.6 px. Height: `blocks-3d` is 8 rows (the face's 7 plus 1 of depth) and
+`blocks-iso` 9 (7 plus 2), and `tagline.maxHeight` (0.34 of the banner
+height by default) caps them all, so a tagline bound by height sets its
+letters at 7/8 or 7/9 of the size `blocks` gets. For a single tagline, set
+`tagline.maxHeight: 0.39` for `blocks-3d` or `0.45` for `blocks-iso` (0.34 ×
+8/7 and × 9/7) to give the face its height back. That pays off for up to
+about ten letters in `blocks-3d` and nine in `blocks-iso` on the template;
+longer taglines are bound by the width anyway.
 
 The letter gap and the space glyph are drawn in hardblanks (`$`), which
 render as spaces but are never kerned away, so `tagline.layout: "fit"` keeps
@@ -152,15 +157,14 @@ as `full` does, except `blocks-iso`, where it removes the lean padding.
 <!-- sample:blocks-3d -->
 
 ```text
-  ██████        ████████          ██          ██████
-██  ▓▓▓▓██      ██▓▓▓▓▓▓██      ████▓▓      ██  ▓▓▓▓██
-██▓▓  ▒▒██▓▓    ██▓▓▒▒▒▒██▓▓      ██▓▓▒▒      ▓▓  ▒▒██▓▓
-██████████▓▓▒▒  ████████  ▓▓▒▒    ██▓▓▒▒        ▒▒██  ▓▓▒▒
-██▓▓▓▓▓▓██▓▓▒▒  ██▓▓▓▓▓▓██  ▒▒    ██▓▓▒▒        ██  ▓▓  ▒▒
-██▓▓▒▒▒▒██▓▓▒▒  ██▓▓▒▒▒▒██▓▓      ██▓▓▒▒          ▓▓  ▒▒
-██▓▓▒▒  ██▓▓▒▒  ████████  ▓▓▒▒  ██████▒▒        ██  ▒▒
-  ▓▓▒▒    ▓▓▒▒    ▓▓▓▓▓▓▓▓  ▒▒    ▓▓▓▓▓▓          ▓▓
-    ▒▒      ▒▒      ▒▒▒▒▒▒▒▒        ▒▒▒▒▒▒          ▒▒
+  ▇▇▇▇▇▇▇    ▇▇▇▇▇▇▇▇▇      ▇▇▇      ▇▇▇▇▇▇▇
+▇▇██████▇▇▇  ████████▇▇▇  ▇▇██▉    ▇▇██████▇▇▇
+██▉     ██▉  ██▉     ██▉  ████▉    ██▉     ██▉
+██▇▇▇▇▇▇██▉  ██▇▇▇▇▇▇██▉    ██▉          ▇▇██▉
+██████████▉  ████████▇▇▇    ██▉        ▇▇██▉
+██▉     ██▉  ██▉     ██▉    ██▉        ██▉
+██▉     ██▉  ██▇▇▇▇▇▇██▉  ▇▇██▇▇▇      ▇▇▇
+██▉     ██▉  ████████▉    ██████▉      ██▉
 ```
 
 <!-- /sample -->
@@ -252,4 +256,4 @@ The six faces are registered in `src/fonts.mjs` as `blocks`, `blocks-shadow`,
 (`fit` for `blocks-iso`) and
 the `shadowGlyphs` from the table above, so `tagline: { font: "blocks-shadow" }`
 is all a config needs. For a single tagline in a 3-D face, add
-`maxHeight: 0.45` (see [Faces](#faces)).
+`maxHeight: 0.39` (`blocks-3d`) or `0.45` (`blocks-iso`), see [Faces](#faces).

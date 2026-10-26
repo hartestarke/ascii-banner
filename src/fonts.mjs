@@ -42,7 +42,7 @@ export const BUNDLED_FONTS = {
   "blocks-shadow": blockFont("blocks-shadow", "░"),
   "blocks-thin": blockFont("blocks-thin"),
   pixel: blockFont("pixel"),
-  "blocks-3d": blockFont("blocks-3d", "▓▒"),
+  "blocks-3d": blockFont("blocks-3d", "▇▉"),
   // Fitted: each glyph carries its lean as plain blank padding, which fitting
   // closes up, while the hardblank letter and word gaps stay.
   "blocks-iso": blockFont("blocks-iso", "▓▒", "fit"),

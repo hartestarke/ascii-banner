@@ -46,7 +46,7 @@ Regenerate, then look at the result through every face before committing.
    `false` (off) or `GAP` (the gap column and the whole space glyph), which
    `paint` writes as hardblanks so `fit` layouts keep it. It returns the
    text rows, the same number of rows for every glyph. `dropShadow`, `extrude`
-   and `shear` build on another face's rows.
+   and `shear` build on another face's rows; `voxel` draws the pixels itself.
 2. Use only characters the embedded font covers: printable ASCII, Box Drawing
    (U+2500–257F) and Block Elements (U+2580–259F). The banner build rejects
    anything else.

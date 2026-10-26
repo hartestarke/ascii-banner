@@ -63,7 +63,7 @@ Every field preset, reveal preset, bundled tagline font and glyph set, plus thre
 | `blocks-shadow` | <img src="font-blocks-shadow.svg" width="440" alt="blocks-shadow font sample"> | 83,488 |
 | `blocks-thin` | <img src="font-blocks-thin.svg" width="440" alt="blocks-thin font sample"> | 75,619 |
 | `pixel` | <img src="font-pixel.svg" width="440" alt="pixel font sample"> | 67,127 |
-| `blocks-3d` | <img src="font-blocks-3d.svg" width="440" alt="blocks-3d font sample"> | 89,180 |
+| `blocks-3d` | <img src="font-blocks-3d.svg" width="440" alt="blocks-3d font sample"> | 84,347 |
 | `blocks-iso` | <img src="font-blocks-iso.svg" width="440" alt="blocks-iso font sample"> | 88,338 |
 
 ## Glyph sets
