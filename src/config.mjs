@@ -46,7 +46,7 @@ export const DEFAULTS = {
     seconds: 2.2, // seconds a line spends revealing
     hold: 5.8, // seconds a settled line holds before the next one starts
     fps: 20, // step rate of stepped reveals; scramble reads as noise below ~15
-    pool: null, // glyphs of the scramble / glitch noise: a GLYPH_SETS name or your own string; null = the field's ramp
+    pool: null, // glyphs of the scramble / decrypt / glitch noise: a GLYPH_SETS name or your own string; null = the field's ramp
     // Merged over the preset's defaults. A top-level `decode: {...}` is the
     // legacy spelling of preset "scramble" with these options.
     options: {},

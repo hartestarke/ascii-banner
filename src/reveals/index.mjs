@@ -6,6 +6,7 @@
 // per-preset prefix (tw, wp, dv, dp, gx, nr) clear of the field's (.f, .b<n>,
 // k); scramble's unprefixed names are part of the default banner's bytes.
 import scramble from "./scramble.mjs";
+import decrypt from "./decrypt.mjs";
 import typewriter from "./typewriter.mjs";
 import wipe from "./wipe.mjs";
 import dissolve from "./dissolve.mjs";
@@ -13,4 +14,4 @@ import fall from "./fall.mjs";
 import glitch from "./glitch.mjs";
 import none from "./none.mjs";
 
-export const REVEAL_PRESETS = { scramble, typewriter, wipe, dissolve, fall, glitch, none };
+export const REVEAL_PRESETS = { scramble, decrypt, typewriter, wipe, dissolve, fall, glitch, none };

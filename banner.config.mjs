@@ -52,7 +52,7 @@ export default {
     seconds: 2.2, // s a line spends revealing
     hold: 5.8, // s a settled line holds before the next one starts
     fps: 20, // steps per second of stepped reveals; scramble reads as noise below ~15
-    // Glyphs of the scramble / glitch noise: a glyph set (see field.ramp) or
+    // Glyphs of the scramble / decrypt / glitch noise: a glyph set (see field.ramp) or
     // your own string, spaces ignored. null = the field's ramp glyphs; for the
     // rain field those are all bars, and pool: "classic" mixes the noise up.
     pool: null,

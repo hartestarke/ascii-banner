@@ -2,7 +2,7 @@
 
 # ascii-banner
 
-An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Ten field presets (or your own function, or none), six reveals (or none), twenty bundled fonts and eight glyph sets, all picked in one config file. Zero dependencies, Node ≥ 20.
+An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Ten field presets (or your own function, or none), seven reveals (or none), twenty bundled fonts and eight glyph sets, all picked in one config file. Zero dependencies, Node ≥ 20.
 
 ## Examples
 
@@ -135,19 +135,19 @@ The previews are animated SVGs: 440 × 120, a 6 s field loop at 6 fps, default o
 <table>
 <tr>
 <td align="center"><img src="docs/gallery/reveal-scramble.svg" width="440" alt="scramble reveal"><br><code>scramble</code></td>
+<td align="center"><img src="docs/gallery/reveal-decrypt.svg" width="440" alt="decrypt reveal"><br><code>decrypt</code></td>
+</tr>
+<tr>
 <td align="center"><img src="docs/gallery/reveal-typewriter.svg" width="440" alt="typewriter reveal"><br><code>typewriter</code></td>
-</tr>
-<tr>
 <td align="center"><img src="docs/gallery/reveal-wipe.svg" width="440" alt="wipe reveal"><br><code>wipe</code></td>
+</tr>
+<tr>
 <td align="center"><img src="docs/gallery/reveal-dissolve.svg" width="440" alt="dissolve reveal"><br><code>dissolve</code></td>
-</tr>
-<tr>
 <td align="center"><img src="docs/gallery/reveal-fall.svg" width="440" alt="fall reveal"><br><code>fall</code></td>
-<td align="center"><img src="docs/gallery/reveal-glitch.svg" width="440" alt="glitch reveal"><br><code>glitch</code></td>
 </tr>
 <tr>
+<td align="center"><img src="docs/gallery/reveal-glitch.svg" width="440" alt="glitch reveal"><br><code>glitch</code></td>
 <td align="center"><img src="docs/gallery/reveal-none.svg" width="440" alt="no reveal"><br><code>none</code></td>
-<td></td>
 </tr>
 </table>
 
@@ -212,7 +212,7 @@ export default {
 | `tagline.maxHeight` | `0.34` | ...and the letters at most this fraction of the height |
 | `tagline.lineHeight` | `1.2` | row pitch in em; block glyphs span -0.3..1.02 em, so ≤ 1.32 stays seamless |
 | `tagline.shadowAlpha` | `0.5` | alpha of the shadow glyphs vs the solid ones |
-| `tagline.color` | `null` | `#rrggbb` of the letters and of what a reveal draws in letter colour (scramble noise, glitch flashes, typewriter cursor); `null` = `accent` |
+| `tagline.color` | `null` | `#rrggbb` of the letters and of what a reveal draws in letter colour (scramble and decrypt noise, glitch flashes, typewriter cursor); `null` = `accent` |
 | `tagline.shadowColor` | `null` | `#rrggbb` of the shadow glyphs, still at `shadowAlpha`; `null` = `tagline.color` |
 | `tagline.knockout` | `6` | px of field cleared around the letters; `0` = off |
 | `tagline.font` | `"ansi-shadow"` | a bundled font (`ascii-banner fonts` lists them) or a path to any `.flf`, relative to the config file; an unknown name fails with the list. `ansi-shadow` and the block faces are caps only |
@@ -223,11 +223,11 @@ export default {
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `reveal.preset` | `"scramble"` | `"scramble"`, `"typewriter"`, `"wipe"`, `"dissolve"`, `"fall"`, `"glitch"`, or `"none"`: each line shown settled for its slot, no animation |
+| `reveal.preset` | `"scramble"` | `"scramble"`, `"decrypt"`, `"typewriter"`, `"wipe"`, `"dissolve"`, `"fall"`, `"glitch"`, or `"none"`: each line shown settled for its slot, no animation |
 | `reveal.seconds` | `2.2` | seconds a line spends revealing |
 | `reveal.hold` | `5.8` | seconds a settled line holds before the next one starts |
 | `reveal.fps` | `20` | step rate of stepped reveals; scramble reads as noise below ~15 |
-| `reveal.pool` | `null` | glyphs of scramble's noise and glitch's flashes: a glyph set name (see `field.ramp`) or your own string, spaces ignored; `null` = the field's ramp (over `rain` that is all bars; `"classic"` mixes the noise up) |
+| `reveal.pool` | `null` | glyphs of scramble's and decrypt's noise and glitch's flashes: a glyph set name (see `field.ramp`) or your own string, spaces ignored; `null` = the field's ramp (over `rain` that is all bars; `"classic"` mixes the noise up) |
 | `reveal.options` | the preset's | the preset's own knobs, merged over its defaults; unknown ones are an error, so replace them when you switch preset. `ascii-banner presets` lists them, [docs/reveals.md](docs/reveals.md) explains them |
 
 ### `field`
@@ -318,7 +318,7 @@ pyftsubset YourMono.ttf --text-file=glyphs.txt --flavor=woff2 \
 - **Field.** The preset (or `field.sample`) gives a brightness in [0, 1] for every cell of every frame. Presets use whole cycles and whole drifts per loop, so the seam is exact; the build checks it. Each value lands on a ramp level, and the levels fold into one to three alpha bands. Every frame row is written in whichever of two encodings is shorter: one `<text>` per band, or one `<text>` with a `<tspan>` per glyph run. Dense, banded fields favour the first, sparse ones the second. A CSS animation flips the frames. Each band fills with its `field.colors` entry, or with one horizontal `<linearGradient>` across the width at the band's alpha when `field.gradient` is set.
 - **No field, a still field.** `field.preset: "none"` writes no frames and no knockout mask; `field.fps: 0` writes the one frame at `stillAt` and no flipbook animation, so with a single tagline and `reveal.preset: "none"` the SVG has no `@keyframes` at all.
 - **Taglines.** Figlet rows, two-tone: the font's shadow glyphs at `shadowAlpha` in `tagline.shadowColor`, the rest solid in `tagline.color` (both the accent by default). Each line owns a slot in the tagline loop, is hidden outside it, reveals over `seconds` and then holds settled; the settled line is identical whichever reveal drew it.
-- **Reveals.** Each preset hides and shows with CSS-animated clips, masks and transforms. `scramble` gives every figlet row its own clip window, stepping in whole columns along a shared uneven pace plus a bounded per-row wander, with a band of cycling ramp glyphs running ahead. `typewriter` steps all rows together behind a cursor. `wipe` scales one mask rect from the edge it starts at. `dissolve` fills the mask with a dither `<pattern>` whose cells switch on at their threshold tick, so it costs matrix² animations however long the line is. `fall` drops glyph groups into place, and `glitch` jumps rows sideways and flashes noise.
+- **Reveals.** Each preset hides and shows with CSS-animated clips, masks and transforms. `scramble` gives every figlet row its own clip window, stepping in whole columns along a shared uneven pace plus a bounded per-row wander, with a band of cycling ramp glyphs running ahead. `decrypt` shows the whole line as cycling noise from the first tick and locks cells in a left-to-right sweep that is ragged cell by cell: every cell belongs to one of a few interleaved lanes whose fronts trail each other. `typewriter` steps all rows together behind a cursor. `wipe` scales one mask rect from the edge it starts at. `dissolve` fills the mask with a dither `<pattern>` whose cells switch on at their threshold tick, so it costs matrix² animations however long the line is. `fall` drops glyph groups into place, and `glitch` jumps rows sideways and flashes noise.
 - **Firefox.** Firefox ignores CSS transforms on a `clipPath`'s children, so the clipped group moves and an inner group counter-moves the glyphs.
 - **Knockout.** A mask clears the field around the letters (stroke dilation), which keeps the tagline legible on any page colour and over the field's hot zones. It opens only where text is visible: with the scramble front, under the wipe window, with each falling group. Opened up front, the letter-shaped hole would give the line away before it appears.
 - **Budget.** Keep the SVG under 1 MiB raw; the default banner is 858 KB raw, 90 KB gzipped. Raw size ∝ frames × rows × columns; gzip barely grows with frames. What visitors actually pay is DOM (about 5.5k text nodes by default) and repaint rate, so keep `fps × loopSeconds` modest. The build fails over `budget.maxBytes`.
