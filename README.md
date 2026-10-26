@@ -101,24 +101,6 @@ jobs:
           git commit -m "Rebuild banner" && git push
 ```
 
-## Changes in 0.2
-
-- Twenty bundled tagline fonts: `ansi-shadow`, 15 BSD-3 FIGlet fonts and 4 original block faces (`ascii-banner fonts` lists them).
-- Eleven field presets (`field.preset`, `field.options`) and seven reveal presets (`reveal.preset`, `reveal.options`); `ascii-banner presets` lists them.
-- `reveal` replaces `decode`, and `field.preset` / `field.options` replace `field.waves` / `field.drive`. The old keys are still accepted.
-- Each field row is now written as per-band texts or tspan runs, whichever is shorter: the default banner went from 951,285 to 877,686 bytes with pixel-identical output.
-- **Breaking:** a `tagline.font` given as a path now defaults to `layout: "header"` and no dimmed shadow glyphs. Set `layout: "full", shadowGlyphs: "═║╔╗╚╝"` to get the 0.1 look.
-
-## Changes in 0.3
-
-- **Breaking:** the `static` field, the `fade` reveal and the `digital` and `bubble` fonts are removed; a config naming them fails. Ten field presets, six reveals plus `none`, twenty bundled fonts.
-- Colours: `field.colors` (1–3 per band, dim to bright) or `field.gradient` (2–8 stops, left → right), `tagline.color` (letters, scramble noise, glitch flashes, typewriter cursor) and `tagline.shadowColor`. Each defaults to `accent`.
-- Glyph sets: `field.ramp` takes `classic`, `digits`, `dots`, `squares`, `shapes`, `shade`, `binary` or `lines`. A glyph beyond ASCII costs 3 bytes, so a dense field in `dots`, `squares`, `shapes`, `shade` or `lines` needs `field.bands: 1` to stay under 1 MiB. The embedded font subset grows to 303 glyphs.
-- `reveal.pool`: the glyphs of scramble's noise and glitch's flashes, a set name or a string; `null` = the field's ramp.
-- `field.preset: "none"` draws no field, `field.fps: 0` one still frame (the one at `stillAt`), `reveal.preset: "none"` shows each line for its slot without animation. One line over no field or a still one is a static SVG.
-- Two extruded block faces, `blocks-3d` and `blocks-iso` (default layout `fit`). Block faces draw their gaps as hardblanks, so `tagline.layout: "fit"` keeps letters and words apart.
-- An unknown `tagline.font` name fails with the list of bundled names.
-
 ## Pick a look
 
 The previews are animated SVGs: 440 × 120, a 6 s field loop at 6 fps, default options, the `ansi-shadow` font. `npm run gallery` rebuilds them; the [gallery page](docs/gallery/README.md) lists their sizes and shows all twenty fonts.
@@ -296,6 +278,7 @@ Run it as `npx --yes github:hartestarke/ascii-banner <command>`, or `node bin/as
 - [docs/fonts.md](docs/fonts.md): the bundled fonts, `tagline.font`, `tagline.layout`, `tagline.shadowGlyphs`.
 - [docs/block-fonts.md](docs/block-fonts.md): the six original block faces, their bitmap format and generator.
 - [docs/gallery/README.md](docs/gallery/README.md): every field, reveal, font and glyph set rendered small, and three colour samples.
+- [CHANGELOG.md](CHANGELOG.md): what changed in each version and what breaks a config on upgrade.
 
 ## Hacking
 
