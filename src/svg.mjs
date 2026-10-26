@@ -53,6 +53,7 @@ function runs(row, isShadow) {
  *   layout          layoutTaglines(): TROWS, maxCols, TFONT, TPX, TPY, rowY(i),
  *                   SLOT_T, TDUR, NT (= round(seconds × fps) ticks), tickT(k)
  *   figs, pool      figlet rows per tagline, padded to TROWS; noise glyphs (reveal.pool, flattened)
+ *   spans           spans[p][i]: column span [a, b) of tagline p's i-th character (figletLaid())
  *   W, H, CUT       viewBox size; knockout stroke px, 0 = no knockout (always 0 with no field)
  *   esc, num, num2  XML text escape; 1 and 2 decimal numbers
  *   rgb(a), jitter  tagline.color at alpha a; jitter(i) in [0, 1), the only RNG
@@ -70,7 +71,7 @@ function runs(row, isShadow) {
  * reveal draws beyond the taglines, pool noise included, which the build
  * checks against the embedded font.
  */
-export function renderReveal(cfg, layout, figs, pool) {
+export function renderReveal(cfg, layout, figs, pool, spans) {
   const { width: W, height: H } = cfg.size;
   const { TPX, TDUR, SLOT_T, rowY } = layout;
   const shadowSet = new Set(cfg.tagline.shadowGlyphs);
@@ -85,7 +86,7 @@ export function renderReveal(cfg, layout, figs, pool) {
     return row ? `<text class="tg" y="${num(rowY(i))}">${esc(row)}</text>` : "";
   };
   const ctx = {
-    cfg, o: cfg.reveal.options, layout, figs, pool, W, H,
+    cfg, o: cfg.reveal.options, layout, figs, spans, pool, W, H,
     CUT: cfg.field.preset === NO_FIELD ? 0 : cfg.tagline.knockout, // nothing to cut without a field
     esc, num, num2, rgb: rgbOf(cfg.tagline.color), jitter,
     pct: (s) => ((s / TDUR) * 100).toFixed(3),

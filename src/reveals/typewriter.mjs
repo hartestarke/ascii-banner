@@ -1,15 +1,44 @@
-// Typewriter: every figlet row advances in lockstep, whole columns per reveal
-// tick, left to right over `seconds`, with a cursor block riding the front. The
-// window works like scramble's (Firefox ignores transforms on a clipPath's
-// children): the clipped group slides right, the inner group counter-slides the
-// glyphs. The knockout copy rides the same window plus a black cursor, so the
-// hole in the field follows the front.
+// Typewriter: the line is typed letter by letter. Each tagline character is one
+// keystroke that shows its whole figlet glyph, every row at once, and a cursor
+// block sits right after the last typed letter. Keystrokes land on reveal ticks
+// at uneven but deterministic intervals over `seconds`, the last on the final
+// tick. A glyph's columns come from the figlet layout's spans: fitting and
+// smushing leave no blank column between letters to find them by. The window
+// works like scramble's (Firefox ignores transforms on a clipPath's children):
+// the clipped group slides right, the inner group counter-slides the glyphs.
+// The knockout copy rides the same window plus a black cursor, so the hole in
+// the field follows the typing.
 import { EMPTY, animate, keyframes, slideKeyframes } from "./common.mjs";
+
+// Seeds of a stroke's interval draw: keep taglines and strokes on distinct jitter() inputs.
+const SEED_TAGLINE = 1009;
+const SEED_STROKE = 37;
+const SEED_OFFSET = 3;
+
+/**
+ * Columns typed after each tick k = 0..NT. Keystroke i lands where the running
+ * sum of the interval weights weight(i) reaches its share of ticks 1..NT,
+ * rounded and never before the previous stroke, so the last one lands on NT.
+ */
+function typedCols(spans, NT, weight) {
+  let total = 0;
+  const cum = spans.map((_, i) => (total += weight(i)));
+  let tick = 1;
+  // With every weight 0 (jitter 1 can draw zeros) there is no pace to follow: all strokes land on NT.
+  const strokes = cum.map((c) => (tick = Math.max(tick, total > 0 ? Math.round((NT * c) / total) : NT)));
+  const typed = [];
+  for (let k = 0, j = -1; k <= NT; k++) {
+    while (j + 1 < strokes.length && strokes[j + 1] <= k) j++;
+    typed.push(j < 0 ? 0 : spans[j][1]);
+  }
+  return typed;
+}
 
 export default {
   defaults: {
     cursor: "█",
     blink: 0, // period in seconds; 0 = the cursor leaves when the line settles
+    jitter: 0.5, // spread of the keystroke intervals: 0 = even, 1 = from almost nothing to twice the mean
   },
 
   validate(o, v) {
@@ -18,10 +47,11 @@ export default {
       `must be one character or "", got ${JSON.stringify(o.cursor)}`);
     v.nonNeg("blink");
     v.check(o.blink === 0 || o.blink >= 0.1, "blink", `must be 0 or at least 0.1 s, got ${o.blink}`);
+    v.unit("jitter");
   },
 
   render(ctx) {
-    const { o, cfg, layout, figs, H, CUT, esc, num, num2, pct, wrap, textRows, knockRows, delays } = ctx;
+    const { o, cfg, layout, figs, spans, H, CUT, esc, num, num2, pct, jitter, wrap, textRows, knockRows, delays } = ctx;
     if (!figs.length) return EMPTY;
     const { TROWS, maxCols, TPX, rowY, SLOT_T, TDUR, NT, tickT } = layout;
     const S = cfg.reveal.seconds;
@@ -38,10 +68,10 @@ export default {
     const settle = [];
     figs.forEach((rows, p) => {
       const cols = rows[0].length;
-      // The cursor's column and the columns shown after tick k; tick NT also
-      // opens the right margin.
-      const caret = (k) => (k < NT ? Math.round((k * cols) / NT) : cols);
-      const front = (k) => (k === 0 ? 0 : k < NT ? MC + caret(k) : cols + 2 * MC);
+      const typed = typedCols(spans[p], NT, (i) =>
+        1 + o.jitter * (2 * jitter(p * SEED_TAGLINE + i * SEED_STROKE + SEED_OFFSET) - 1));
+      // typed[k] is also the cursor's column; tick NT opens the right margin.
+      const front = (k) => (k === 0 ? 0 : k < NT ? MC + typed[k] : cols + 2 * MC);
       css += animate(`tw${p}`, TDUR) + animate(`twi${p}`, TDUR) +
         slideKeyframes(ctx, `tw${p}`, (k) => tx(front(k) * TPX), "transform:none") +
         slideKeyframes(ctx, `twi${p}`, (k) => tx(-front(k) * TPX), "transform:none");
@@ -51,7 +81,7 @@ export default {
       let knockCursor = "";
       if (o.cursor) {
         const stops = [["0", "opacity:1;transform:none"]];
-        for (let k = 1; k < NT; k++) if (caret(k) !== caret(k - 1)) stops.push([pct(tickT(k)), tx(caret(k) * TPX)]);
+        for (let k = 1; k < NT; k++) if (typed[k] !== typed[k - 1]) stops.push([pct(tickT(k)), tx(typed[k] * TPX)]);
         stops.push([pct(S), `${tx(cols * TPX)};opacity:${o.blink > 0 ? 1 : 0}`]);
         if (o.blink > 0)
           for (let j = 1, t = S + o.blink / 2; t < SLOT_T - 1e-9; j++, t = S + (j * o.blink) / 2)

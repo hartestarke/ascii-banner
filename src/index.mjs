@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { ConfigError, BUNDLED_GLYPHS, assetPaths, parseRamp, resolveConfig } from "./config.mjs";
 import { bakeField, fieldGrid } from "./field.mjs";
-import { figlet, loadFlf } from "./figlet.mjs";
+import { figletLaid, loadFlf } from "./figlet.mjs";
 import { layoutTaglines } from "./layout.mjs";
 import { renderReveal, renderSvg } from "./svg.mjs";
 
@@ -41,11 +41,13 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
 
   const flf = loadFlf(paths.flf, cfg.tagline.font, { layout: cfg.tagline.layout });
   const missing = new Set();
-  const figs = cfg.taglines.map((t, i) => figlet(flf, t, missing, `taglines[${i}]`));
+  const laid = cfg.taglines.map((t, i) => figletLaid(flf, t, missing, `taglines[${i}]`));
+  const figs = laid.map((l) => l.rows);
+  const spans = laid.map((l) => l.spans);
   if (missing.size) warnings.push(`tagline font has no glyph for ${show(missing)}; drawn as its "?" glyph`);
 
   const layout = layoutTaglines(cfg, figs);
-  const reveal = renderReveal(cfg, layout, figs, pool);
+  const reveal = renderReveal(cfg, layout, figs, pool, spans);
 
   // Every character the SVG draws must exist in the embedded font, or the
   // browser falls back to a system monospace with a different advance and the

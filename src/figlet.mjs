@@ -118,6 +118,18 @@ function stripEndmark(line) {
  * renders all blank is a ConfigError naming `label`.
  */
 export function figlet(font, text, missing = new Set(), label = JSON.stringify(text)) {
+  return figletLaid(font, text, missing, label).rows;
+}
+
+/**
+ * figlet() plus where each character landed: spans[i] = [a, b) is the column
+ * range of the glyph of the i-th code point of `text`, b = a + its padded width.
+ * Fitting and smushing move a glyph left over its neighbour, so spans overlap
+ * by that amount, and a leading glyph whose blank columns fit away starts left
+ * of column 0. Letter boundaries can't be read back from the rows: block fonts
+ * butt letters together and smushing merges them.
+ */
+export function figletLaid(font, text, missing = new Set(), label = JSON.stringify(text)) {
   const glyphs = [...text].map((ch) => {
     const g = font.chars.get(ch);
     if (g) return g;
@@ -125,17 +137,24 @@ export function figlet(font, text, missing = new Set(), label = JSON.stringify(t
     return font.chars.get("?");
   });
   const laid = font.smushMode & (SM_SMUSH | SM_KERN) ? layOut(font, glyphs) : concat(font.height, glyphs);
-  const rows = laid.map((r) => r.replaceAll(font.hardblank, " "));
+  const rows = laid.rows.map((r) => r.replaceAll(font.hardblank, " "));
   while (rows.length && !rows.at(-1).trim()) rows.pop();
   if (!rows.length) throw new ConfigError(`${label} renders blank in ${font.name}`);
   const cols = Math.max(...rows.map((r) => r.length));
-  return rows.map((r) => r.padEnd(cols));
+  // Only a dropped blank row of a malformed font can run past the kept rows.
+  return { rows: rows.map((r) => r.padEnd(cols)), spans: laid.spans.map(([a, b]) => [a, Math.min(b, cols)]) };
 }
 
+// No padding here, so a font whose glyph rows differ in width shifts later
+// glyphs per row; the span covers the glyph on every row.
 function concat(height, glyphs) {
   const rows = Array.from({ length: height }, () => "");
-  for (const g of glyphs) for (let r = 0; r < height; r++) rows[r] += g[r];
-  return rows;
+  const spans = glyphs.map((g) => {
+    const a = Math.min(...rows.map((r) => r.length));
+    for (let r = 0; r < height; r++) rows[r] += g[r];
+    return [a, Math.max(...rows.map((r) => r.length))];
+  });
+  return { rows, spans };
 }
 
 /**
@@ -145,6 +164,7 @@ function concat(height, glyphs) {
  */
 function layOut(font, glyphs) {
   const out = Array.from({ length: font.height }, () => []);
+  const spans = [];
   let prevWidth = 0;
   for (const g of glyphs) {
     const rows = g.map((r) => [...r]);
@@ -152,6 +172,8 @@ function layOut(font, glyphs) {
     for (const r of rows) while (r.length < width) r.push(" ");
     const ctx = { mode: font.smushMode, hard: font.hardblank, prevWidth, width };
     const amt = smushAmount(out, rows, ctx);
+    // Every row grows by width - amt, so the rows stay equal length.
+    spans.push([out[0].length - amt, out[0].length - amt + width]);
     for (let r = 0; r < font.height; r++) {
       const line = out[r];
       for (let k = 0; k < amt; k++) {
@@ -163,7 +185,7 @@ function layOut(font, glyphs) {
     }
     prevWidth = width;
   }
-  return out.map((r) => r.join(""));
+  return { rows: out.map((r) => r.join("")), spans };
 }
 
 /** figlet.c smushamt(): the most columns the glyph can move left on every row. */

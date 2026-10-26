@@ -35,7 +35,7 @@ Sizes below are for the template config (3 taglines, 880 × 240, default options
 | --- | ---: | ---: | ---: |
 | scramble | 877,686 | 55.4 KB | 13 |
 | decrypt | 917,873 | 95.6 KB | 9 |
-| typewriter | 855,508 | 33.2 KB | 9 |
+| typewriter | 846,125 | 22.5 KB | 9 |
 | wipe | 855,049 | 32.7 KB | 3 |
 | dissolve | 860,356 | 38.1 KB | 18 |
 | fall | 884,702 | 62.4 KB | 26 |
@@ -74,14 +74,15 @@ From its first tick the whole line is noise (`pool` glyphs cycling every tick), 
 
 ## typewriter
 
-All figlet rows advance together, whole columns per tick, left to right over `seconds`, so a glyph cell is never sliced. A cursor block rides the front, and the knockout follows the front and the cursor.
+The line is typed letter by letter. Each character of the tagline, space included, is one keystroke that shows its whole figlet glyph, every row at once, and a cursor block sits right after the last typed letter. Keystrokes land on reveal ticks at uneven intervals over `seconds`, the same ones on every build, and the last lands as the line settles; with fewer ticks (`seconds × fps`) than characters, several share a tick. Where `tagline.layout` fits or smushes two letters together, the columns they share show with the first. The knockout follows the typed text and the cursor.
 
 | option | default | meaning |
 | --- | --- | --- |
-| `cursor` | `"█"` | one character drawn down every row at the front; `""` = no cursor. It must exist in the font (the bundled one has the box and block glyphs) |
+| `cursor` | `"█"` | one character drawn down every row after the last typed letter; `""` = no cursor. It must exist in the font (the bundled one has the box and block glyphs) |
 | `blink` | `0` | 0 = the cursor leaves when the line settles; > 0 = it stays and blinks with this period (seconds) during the hold |
+| `jitter` | `0.5` | spread of the keystroke intervals, in [0, 1]: 0 = even, 1 = from almost nothing to twice the mean |
 
-855,508 bytes, 9 keyframes (3 per tagline).
+846,125 bytes, 9 keyframes (3 per tagline).
 
 ## wipe
 
@@ -141,7 +142,7 @@ On the template (three taglines) it adds 16.1 KB and one @keyframes to the bare 
 A preset is a module in `src/reveals/` registered in `src/reveals/index.mjs`. It exports `{ defaults, validate(options, v), render(ctx) }`. Field presets validate the same way: `v` comes from `optionChecks` in `src/config.mjs` (`check`, `positive`, `nonNeg`, `unit`, `fraction`, `posInt`, `int`, `oneOf`), and every error names the option's full path.
 
 - `render` returns `{ defs, css, overlay, knockout, reducedMotionCss: { stop, settle }, extraGlyphs }`.
-- `ctx` is documented at `renderReveal` in `src/svg.mjs`.
+- `ctx` is documented at `renderReveal` in `src/svg.mjs`. A preset that works letter by letter takes the columns from `ctx.spans` (each tagline character's column span), since fitted, smushed and butted figlet letters leave no blank column between them.
 - Prefix every class and id with the preset's own letters so it can't collide with another preset or the field.
 - Hide with transforms, clips or masks, never with visibility on nested groups.
 - Put the per-slot delay rules after the `animation` shorthands, because the shorthand resets the delay.
