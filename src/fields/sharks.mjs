@@ -1,6 +1,7 @@
 // sharks: a top-down view of sharks cruising across the banner at a few
-// depths, tails beating, over an optional scatter of small fish drifting the
-// other way.
+// depths, each bending along its own meandering course and turning round
+// off-screen between crossings, tails beating, over an optional school of
+// small fish drifting past.
 // Outlines after stackedlol/ascii-sharks (MIT, Copyright (c) 2026 drewdi).
 import { TAU, frac, perFrame, rnd } from "./util.mjs";
 
@@ -91,9 +92,28 @@ const WAVE = 0.05;
 const WAVE_K = 5.2;
 const BEAT_HZ = 0.8;
 const BEAT_FRAMES = 4;
+// Course: a shark makes `speed` crossings per loop and turns round off-screen
+// between them (an odd count also wraps once, off-screen). Each crossing
+// follows its own meander, a sine across the crossing's x range with one of
+// WIGGLES periods, its amplitude at most AMP of the field height, kept inside
+// the field by the body's half-width and bending the body by at most BEND
+// radians (a sine's crest curvature is A (2π/λ)²). The body lies along the
+// course as a polyline of SPINE segments, so it bends and the heading swings.
+const DWELL = 0.2; // fraction of a crossing spent wholly off-screen, half at each end
+const AMP = 0.33;
+const WIGGLES = [1, 1.5, 2];
+const BEND = 0.5;
+const SPINE = 16;
 // Rotated-grid sub-samples per cell, (x, y) in cell units: four distinct rows
 // and columns, so near-horizontal flanks get five coverage steps.
 const SUB = [[0.375, 0.125], [0.875, 0.375], [0.125, 0.625], [0.625, 0.875]];
+// Fish gather in one school: an ellipse SCHOOL = [half-width in columns, half-
+// height in rows] as fractions of the field, drifting right → left, swaying
+// SWAY rows up and down once per loop; each fish wanders WOBBLE cells about
+// its place at a whole number of cycles per loop.
+const SCHOOL = [0.1, 0.16];
+const SWAY = 0.12;
+const WOBBLE = 1;
 const FISH_PEAK = [0.6, 0.3]; // a fish cell's brightness: base + up to this much more
 
 const smoothstep = (a, b, x) => {
@@ -155,9 +175,9 @@ export default {
   defaults: {
     sharks: 3, // count
     length: 0.45, // the nearest shark's length as a fraction of the width
-    speed: 1, // crossings per loop of the nearest shark; farther ones at most as many
+    speed: 2, // crossings per loop of the nearest shark; farther ones at most as many
     species: "classic", // one of KINDS, or "mix" = a different one per shark
-    fish: 0, // fraction of cells holding a drifting fish (try 0.015); 0 = none
+    fish: 0, // fraction of cells holding a fish, gathered in a school (try 0.015); 0 = none
     seed: 1,
   },
   ramp: ": ; t % S X 8 # @",
@@ -172,12 +192,10 @@ export default {
   },
   make(g, o, cfg) {
     const { PX, PY, COLS, ROWS, NF, y0 } = g;
-    const Wf = COLS * PX; // the field's width; a shark wraps while wholly off it
+    const Wf = COLS * PX; // the field's width; a shark turns while wholly off it
     const Hf = ROWS * PY;
     const n = o.sharks;
     const start = Math.floor(rnd(o.seed, 0, 1) * KINDS.length);
-    // lanes top → bottom, dealt to the sharks in a seeded order
-    const lanes = Array.from({ length: n }, (_, k) => k).sort((a, b) => rnd(o.seed, a, 2) - rnd(o.seed, b, 2));
     const sharks = Array.from({ length: n }, (_, k) => {
       const r = (slot) => rnd(o.seed, k, slot);
       // depth z: 0 = the nearest shark, 1 = the farthest
@@ -185,63 +203,136 @@ export default {
       const z = (1 - size) / (1 - OTHER_SIZE[1]);
       const L = o.length * g.W * size;
       const sp = SPECIES[o.species === MIX ? KINDS[(start + k) % KINDS.length] : o.species];
+      const crossings = Math.max(1, Math.round(o.speed * size));
+      const span = Wf + 2 * L; // x range the body covers over a crossing: snout 0 → Wf + L, tail L behind
+      const half = (sp.body[1] + sp.body[4]) * L; // the body's widest half-width
+      const first = r(6) < 0.5 ? 1 : -1; // heading of the first crossing, then alternating
+      const legs = Array.from({ length: crossings }, (_, i) => {
+        const q = (slot) => rnd(o.seed, k, 10 + 4 * i + slot);
+        const wiggles = WIGGLES[Math.floor(q(0) * WIGGLES.length)];
+        const wavelength = span / wiggles;
+        const amp = Math.max(0, Math.min(AMP * Hf, Hf / 2 - half, (BEND * wavelength * wavelength) / (TAU * TAU * L)));
+        const room = Math.max(0, Hf / 2 - half - amp); // how far the course's centre may sit off the middle
+        return {
+          dir: i % 2 ? -first : first,
+          amp,
+          kx: TAU / wavelength,
+          phase: TAU * q(1),
+          centre: y0 + Hf / 2 + room * (2 * q(2) - 1),
+        };
+      });
       return {
         sp,
         L,
-        dir: k % 2 ? -1 : 1, // alternating left → right and right → left
-        y: y0 + (Hf * (lanes[k] + 0.5 + 0.3 * (r(3) - 0.5))) / n,
+        crossings,
+        legs,
         bright: 1 - (1 - FAR) * z,
-        speed: Math.max(1, Math.round(o.speed * size)),
         phase: (k + 0.25 + 0.5 * r(4)) / n,
         beats: Math.max(1, Math.min(Math.round((BEAT_HZ * cfg.field.loopSeconds) / size), Math.floor(NF / BEAT_FRAMES))),
         beatPhase: r(5),
-        // farthest any part gets from the lane: widest fin or head, plus the tail swing
-        reach: L * (Math.max(sp.pectoral[3], sp.pelvic[3], sp.caudal, sp.head?.[0] ?? 0) + WAVE),
+        // farthest any part gets from the spine: the widest fin or head
+        reach: L * Math.max(sp.pectoral[3], sp.pelvic[3], sp.caudal, sp.head?.[0] ?? 0),
+        pts: new Float64Array(2 * (SPINE + 1)), // the spine for the frame being built, snout first
       };
     });
-    const fish = Array.from({ length: Math.round(o.fish * COLS * ROWS) }, (_, k) => {
-      const r = (slot) => rnd(o.seed, n + k, slot);
+    const count = Math.round(o.fish * COLS * ROWS);
+    const school = {
+      x: rnd(o.seed, n, 1) * COLS, // the centre's column at t = 0
+      laps: 1 + Math.floor(rnd(o.seed, n, 2) * 2), // crossings per loop
+      row: ROWS * (0.5 + (0.5 - SWAY - SCHOOL[1]) * (2 * rnd(o.seed, n, 3) - 1)), // ellipse and sway stay inside
+      sway: TAU * rnd(o.seed, n, 4),
+    };
+    const fish = Array.from({ length: count }, (_, k) => {
+      const r = (slot) => rnd(o.seed, n + 1 + k, slot);
+      const angle = TAU * r(1);
+      const radius = Math.sqrt(r(2)); // even over the ellipse
       return {
-        row: Math.floor(r(1) * ROWS),
-        x: r(2) * COLS,
-        laps: 1 + Math.floor(r(3) * 2), // crossings per loop
-        peak: FISH_PEAK[0] + FISH_PEAK[1] * r(4),
+        dc: SCHOOL[0] * COLS * radius * Math.cos(angle),
+        dr: SCHOOL[1] * ROWS * radius * Math.sin(angle),
+        cycles: 1 + Math.floor(r(3) * 2),
+        wobble: TAU * r(4),
+        peak: FISH_PEAK[0] + FISH_PEAK[1] * r(5),
       };
     });
-    // Positions advance by frac(whole crossings × t), exactly 0 again at t = 1,
+    // Everything advances by frac(whole cycles × t), exactly 0 again at t = 1,
     // so frame NF repeats frame 0 bit for bit.
     return perFrame(g, (t) => {
       const buf = new Float32Array(COLS * ROWS);
       for (const sh of sharks) {
-        const { sp, L, dir } = sh;
-        const p = frac(frac(sh.speed * t) + sh.phase) * (Wf + L);
-        const hx = dir > 0 ? p : Wf - p; // snout x; the body trails it by L
-        const left = dir > 0 ? hx - L : hx;
+        const { sp, L, pts } = sh;
+        const progress = frac(t + sh.phase) * sh.crossings;
+        const leg = sh.legs[Math.floor(progress)];
+        const { dir, amp, centre, kx, phase } = leg;
+        // snout x: wholly off-screen for DWELL/2 of the crossing at each end
+        const p = Math.min(1, Math.max(0, (progress - Math.floor(progress) - DWELL / 2) / (1 - DWELL))) * (Wf + L);
         const beat = TAU * (frac(sh.beats * t) + sh.beatPhase);
-        const c0 = Math.max(0, Math.floor(left / PX));
-        const c1 = Math.min(COLS - 1, Math.floor((left + L) / PX));
-        const r0 = Math.max(0, Math.floor((sh.y - sh.reach - y0) / PY));
-        const r1 = Math.min(ROWS - 1, Math.floor((sh.y + sh.reach - y0) / PY));
+        // the spine: walk back from the snout along the course in SPINE steps
+        // of equal arc length, each point swung sideways by the tail beat
+        let x = dir > 0 ? p : Wf - p;
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (let j = 0; j <= SPINE; j++) {
+          const s = j / SPINE;
+          const arg = kx * (x + L) + phase;
+          const slope = amp * kx * Math.cos(arg);
+          const norm = Math.hypot(1, slope);
+          const swing = L * WAVE * (0.1 + 0.9 * s ** 1.8) * Math.sin(beat - s * WAVE_K);
+          const px = x + (swing * dir * slope) / norm;
+          const py = centre + amp * Math.sin(arg) - (swing * dir) / norm;
+          pts[2 * j] = px;
+          pts[2 * j + 1] = py;
+          if (px < minX) minX = px;
+          if (px > maxX) maxX = px;
+          if (py < minY) minY = py;
+          if (py > maxY) maxY = py;
+          x -= (dir * L) / SPINE / norm;
+        }
+        const c0 = Math.max(0, Math.floor((minX - sh.reach) / PX));
+        const c1 = Math.min(COLS - 1, Math.floor((maxX + sh.reach) / PX));
+        const r0 = Math.max(0, Math.floor((minY - sh.reach - y0) / PY));
+        const r1 = Math.min(ROWS - 1, Math.floor((maxY + sh.reach - y0) / PY));
         for (let row = r0; row <= r1; row++)
           for (let col = c0; col <= c1; col++) {
             let sum = 0;
             for (const [ox, oy] of SUB) {
-              const s = (dir * (hx - (col + ox) * PX)) / L;
-              if (s < 0 || s > 1) continue;
-              const spine = sh.y + L * WAVE * (0.1 + 0.9 * s ** 1.8) * Math.sin(beat - s * WAVE_K);
-              const dy = y0 + (row + oy) * PY - spine;
-              sum += skin(sp, s, Math.abs(dy), dy < 0 ? 1 : -1, L);
+              const qx = (col + ox) * PX;
+              const qy = y0 + (row + oy) * PY;
+              // the nearest spine segment, and where the point projects on it
+              let best = Infinity, seg = 0, along = 0, offY = 0;
+              for (let j = 0; j < SPINE; j++) {
+                const ax = pts[2 * j], ay = pts[2 * j + 1];
+                const ex = pts[2 * j + 2] - ax, ey = pts[2 * j + 3] - ay;
+                const u = ((qx - ax) * ex + (qy - ay) * ey) / (ex * ex + ey * ey);
+                const uc = Math.min(1, Math.max(0, u));
+                const dx = qx - ax - uc * ex, dy = qy - ay - uc * ey;
+                const d2 = dx * dx + dy * dy;
+                if (d2 < best) {
+                  best = d2;
+                  seg = j;
+                  along = u;
+                  offY = dy;
+                }
+              }
+              // ahead of the snout or past the tail tip
+              if ((seg === 0 && along < 0) || (seg === SPINE - 1 && along > 1)) continue;
+              const s = (seg + Math.min(1, Math.max(0, along))) / SPINE;
+              sum += skin(sp, s, Math.sqrt(best), offY < 0 ? 1 : -1, L);
             }
             const v = (sh.bright * sum) / SUB.length;
             const i = row * COLS + col;
             if (v > buf[i]) buf[i] = v;
           }
       }
-      for (const f of fish) {
-        // against the nearest shark, which swims left → right
-        const col = Math.floor(frac((f.x - frac(f.laps * t) * COLS) / COLS + 1) * COLS);
-        const i = f.row * COLS + col;
-        if (f.peak > buf[i]) buf[i] = f.peak;
+      if (count) {
+        const cx = school.x - frac(school.laps * t) * COLS;
+        const cy = school.row + SWAY * ROWS * Math.sin(TAU * t + school.sway);
+        for (const f of fish) {
+          const wobble = TAU * f.cycles * t + f.wobble;
+          const col = Math.floor(frac((cx + f.dc + WOBBLE * Math.cos(wobble)) / COLS) * COLS);
+          const row = Math.round(cy + f.dr + WOBBLE * 0.5 * Math.sin(wobble));
+          if (row < 0 || row >= ROWS) continue;
+          const i = row * COLS + col;
+          if (f.peak > buf[i]) buf[i] = f.peak;
+        }
       }
       return buf;
     });

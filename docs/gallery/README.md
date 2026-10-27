@@ -8,7 +8,7 @@ Every field preset, reveal preset, bundled tagline font and glyph set, plus thre
 
 ## Fields
 
-`field.preset` with its default options (see [fields.md](../fields.md)). 440 × 120, field loop 6 s at 6 fps; tagline "ascii" in `ansi-shadow`, scramble reveal.
+`field.preset` with its default options (see [fields.md](../fields.md); `sharks` at `speed: 1`, one crossing in this short loop). 440 × 120, field loop 6 s at 6 fps; tagline "ascii" in `ansi-shadow`, scramble reveal.
 
 | `field.preset` | preview | bytes |
 | --- | --- | ---: |
@@ -22,7 +22,7 @@ Every field preset, reveal preset, bundled tagline font and glyph set, plus thre
 | `mesh` | <img src="field-mesh.svg" width="440" alt="mesh field sample"> | 73,648 |
 | `contour` | <img src="field-contour.svg" width="440" alt="contour field sample"> | 65,734 |
 | `vortex` | <img src="field-vortex.svg" width="440" alt="vortex field sample"> | 74,126 |
-| `sharks` | <img src="field-sharks.svg" width="440" alt="sharks field sample"> | 58,124 |
+| `sharks` | <img src="field-sharks.svg" width="440" alt="sharks field sample"> | 53,072 |
 
 ## Reveals
 
