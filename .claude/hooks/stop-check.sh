@@ -14,8 +14,10 @@ set -u
 # "stop_hook_active": true means this hook already blocked the current turn
 # once. Let the stop through then, so an unfixable failure cannot loop the
 # session. No stdin (a terminal, or </dev/null) means a manual run: check.
+# Claude Code closes stdin after the JSON, so the read ends at EOF at once; the 1 s
+# timeout only spares a caller that leaves stdin open (a plain `cat` would hang there).
 input=""
-[ -t 0 ] || input=$(cat 2>/dev/null)
+[ -t 0 ] || IFS= read -r -d '' -t 1 input || true
 printf '%s' "$input" | grep -Eq '"stop_hook_active"[[:space:]]*:[[:space:]]*true' && exit 0
 
 MAX_LINES=60
