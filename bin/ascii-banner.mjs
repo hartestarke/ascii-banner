@@ -161,7 +161,8 @@ async function card(argv) {
   writeOut(outPath, svg);
   console.log(
     `${shortPath(outPath)}: ${stats.width}x${stats.height}, ${stats.rawBytes} bytes raw (${kb(stats.rawBytes)}), ` +
-    `${stats.gzipBytes} gzip; ${stats.lines} rows, ${stats.textNodes} text nodes; data of ${stats.fetchedAt}; built in ${stats.buildMs} ms`,
+    `${stats.gzipBytes} gzip; ${stats.lines} rows, ${stats.textNodes} text nodes; ` +
+    `${stats.intro ? `intro ${stats.intro} s; ` : ""}data of ${stats.fetchedAt}; built in ${stats.buildMs} ms`,
   );
 }
 

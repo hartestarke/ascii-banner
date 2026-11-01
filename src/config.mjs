@@ -101,7 +101,9 @@ export const DEFAULTS = {
     title: null, // the header's leading name; null = the name on GitHub, else the login / repo
     rows: [], // your own [key, value] rows, shown before GitHub's
     show: null, // GitHub's rows in order, from CARD_ROWS[mode]; null = all of them
-    sparkline: true, // mode "person": contributions per week over the last year
+    activity: null, // mode "person", the last year: "sparkline" (per week), "calendar" (per day, as on GitHub) or "none"; null = sparkline for a person, none for a project
+    intro: "once", // the card builds itself up on load: "once", "loop" (again every `period` s) or "none" (still)
+    period: 12, // s, one cycle of intro "loop"
     portrait: null, // "avatar", "solid" (a turning torus) or "none"; null = avatar for a person, solid for a project
     screen: "#0d1117", // #rrggbb behind the portrait, so its light-as-ink tones read on light pages too; null = none
     width: 880, // px
@@ -115,6 +117,8 @@ export const CARD_ROWS = {
   project: ["release", "license", "stats", "commits", "languages"],
 };
 const CARD_PORTRAITS = ["avatar", "solid", "none"];
+const CARD_ACTIVITIES = ["sparkline", "calendar", "none"];
+const CARD_INTROS = ["once", "loop", "none"];
 // The text column needs room next to a 240 px portrait.
 const CARD_MIN_WIDTH = 600;
 
@@ -147,6 +151,7 @@ const NULLABLE = {
   "card.repo": "string",
   "card.title": "string",
   "card.show": "array",
+  "card.activity": "string",
   "card.portrait": "string",
   "card.screen": "string",
   "tagline.layout": "string",
@@ -421,7 +426,7 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   return c;
 }
 
-/** card.*: shape checks; fills show / portrait and resolves data. Which login or repo fetch needs is checked there. */
+/** card.*: shape checks; fills show / activity / portrait and resolves data. Which login or repo fetch needs is checked there. */
 function checkCard(k, abs) {
   oneOf(k.mode, "card.mode", Object.keys(CARD_ROWS));
   if (k.user !== null) check(/^[A-Za-z0-9-]{1,39}$/.test(k.user), "card.user", `must be a GitHub login, got ${describe(k.user)}`);
@@ -437,6 +442,11 @@ function checkCard(k, abs) {
   if (k.show === null) k.show = [...rows];
   k.show.forEach((s, i) => oneOf(s, `card.show[${i}]`, rows));
   check(new Set(k.show).size === k.show.length, "card.show", `names a row twice: ${JSON.stringify(k.show)}`);
+  k.activity ??= k.mode === "person" ? "sparkline" : "none";
+  oneOf(k.activity, "card.activity", CARD_ACTIVITIES);
+  check(k.mode === "person" || k.activity === "none", "card.activity", `mode "project" has no contribution activity; use "none", got ${JSON.stringify(k.activity)}`);
+  oneOf(k.intro, "card.intro", CARD_INTROS);
+  positive(k.period, "card.period");
   k.portrait ??= k.mode === "person" ? "avatar" : "solid";
   oneOf(k.portrait, "card.portrait", CARD_PORTRAITS);
   if (k.screen !== null) hexColour(k.screen, "card.screen");
