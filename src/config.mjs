@@ -91,7 +91,32 @@ export const DEFAULTS = {
   budget: {
     maxBytes: 1048576, // fail the build above this many raw bytes; 0 = no limit
   },
+  // The info card, a second SVG built by `ascii-banner card` from a snapshot
+  // that `ascii-banner fetch` takes of GitHub; `build` ignores this block.
+  card: {
+    mode: "person", // "person": a GitHub user; "project": a repository
+    user: null, // GitHub login, mode "person"
+    repo: null, // "owner/name", mode "project"
+    data: "card.data.json", // the snapshot fetch writes and card reads, relative to this config
+    title: null, // the header's leading name; null = the name on GitHub, else the login / repo
+    rows: [], // your own [key, value] rows, shown before GitHub's
+    show: null, // GitHub's rows in order, from CARD_ROWS[mode]; null = all of them
+    sparkline: true, // mode "person": contributions per week over the last year
+    portrait: null, // "avatar", "solid" (a turning torus) or "none"; null = avatar for a person, solid for a project
+    screen: "#0d1117", // #rrggbb behind the portrait, so its light-as-ink tones read on light pages too; null = none
+    width: 880, // px
+    textSize: 13, // px
+  },
 };
+
+/** The GitHub rows each card mode can show, in their default order. */
+export const CARD_ROWS = {
+  person: ["uptime", "repos", "languages", "contributions"],
+  project: ["release", "license", "stats", "commits", "languages"],
+};
+const CARD_PORTRAITS = ["avatar", "solid", "none"];
+// The text column needs room next to a 240 px portrait.
+const CARD_MIN_WIDTH = 600;
 
 /** field.gamma for a preset that sets none. */
 export const PRESET_GAMMA = 1.35;
@@ -118,6 +143,12 @@ const NULLABLE = {
   "field.bands": "number",
   "field.gamma": "number",
   "font.file": "string",
+  "card.user": "string",
+  "card.repo": "string",
+  "card.title": "string",
+  "card.show": "array",
+  "card.portrait": "string",
+  "card.screen": "string",
   "tagline.layout": "string",
   "tagline.shadowGlyphs": "string",
   "tagline.color": "string",
@@ -386,7 +417,32 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   if (!isBundledFont(t.font)) t.font = abs(t.font);
   t.layout ??= fontDefaults.layout;
   t.shadowGlyphs ??= fontDefaults.shadowGlyphs;
+  checkCard(c.card, abs);
   return c;
+}
+
+/** card.*: shape checks; fills show / portrait and resolves data. Which login or repo fetch needs is checked there. */
+function checkCard(k, abs) {
+  oneOf(k.mode, "card.mode", Object.keys(CARD_ROWS));
+  if (k.user !== null) check(/^[A-Za-z0-9-]{1,39}$/.test(k.user), "card.user", `must be a GitHub login, got ${describe(k.user)}`);
+  if (k.repo !== null) check(/^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/.test(k.repo), "card.repo", `must be "owner/name", got ${describe(k.repo)}`);
+  k.rows.forEach((r, i) => {
+    const at = `card.rows[${i}]`;
+    check(Array.isArray(r) && r.length === 2 && r.every((s) => typeof s === "string" && s.trim()), at,
+      `must be a [key, value] pair of non-empty strings, got ${JSON.stringify(r)}`);
+    r.forEach((s) => plainText(s, at));
+  });
+  if (k.title !== null) plainText(k.title, "card.title");
+  const rows = CARD_ROWS[k.mode];
+  if (k.show === null) k.show = [...rows];
+  k.show.forEach((s, i) => oneOf(s, `card.show[${i}]`, rows));
+  check(new Set(k.show).size === k.show.length, "card.show", `names a row twice: ${JSON.stringify(k.show)}`);
+  k.portrait ??= k.mode === "person" ? "avatar" : "solid";
+  oneOf(k.portrait, "card.portrait", CARD_PORTRAITS);
+  if (k.screen !== null) hexColour(k.screen, "card.screen");
+  check(k.width >= CARD_MIN_WIDTH, "card.width", `must be at least ${CARD_MIN_WIDTH} px, got ${k.width}`);
+  positive(k.textSize, "card.textSize");
+  k.data = abs(k.data);
 }
 
 /** Absolute paths of the font files a resolved config draws with. */

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 // ascii-banner CLI: `init` drops a commented config, `build` renders it,
+// `fetch` snapshots GitHub for the info card and `card` renders the card,
 // `fonts` lists the bundled figlet fonts, `presets` the field and reveal presets.
 // Exit codes: 0 ok, 1 user/config error (message only), 2 unexpected (stack).
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildBanner, ConfigError, DEFAULTS, NO_FIELD, PRESET_GAMMA } from "../src/index.mjs";
+import { buildCard, fetchCard } from "../src/card/index.mjs";
 import { describeLayout, figlet, loadFlf } from "../src/figlet.mjs";
 import { listFonts } from "../src/fonts.mjs";
 import { FIELD_PRESETS } from "../src/fields/index.mjs";
@@ -14,6 +16,7 @@ import { REVEAL_PRESETS } from "../src/reveals/index.mjs";
 
 const CONFIG_NAME = "banner.config.mjs";
 const OUT_NAME = "banner.svg";
+const CARD_OUT_NAME = "card.svg";
 const TEMPLATE = fileURLToPath(new URL(`../${CONFIG_NAME}`, import.meta.url));
 
 const USAGE = `ascii-banner — animated ASCII-field SVG banner for READMEs
@@ -23,6 +26,13 @@ Usage:
   ascii-banner build [--config <path>] [--out <path>]
                                              render the config (default ./${CONFIG_NAME})
                                              to an SVG (default ./${OUT_NAME})
+  ascii-banner fetch [--config <path>] [--out <path>]
+                                             snapshot GitHub for the info card (card.user
+                                             or card.repo) to card.data (or --out);
+                                             needs a token in GITHUB_TOKEN or GH_TOKEN
+  ascii-banner card [--config <path>] [--data <path>] [--out <path>]
+                                             render the info card from the snapshot,
+                                             offline, to an SVG (default ./${CARD_OUT_NAME})
   ascii-banner fonts [--sample <text>]       list the bundled figlet fonts (tagline.font);
                                              --sample renders <text> in each
   ascii-banner presets [--json]              list the field and reveal presets
@@ -88,11 +98,9 @@ next:
   3. add to your README:  <img src="${OUT_NAME}" width="${width}" alt="">`);
 }
 
-async function build(argv) {
-  const { pos, flags } = parseArgs(argv, ["--config", "--out"], []);
-  if (pos.length) throw new ConfigError(`build takes no positional arguments\n\n${USAGE}`);
-  const configPath = resolve(flags.config ?? CONFIG_NAME);
-  const outPath = resolve(flags.out ?? OUT_NAME);
+/** The --config file's default export (default ./banner.config.mjs) and the directory its paths resolve against. */
+async function loadConfig(path) {
+  const configPath = resolve(path ?? CONFIG_NAME);
   if (!existsSync(configPath))
     throw new ConfigError(`config not found: ${configPath}\nrun \`ascii-banner init\` to create one, or pass --config <path>`);
   let mod;
@@ -103,17 +111,57 @@ async function build(argv) {
   }
   if (!mod.default || typeof mod.default !== "object")
     throw new ConfigError(`${configPath} must \`export default { ... }\``);
+  return { config: mod.default, baseDir: dirname(configPath) };
+}
 
-  const { svg, stats, warnings } = await buildBanner(mod.default, { baseDir: dirname(configPath) });
-  for (const w of warnings) console.error(`warning: ${w}`);
+function writeOut(outPath, text) {
   mkdirSync(dirname(outPath), { recursive: true });
-  writeFileSync(outPath, svg);
-  const kb = (b) => `${(b / 1024).toFixed(0)} KB`;
+  writeFileSync(outPath, text);
+}
+
+const kb = (b) => `${(b / 1024).toFixed(0)} KB`;
+
+async function build(argv) {
+  const { pos, flags } = parseArgs(argv, ["--config", "--out"], []);
+  if (pos.length) throw new ConfigError(`build takes no positional arguments\n\n${USAGE}`);
+  const outPath = resolve(flags.out ?? OUT_NAME);
+  const { config, baseDir } = await loadConfig(flags.config);
+
+  const { svg, stats, warnings } = await buildBanner(config, { baseDir });
+  for (const w of warnings) console.error(`warning: ${w}`);
+  writeOut(outPath, svg);
   console.log(
     `${shortPath(outPath)}: ${stats.rawBytes} bytes raw (${kb(stats.rawBytes)}), ` +
     `${stats.gzipBytes} gzip (${kb(stats.gzipBytes)})\n` +
     `  ${stats.frames} frames, ${stats.cells} cells, ${stats.textNodes} text nodes, ${stats.keyframes} @keyframes; ` +
     `tagline ${stats.taglineCols} cols @ ${stats.taglineFontPx}px; built in ${stats.buildMs} ms`,
+  );
+}
+
+async function fetchCmd(argv) {
+  const { pos, flags } = parseArgs(argv, ["--config", "--out"], []);
+  if (pos.length) throw new ConfigError(`fetch takes no positional arguments\n\n${USAGE}`);
+  const { config, baseDir } = await loadConfig(flags.config);
+  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+  const { snapshot, path } = await fetchCard(config, { baseDir, token });
+  const outPath = resolve(flags.out ?? path);
+  writeOut(outPath, `${JSON.stringify(snapshot, null, 2)}\n`);
+  const who = snapshot.mode === "person" ? snapshot.person.login : snapshot.project.name;
+  const avatar = snapshot.avatar ? `, avatar ${snapshot.avatar.type} ${kb(Buffer.byteLength(snapshot.avatar.base64, "base64"))}` : "";
+  console.log(`${shortPath(outPath)}: ${snapshot.mode} ${who}${avatar}, fetched ${snapshot.fetchedAt}`);
+}
+
+async function card(argv) {
+  const { pos, flags } = parseArgs(argv, ["--config", "--data", "--out"], []);
+  if (pos.length) throw new ConfigError(`card takes no positional arguments\n\n${USAGE}`);
+  const outPath = resolve(flags.out ?? CARD_OUT_NAME);
+  const { config, baseDir } = await loadConfig(flags.config);
+  const { svg, stats, warnings } = await buildCard(config, { baseDir, dataPath: flags.data && resolve(flags.data) });
+  for (const w of warnings) console.error(`warning: ${w}`);
+  writeOut(outPath, svg);
+  console.log(
+    `${shortPath(outPath)}: ${stats.width}x${stats.height}, ${stats.rawBytes} bytes raw (${kb(stats.rawBytes)}), ` +
+    `${stats.gzipBytes} gzip; ${stats.lines} rows, ${stats.textNodes} text nodes; data of ${stats.fetchedAt}; built in ${stats.buildMs} ms`,
   );
 }
 
@@ -178,6 +226,8 @@ async function main(argv) {
   if (!cmd || cmd === "help" || argv.includes("--help") || argv.includes("-h")) return void console.log(USAGE);
   if (cmd === "init") return init(rest);
   if (cmd === "build") return build(rest);
+  if (cmd === "fetch") return fetchCmd(rest);
+  if (cmd === "card") return card(rest);
   if (cmd === "fonts") return fonts(rest);
   if (cmd === "presets") return presets(rest);
   throw new ConfigError(`unknown command "${cmd}"\n\n${USAGE}`);
