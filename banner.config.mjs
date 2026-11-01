@@ -21,6 +21,11 @@ export default {
   tagline: {
     fill: 0.92, // fraction of the width the widest tagline spans at most...
     maxHeight: 0.34, // ...and fraction of the height the letters span at most
+    // Centre of each tagline as a fraction of the width: 0.5 = centred, lower
+    // = further left. A line that would cross an edge stops a column short of
+    // it. Pair with a lower fill to leave room beside the text, e.g. for a
+    // solid field: x: 0.4, fill: 0.66 and the solid at x 0.85.
+    x: 0.5,
     lineHeight: 1.2, // em, row pitch; block glyphs span -0.3..1.02em, so ≤ 1.32 stays seamless
     shadowAlpha: 0.5, // alpha of the shadow strokes vs the solid blocks
     color: null, // #rrggbb of the letters and the reveal's noise and cursor; null = accent

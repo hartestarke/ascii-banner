@@ -76,7 +76,15 @@ export function renderReveal(cfg, layout, figs, pool, spans) {
   const { TPX, TDUR, SLOT_T, rowY } = layout;
   const shadowSet = new Set(cfg.tagline.shadowGlyphs);
   const isShadow = (c) => shadowSet.has(c);
-  const left = (p) => num((W - figs[p][0].length * TPX) / 2);
+  // Each line centred on tagline.x: the shift off the centre is capped by the
+  // line's room on either side less one tagline column, so a line moved aside
+  // stops a column short of the edge (and at x 0.5 the shift is exactly 0, a
+  // line wider than the banner included).
+  const left = (p) => {
+    const room = (W - figs[p][0].length * TPX) / 2;
+    const cap = Math.max(0, room - TPX);
+    return num(room + Math.min(cap, Math.max(-cap, (cfg.tagline.x - 0.5) * W)));
+  };
   const rowText = (p, i) => {
     const row = figs[p][i].trimEnd();
     return row ? `<text class="tg tx" y="${num(rowY(i))}">${runs(row, isShadow)}</text>` : "";

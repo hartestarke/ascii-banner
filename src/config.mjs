@@ -32,6 +32,7 @@ export const DEFAULTS = {
     fill: 0.92, // the widest tagline spans at most this fraction of the width...
     maxHeight: 0.34, // ...and the letters at most this fraction of the height — short
     // lines would otherwise grow until the knockout swallows the field
+    x: 0.5, // centre of each tagline as a fraction of the width; a line that would cross an edge stops a column short
     lineHeight: 1.2, // tagline row pitch, em; █ spans -0.3..1.02em so ≤1.32 stays seamless
     shadowAlpha: 0.5, // alpha of the shadow strokes vs solid blocks
     color: null, // #rrggbb of the letters and of whatever the reveal draws with them; null = accent
@@ -289,6 +290,7 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   const t = c.tagline;
   positive(t.fill, "tagline.fill");
   positive(t.maxHeight, "tagline.maxHeight");
+  unit(t.x, "tagline.x");
   positive(t.lineHeight, "tagline.lineHeight");
   unit(t.shadowAlpha, "tagline.shadowAlpha");
   nonNeg(t.knockout, "tagline.knockout");

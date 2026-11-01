@@ -286,7 +286,9 @@ reads at banner height, the knot only from some angles. Behind the taglines
 a torus seen edge-on vanishes into the knockout for a moment.
 - `shape`: `"torus"`, `"knot"` or `"cube"`.
 - `x`, `y`: 0.82, 0.5, the centre as fractions of the width and the height.
-  Taglines are centred, so keep the solid clear of them or right behind them.
+  Keep the solid clear of the taglines or right behind them: `tagline.x` moves
+  them aside, e.g. `tagline: { x: 0.4, fill: 0.66 }` with the solid at
+  `x: 0.85`.
 - `size`: 0.92, the diameter of the sphere the solid turns in, as a fraction
   of the height.
 - `turns`: `[1, 0, 2]`, whole turns per loop about x (right), y (up) and z

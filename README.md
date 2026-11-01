@@ -214,6 +214,7 @@ export default {
 | --- | --- | --- |
 | `tagline.fill` | `0.92` | the widest tagline spans at most this fraction of the width... |
 | `tagline.maxHeight` | `0.34` | ...and the letters at most this fraction of the height |
+| `tagline.x` | `0.5` | centre of each tagline as a fraction of the width; a line that would cross an edge stops a column short of it. With a lower `fill` it leaves room beside the text: `x: 0.4, fill: 0.66` with a `solid` at `x: 0.85` |
 | `tagline.lineHeight` | `1.2` | row pitch in em; block glyphs span -0.3..1.02 em, so ≤ 1.32 stays seamless |
 | `tagline.shadowAlpha` | `0.5` | alpha of the shadow glyphs vs the solid ones |
 | `tagline.color` | `null` | `#rrggbb` of the letters and of what a reveal draws in letter colour (scramble and decrypt noise, glitch flashes, typewriter cursor); `null` = `accent` |
