@@ -1,6 +1,6 @@
 // Image decoding for the card portrait, zero dependencies: what GitHub serves
-// as avatars, PNG (8-bit, not interlaced) and baseline JPEG, of which only the
-// luma is decoded. A portrait needs brightness, not colour.
+// as avatars, PNG (8-bit, not interlaced) and baseline JPEG (greyscale or
+// YCbCr). The accent portrait reads the luma, the natural one the colour.
 import { inflateSync } from "node:zlib";
 
 /** An unsupported or broken image; the message says which. */
@@ -8,7 +8,11 @@ export class ImageError extends Error {}
 
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
-/** bytes → { width, height, gray }, gray in [0, 1] row-major (transparent PNG pixels over black). */
+/**
+ * bytes → { width, height, gray, rgb }, both row-major in [0, 1], rgb three
+ * values a pixel (transparent PNG pixels over black); rgb is null for a JPEG
+ * in a colour space other than greyscale or YCbCr.
+ */
 export function decodeImage(bytes) {
   const b = Buffer.from(bytes);
   if (b.subarray(0, 8).equals(PNG_MAGIC)) return decodePng(b);
@@ -63,7 +67,7 @@ function decodePng(b) {
 
   // Rec. 601 luma, the weights JPEG's Y uses too; alpha composites over black,
   // the portrait's screen.
-  const gray = new Float32Array(w * h);
+  const gray = new Float32Array(w * h), rgb = new Float32Array(w * h * 3);
   for (let k = 0; k < w * h; k++) {
     const o = k * ch;
     let r, g, bl, alpha = 255;
@@ -79,11 +83,14 @@ function decodePng(b) {
       if (ch === 4) alpha = px[o + 3];
     }
     gray[k] = ((0.299 * r + 0.587 * g + 0.114 * bl) * alpha) / (255 * 255);
+    rgb[3 * k] = (r * alpha) / (255 * 255);
+    rgb[3 * k + 1] = (g * alpha) / (255 * 255);
+    rgb[3 * k + 2] = (bl * alpha) / (255 * 255);
   }
-  return { width: w, height: h, gray };
+  return { width: w, height: h, gray, rgb };
 }
 
-// ---- baseline JPEG, luma only ------------------------------------------------
+// ---- baseline JPEG -----------------------------------------------------------
 
 const ZIGZAG = [
   0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28,
@@ -166,16 +173,18 @@ function decodeJpeg(b) {
   throw new ImageError("corrupt JPEG: no image scan");
 }
 
-/** The first component's plane of an interleaved baseline scan starting at `pos`. */
+/** The planes of an interleaved baseline scan starting at `pos`: luma, and colour for greyscale or YCbCr. */
 function decodeScan(b, pos, frame, tables, qt, restart) {
   const { comps } = frame;
   const hmax = Math.max(...comps.map((c) => c.h)), vmax = Math.max(...comps.map((c) => c.v));
   const mcuX = Math.ceil(frame.width / (8 * hmax)), mcuY = Math.ceil(frame.height / (8 * vmax));
-  const Y = comps[0], q = qt[Y.tq];
-  if (!q || tables.some((t) => !t.dc || !t.ac)) throw new ImageError("corrupt JPEG: missing quantisation or Huffman table");
-  // The luma plane, padded to whole MCUs, cropped at the end.
-  const pw = mcuX * Y.h * 8, ph = mcuY * Y.v * 8;
-  const plane = new Float32Array(pw * ph);
+  const Y = comps[0];
+  if (comps.some((c) => !qt[c.tq]) || tables.some((t) => !t.dc || !t.ac))
+    throw new ImageError("corrupt JPEG: missing quantisation or Huffman table");
+  // Each component's plane at its own sampling, padded to whole MCUs; cropped at the end.
+  const colour = comps.length === 3;
+  const planes = comps.map((c, i) =>
+    i === 0 || colour ? { w: mcuX * c.h * 8, data: new Float32Array(mcuX * c.h * 8 * mcuY * c.v * 8) } : null);
   const width = Math.ceil((frame.width * Y.h) / hmax), height = Math.ceil((frame.height * Y.v) / vmax);
 
   let bits = 0, nbits = 0;
@@ -225,6 +234,7 @@ function decodeScan(b, pos, frame, tables, qt, restart) {
       k++;
     }
     if (!keep) return;
+    const q = qt[comps[c].tq];
     for (let k = 0; k < 64; k++) coef[k] *= q[k];
     // separable IDCT: columns, then rows
     for (let y = 0; y < 8; y++)
@@ -250,21 +260,41 @@ function decodeScan(b, pos, frame, tables, qt, restart) {
         pred.fill(0);
       }
       comps.forEach((comp, c) => {
+        const plane = planes[c];
         for (let by = 0; by < comp.v; by++)
           for (let bx = 0; bx < comp.h; bx++) {
-            block(c, c === 0);
-            if (c) continue;
+            block(c, plane !== null);
+            if (!plane) continue;
             const x0 = (mx * comp.h + bx) * 8, y0 = (my * comp.v + by) * 8;
             for (let y = 0; y < 8; y++)
-              for (let x = 0; x < 8; x++) plane[(y0 + y) * pw + x0 + x] = coef[y * 8 + x];
+              for (let x = 0; x < 8; x++) plane.data[(y0 + y) * plane.w + x0 + x] = coef[y * 8 + x];
           }
       });
     }
 
+  const clamp = (v) => Math.min(1, Math.max(0, v / 255));
   const gray = new Float32Array(width * height);
+  const yp = planes[0];
   for (let y = 0; y < height; y++)
-    for (let x = 0; x < width; x++) gray[y * width + x] = Math.min(1, Math.max(0, (plane[y * pw + x] + 128) / 255));
-  return { width, height, gray };
+    for (let x = 0; x < width; x++) gray[y * width + x] = clamp(yp.data[y * yp.w + x] + 128);
+  let rgb = null;
+  if (comps.length === 1) rgb = Float32Array.from({ length: width * height * 3 }, (_, i) => gray[Math.floor(i / 3)]);
+  else if (colour) {
+    // JFIF YCbCr → RGB; chroma at its own sampling, taken from the nearest sample
+    rgb = new Float32Array(width * height * 3);
+    const [, cb, cr] = planes, [, B, R] = comps;
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++) {
+        const l = yp.data[y * yp.w + x] + 128;
+        const u = cb.data[Math.floor((y * B.v) / Y.v) * cb.w + Math.floor((x * B.h) / Y.h)];
+        const v = cr.data[Math.floor((y * R.v) / Y.v) * cr.w + Math.floor((x * R.h) / Y.h)];
+        const o = 3 * (y * width + x);
+        rgb[o] = clamp(l + 1.402 * v);
+        rgb[o + 1] = clamp(l - 0.344136 * u - 0.714136 * v);
+        rgb[o + 2] = clamp(l + 1.772 * u);
+      }
+  }
+  return { width, height, gray, rgb };
 }
 
 // ---- shaping -----------------------------------------------------------------

@@ -15,7 +15,8 @@ import { autocontrast, decodeImage, ImageError, resample } from "./image.mjs";
 
 // Avatar portrait: a 240 px box of 2.4 × 2.1 px samples (fontSize 4 half
 // blocks, rows 4.2 px apart so they overlap by 1 px), four alpha tones.
-const PORTRAIT = { box: 240, fontSize: 4, pitch: 4.2, tones: 4, cutoff: 0.02 };
+// card.avatarColors "natural" / "gray": the palette's size; more costs bytes, a layer of text rows each.
+const PORTRAIT = { box: 240, fontSize: 4, pitch: 4.2, tones: 4, cutoff: 0.02, colors: { natural: 16, gray: 8 } };
 // The solid emblem: the solid preset in half cells at its usual 4.8 px samples.
 const SOLID = { fontSize: 8, pitch: 9.5, stillAt: 3.3 };
 const SCREEN_PAD = 6; // screen margin around the portrait, px
@@ -32,6 +33,9 @@ const ALPHA = { d: 0.42, m: 0.68, h: 0.95, t1: 0.3, t2: 0.6, t3: 0.95, l0: 0.13,
 const SPARK = " ▁▂▃▄▅▆▇█"; // index = level, 1 to 8; a week without contributions is "·"
 const CALENDAR_TOP = 4; // calendar levels: l0 (no contributions) to l4
 const CELL = "■";
+// card.swatches: the accent from faint to full, a block each
+const SWATCH = "███";
+const SWATCHES = [0.13, 0.25, 0.37, 0.5, 0.62, 0.74, 0.86, 0.95];
 const HALF = " ▀▄█";
 const DAY_MS = 86_400_000;
 const WEEK_DAYS = 7;
@@ -42,7 +46,8 @@ const INTRO = {
   start: 0.15, // the first tone and the first line begin
   screen: 0.3, // the dark screen fades in
   tone: 0.9, // a portrait tone develops top to bottom,
-  toneStep: 0.35, // the next one this much later
+  toneStep: 0.35, // the next one this much later,
+  toneSpread: 0.7, // and the last one at most this long after the first (a natural palette has many)
   line: 0.35, // a text line types in,
   lineStep: 0.18, // the next one this much later
   calendar: 0.7, // the calendar, week by week
@@ -85,33 +90,71 @@ const languageList = (langs) => {
   return shown.slice(0, LANGUAGES_SHOWN);
 };
 
-/** Floyd–Steinberg to `levels` tones; tone k ≥ 1 becomes its own rows of half blocks. */
-function toneLayers(values, cols, rows, levels) {
+/**
+ * Floyd–Steinberg over `channels` values a sample: `nearest(v, i)` picks a
+ * level for the sample's (error-carrying) values and returns them, the rest is
+ * pushed on to the neighbours. → the level of every sample.
+ */
+function diffuse(values, cols, rows, channels, nearest) {
   const v = Float32Array.from(values), q = new Uint8Array(cols * rows);
+  const push = (i, err, w) => {
+    for (let ch = 0; ch < channels; ch++) v[i * channels + ch] += err[ch] * w;
+  };
   for (let r = 0; r < rows; r++)
     for (let c = 0; c < cols; c++) {
-      const i = r * cols + c;
-      q[i] = Math.max(0, Math.min(levels - 1, Math.round(v[i] * (levels - 1))));
-      const err = v[i] - q[i] / (levels - 1);
-      if (c + 1 < cols) v[i + 1] += (err * 7) / 16;
+      const i = r * cols + c, at = v.subarray(i * channels, (i + 1) * channels);
+      const [level, got] = nearest(at);
+      q[i] = level;
+      const err = Array.from(at, (x, ch) => x - got[ch]);
+      if (c + 1 < cols) push(i + 1, err, 7 / 16);
       if (r + 1 < rows) {
-        if (c > 0) v[i + cols - 1] += (err * 3) / 16;
-        v[i + cols] += (err * 5) / 16;
-        if (c + 1 < cols) v[i + cols + 1] += err / 16;
+        if (c > 0) push(i + cols - 1, err, 3 / 16);
+        push(i + cols, err, 5 / 16);
+        if (c + 1 < cols) push(i + cols + 1, err, 1 / 16);
       }
     }
-  const layers = [];
-  for (let k = 1; k < levels; k++) {
+  return q;
+}
+
+/** Rows of half blocks per level in `levels`: a cell's top and bottom samples each lit where q is that level. */
+function halfLayers(q, cols, rows, levels, cls) {
+  return levels.map((k) => {
     const lines = [];
     for (let r = 0; r < rows; r += 2) {
       let s = "";
       for (let c = 0; c < cols; c++) s += HALF[(q[r * cols + c] === k ? 1 : 0) + (r + 1 < rows && q[(r + 1) * cols + c] === k ? 2 : 0)];
       lines.push({ col: 0, row: r / 2, s: s.trimEnd() });
     }
-    layers.push({ cls: `t${k}`, lines });
-  }
-  return layers;
+    return { cls: cls(k), lines };
+  });
 }
+
+/** `n` colours that stand for `rgb` (three values a sample): median cut, deterministic. */
+function medianCut(rgb, n) {
+  const span = (box, ch) => {
+    let lo = Infinity, hi = -Infinity;
+    for (const i of box) (lo = Math.min(lo, rgb[3 * i + ch])), (hi = Math.max(hi, rgb[3 * i + ch]));
+    return hi - lo;
+  };
+  const boxes = [Array.from({ length: rgb.length / 3 }, (_, i) => i)];
+  while (boxes.length < n) {
+    // split the box whose widest channel spans most, weighed by how many samples it holds
+    let best = -1, score = 0, axis = 0;
+    boxes.forEach((box, b) => {
+      for (let ch = 0; box.length > 1 && ch < 3; ch++) {
+        const s = span(box, ch) * Math.sqrt(box.length);
+        if (s > score) [best, score, axis] = [b, s, ch];
+      }
+    });
+    if (best < 0) break;
+    const box = boxes[best].sort((a, b) => rgb[3 * a + axis] - rgb[3 * b + axis] || a - b);
+    boxes.splice(best, 1, box.slice(0, box.length >> 1), box.slice(box.length >> 1));
+  }
+  return boxes.map((box) => [0, 1, 2].map((ch) => box.reduce((a, i) => a + rgb[3 * i + ch], 0) / box.length));
+}
+
+const luma = ([r, g, b]) => 0.299 * r + 0.587 * g + 0.114 * b;
+const hex = (c) => "#" + c.map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")).join("");
 
 /**
  * The portrait, or null for "none": its box, and its text rows grouped by
@@ -155,11 +198,40 @@ function portrait(cfg, snap, adv) {
   const cols = Math.round(PORTRAIT.box / px);
   // rows stretched by the sample aspect, and even, so the image keeps its proportions
   const rows = 2 * Math.round((PORTRAIT.box * img.height) / img.width / py / 2);
-  const gray = autocontrast(resample(img, cols, rows), PORTRAIT.cutoff);
-  return {
-    kind: "avatar", fs: PORTRAIT.fontSize, pitch: PORTRAIT.pitch, top: 0, rows: rows / 2,
-    w: cols * px, h: (rows / 2) * PORTRAIT.pitch, groups: toneLayers(gray, cols, rows, PORTRAIT.tones),
-  };
+  const box = { kind: "avatar", fs: PORTRAIT.fontSize, pitch: PORTRAIT.pitch, top: 0, rows: rows / 2, w: cols * px, h: (rows / 2) * PORTRAIT.pitch };
+  const colours = cfg.card.avatarColors;
+  if (colours === "accent") {
+    // tones of the accent: tone 0 stays dark, the screen; tones 1–3 are alpha classes
+    const L = PORTRAIT.tones - 1;
+    const gray = autocontrast(resample(img, cols, rows), PORTRAIT.cutoff);
+    const q = diffuse(gray, cols, rows, 1, ([v]) => {
+      const level = Math.max(0, Math.min(L, Math.round(v * L)));
+      return [level, [level / L]];
+    });
+    return { ...box, groups: halfLayers(q, cols, rows, Array.from({ length: L }, (_, i) => i + 1), (t) => `t${t}`) };
+  }
+  // opaque colours: an adaptive palette, every sample on one of them
+  let rgb;
+  if (colours === "gray") {
+    const gray = autocontrast(resample(img, cols, rows), PORTRAIT.cutoff);
+    rgb = Float32Array.from({ length: gray.length * 3 }, (_, i) => gray[Math.floor(i / 3)]);
+  } else {
+    if (!img.rgb) throw new ImageError("its colour space has no natural colours here (greyscale or YCbCr JPEG only)");
+    const channel = (ch) => resample({ width: img.width, height: img.height, gray: img.rgb.filter((_, i) => i % 3 === ch) }, cols, rows);
+    const [r, g, b] = [0, 1, 2].map(channel);
+    rgb = Float32Array.from({ length: r.length * 3 }, (_, i) => [r, g, b][i % 3][Math.floor(i / 3)]);
+  }
+  const palette = medianCut(rgb, PORTRAIT.colors[colours]).sort((a, b) => luma(a) - luma(b));
+  const q = diffuse(rgb, cols, rows, 3, (v) => {
+    let best = 0, dist = Infinity;
+    palette.forEach((p, k) => {
+      const d = (v[0] - p[0]) ** 2 + (v[1] - p[1]) ** 2 + (v[2] - p[2]) ** 2;
+      if (d < dist) [best, dist] = [k, d];
+    });
+    return [best, palette[best]];
+  });
+  // dark to light, the order they develop in
+  return { ...box, groups: halfLayers(q, cols, rows, palette.map((_, k) => k), (k) => `c${k}`), fills: palette.map(hex) };
 }
 
 /**
@@ -228,31 +300,45 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
   if (cols < MIN_COLS)
     throw new ConfigError(`card: the text column has room for ${cols} characters, at least ${MIN_COLS} are needed; ` +
       `widen card.width or lower card.textSize`);
-  const fit =(s, room, what) => {
+  const fit = (s, room, what) => {
     if (len(s) <= room) return s;
     warnings.push(`${what} cut to ${room} columns`);
     return [...s].slice(0, Math.max(0, room - 2)).join("") + "..";
   };
+  const colon = k.layout === "colon";
   /**
-   * "key ····· value", the value right-aligned at the column's end. `parts` =
-   * strings and numbers; with an intro the numbers count up, so the value run
-   * leaves them blank and `nums` places them, unless the value had to be cut.
+   * A row: "key ····· value" with the value right-aligned at the column's end,
+   * or "key: value". `parts` = strings and numbers; with an intro the numbers
+   * count up, so the value run leaves them blank and `nums` places them,
+   * unless the value had to be cut.
    */
   const kv = (key, parts) => {
     const strs = parts.map((p) => (typeof p === "number" ? fmt(p) : p));
     const full = strs.join("");
-    const v = fit(full, cols - len(key) - 4, `card row "${key}"`);
+    const v = fit(full, cols - len(key) - (colon ? 2 : 4), `card row "${key}"`);
     const counts = (p) => moving && v === full && typeof p === "number" && p > 0;
     const nums = [];
-    let col = cols - len(v);
+    let col = colon ? len(key) + 2 : cols - len(v);
     parts.forEach((p, i) => {
       if (counts(p)) nums.push({ col, n: p });
       col += len(strs[i]);
     });
     const value = nums.length ? parts.map((p, i) => (counts(p) ? " ".repeat(len(strs[i])) : strs[i])).join("") : v;
-    return { runs: [[key + " ", "m"], ["·".repeat(cols - len(key) - len(v) - 2), "d"], [" " + value, "h"]], nums };
+    const runs = colon
+      ? [[key, "k"], [": ", "d"], [value, "v"]]
+      : [[key + " ", "k"], ["·".repeat(cols - len(key) - len(v) - 2), "d"], [" " + value, "v"]];
+    return { runs, nums };
   };
-  const header = (s) => ({ runs: [[fit(s, cols - 2, "the header"), "h"], [" " + "─".repeat(Math.max(0, cols - len(s) - 1)), "d"]] });
+  /** The header's lines from its [text, class] runs: ruled to the column's end, or underlined (colon). */
+  const header = (runs) => {
+    const room = cols - 2, total = runs.reduce((a, [s]) => a + len(s), 0);
+    if (total > room) runs.at(-1)[0] = fit(runs.at(-1)[0], Math.max(2, len(runs.at(-1)[0]) - (total - room)), "the header");
+    const width = runs.reduce((a, [s]) => a + len(s), 0);
+    return colon
+      ? [{ runs }, { runs: [["─".repeat(width), "d"]] }]
+      : [{ runs: [...runs, [" " + "─".repeat(Math.max(0, cols - width - 1)), "d"]] }];
+  };
+  const swatches = () => ({ runs: SWATCHES.map((_, i) => [SWATCH, `s${i}`]) });
 
   // The text column: lines of [text, class] runs, and for a person maybe the calendar.
   const items = [];
@@ -261,7 +347,7 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     const p = snap.person;
     const title = k.title !== null ? ownText(k.title, "card.title") : gitText(p.name ?? p.login, "the GitHub name");
     const handle = `${p.login}@github`;
-    items.push(header(title === p.login ? handle : `${title} ${handle}`));
+    items.push(...header(title === p.login ? [[handle, "h"]] : [[title, "h"], [" " + handle, "v"]]));
     const langs = languageList(p.languages);
     const value = {
       uptime: [age(p.createdAt, snap.fetchedAt)],
@@ -271,6 +357,7 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     };
     for (const [key, v] of rows) items.push(kv(key, [v]));
     for (const id of k.show) items.push(kv(id, value[id]));
+    if (k.swatches) items.push(swatches());
     const weeks = p.contributions.weeks;
     if (k.activity === "sparkline") {
       const n = Math.min(SPARK_WEEKS, weeks.length, cols - len(`${SPARK_WEEKS} weeks `));
@@ -278,7 +365,7 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
       const sums = weeks.slice(-n).map((w) => w.days.reduce((a, d) => a + d, 0));
       const max = Math.max(...sums, 1);
       const levels = sums.map((s) => (s <= 0 ? 0 : Math.max(1, Math.min(8, 1 + Math.floor((Math.log1p(s) / Math.log1p(max)) * 7)))));
-      const runs = [[label, "m"]];
+      const runs = [[label, "k"]];
       for (const l of levels) {
         const [ch, cls] = l ? [SPARK[l], "h"] : ["·", "d"];
         if (runs.at(-1)[1] === cls && runs.length > 1) runs.at(-1)[0] += ch;
@@ -302,7 +389,7 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     }
   } else {
     const p = snap.project;
-    items.push(header(k.title !== null ? ownText(k.title, "card.title") : p.name));
+    items.push(...header([[k.title !== null ? ownText(k.title, "card.title") : p.name, "h"]]));
     if (p.description) {
       const words = gitText(p.description, "the description").split(/\s+/), wrapped = [""];
       for (const w of words) {
@@ -312,7 +399,7 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
       }
       const shown = wrapped.slice(0, WRAP_LINES).map((l) => fit(l, cols, "the description"));
       if (wrapped.length > WRAP_LINES) shown[WRAP_LINES - 1] = fit(shown[WRAP_LINES - 1] + " " + wrapped[WRAP_LINES], cols, "the description");
-      for (const l of shown) items.push({ runs: [[l, "m"]] });
+      for (const l of shown) items.push({ runs: [[l, "v"]] });
     }
     const langs = languageList(p.languages);
     const value = {
@@ -329,18 +416,19 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
       }
       // a bar split by language, shades alternating, then the leading languages
       const legend = " " + gitText(langs.length ? langs.slice(0, 2).map((l) => `${l.name} ${l.pct}%`).join(", ") : "none", "the languages row");
-      const bar = Math.max(4, cols - len("languages ") - len(legend));
+      const runs = [["languages", "k"], [colon ? ": " : " ", "d"]];
+      const bar = Math.max(4, cols - len(runs[0][0] + runs[1][0]) - len(legend));
       const total = langs.reduce((a, l) => a + l.pct, 0) || 1;
-      const runs = [["languages ", "m"]];
       let used = 0;
       langs.forEach((l, i) => {
         const n = i === langs.length - 1 ? bar - used : Math.round((bar * l.pct) / total);
         if (n > 0) runs.push(["█".repeat(n), ["h", "m", "d"][i % 3]]);
         used += n;
       });
-      runs.push([legend, "m"]);
+      runs.push([legend, "v"]);
       items.push({ runs });
     }
+    if (k.swatches) items.push(swatches());
   }
 
   // ---- layout ----
@@ -377,7 +465,8 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
   let screenGone = 0; // intro "loop": when the screen has faded, after the tones on it
   if (pic) {
     const x0 = MARGIN + pad, y0 = MARGIN + pad;
-    const toneEnd = INTRO.start + (pic.groups.length - 1) * INTRO.toneStep + INTRO.tone;
+    const toneStep = pic.groups.length > 1 ? Math.min(INTRO.toneStep, INTRO.toneSpread / (pic.groups.length - 1)) : 0;
+    const toneEnd = INTRO.start + (pic.groups.length - 1) * toneStep + INTRO.tone;
     if (pad) {
       body.push(`<rect${moving ? ' class="sc"' : ""} x="${MARGIN}" y="${MARGIN}" width="${n2(pic.w + 2 * pad)}" height="${n2(pic.h + 2 * pad)}" rx="${SCREEN_RADIUS}" fill="${k.screen}"/>`);
       // going away, the screen waits for the last tone: alone on a light page they read as a negative
@@ -387,7 +476,7 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     }
     reveals.push({ cls: "tn", prop: "y", dur: INTRO.tone, steps: pic.rows });
     pic.groups.forEach(({ cls, lines }, i) => {
-      const delay = INTRO.start + i * INTRO.toneStep;
+      const delay = INTRO.start + i * toneStep;
       if (moving) defs.push(mask(`p${i}`, [rect("tn", x0, y0 + pic.top, pic.w, pic.rows * pic.pitch, delay)]));
       reveal(delay, INTRO.tone);
       body.push(...group(`p${i}`, lines.map((l) => text(x0 + l.col * pic.fs * adv, y0 + pic.top + (l.row + 0.5) * pic.pitch, l.s, cls, pic.fs)).filter(Boolean)));
@@ -432,9 +521,9 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
         const from = delay + INTRO.line; // the count starts once the line is in
         for (const { col: c, n } of it.nums ?? []) {
           const s = fmt(n);
-          lines.push(text(X + c * PX, mid, s, "h nv", S, from));
+          lines.push(text(X + c * PX, mid, s, "v nv", S, from));
           for (let f = 0; f < INTRO.countFrames; f++)
-            lines.push(text(X + c * PX, mid, fmt(Math.round(n * (1 - (1 - f / INTRO.countFrames) ** 3))).padStart(len(s)), "h nf", S, from + f * slot));
+            lines.push(text(X + c * PX, mid, fmt(Math.round(n * (1 - (1 - f / INTRO.countFrames) ** 3))).padStart(len(s)), "v nf", S, from + f * slot));
           introEnd = Math.max(introEnd, from + INTRO.count);
         }
         if (it.spark) {
@@ -475,6 +564,13 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     `@font-face{font-family:B;src:url(data:font/woff2;base64,${fontB64}) format('woff2')}`,
     "text{font-family:B,monospace;white-space:pre;dominant-baseline:central;font-variant-ligatures:none;text-rendering:optimizeSpeed}",
     Object.entries(ALPHA).map(([c, v]) => `.${c}{fill:${a(v)}}`).join(""),
+    // keys in the accent, values in the ink; with no ink the values take the bright accent and the keys step down
+    `.k{fill:${a(k.ink ? ALPHA.h : ALPHA.m)}}.v{fill:${k.ink ?? a(ALPHA.h)}}`,
+    ...(pic?.fills ? [pic.fills.map((f, i) => `.c${i}{fill:${f}}`).join("")] : []),
+    // swatches: the natural palette spread dark to light, else the accent faint to full
+    ...(k.swatches
+      ? [SWATCHES.map((v, i) => `.s${i}{fill:${pic?.fills ? pic.fills[Math.round((i * (pic.fills.length - 1)) / (SWATCHES.length - 1))] : a(v)}}`).join("")]
+      : []),
     [...sizes].map((s) => `.${size(s)}{font-size:${s}px}`).join(""),
     ...(calendar ? [`.cg{letter-spacing:${n2(calendar.cp - calendar.cell)}px}`] : []),
     ...(moving ? [introCss(k, reveals, hold, waveShift)] : []),

@@ -104,7 +104,13 @@ export const DEFAULTS = {
     activity: null, // mode "person", the last year: "sparkline" (per week), "calendar" (per day, as on GitHub) or "none"; null = sparkline for a person, none for a project
     intro: "once", // the card builds itself up on load: "once", "loop" (again every `period` s) or "none" (still)
     period: 12, // s, one cycle of intro "loop"
+    layout: "dots", // rows as "key ···· value" (value right-aligned) or "colon": "key: value", neofetch's
+    // #rrggbb of the values, the handle and the description: a grey that reads
+    // on light and dark pages alike; null = the accent, like the keys
+    ink: "#7d8590",
+    swatches: false, // a row of colour blocks under the rows, as neofetch ends
     portrait: null, // "avatar", "solid" (a turning torus) or "none"; null = avatar for a person, solid for a project
+    avatarColors: "accent", // the avatar in four tones of the accent, "natural" (its own colours, 16) or "gray" (8 greys)
     screen: "#0d1117", // #rrggbb behind the portrait, so its light-as-ink tones read on light pages too; null = none
     width: 880, // px
     textSize: 13, // px
@@ -119,6 +125,8 @@ export const CARD_ROWS = {
 const CARD_PORTRAITS = ["avatar", "solid", "none"];
 const CARD_ACTIVITIES = ["sparkline", "calendar", "none"];
 const CARD_INTROS = ["once", "loop", "none"];
+const CARD_LAYOUTS = ["dots", "colon"];
+const CARD_AVATAR_COLORS = ["accent", "natural", "gray"];
 // The text column needs room next to a 240 px portrait.
 const CARD_MIN_WIDTH = 600;
 
@@ -152,6 +160,7 @@ const NULLABLE = {
   "card.title": "string",
   "card.show": "array",
   "card.activity": "string",
+  "card.ink": "string",
   "card.portrait": "string",
   "card.screen": "string",
   "tagline.layout": "string",
@@ -447,8 +456,13 @@ function checkCard(k, abs) {
   check(k.mode === "person" || k.activity === "none", "card.activity", `mode "project" has no contribution activity; use "none", got ${JSON.stringify(k.activity)}`);
   oneOf(k.intro, "card.intro", CARD_INTROS);
   positive(k.period, "card.period");
+  oneOf(k.layout, "card.layout", CARD_LAYOUTS);
+  if (k.ink !== null) hexColour(k.ink, "card.ink");
   k.portrait ??= k.mode === "person" ? "avatar" : "solid";
   oneOf(k.portrait, "card.portrait", CARD_PORTRAITS);
+  oneOf(k.avatarColors, "card.avatarColors", CARD_AVATAR_COLORS);
+  check(k.avatarColors === "accent" || k.portrait === "avatar", "card.avatarColors",
+    `colours an avatar, but card.portrait is "${k.portrait}"`);
   if (k.screen !== null) hexColour(k.screen, "card.screen");
   check(k.width >= CARD_MIN_WIDTH, "card.width", `must be at least ${CARD_MIN_WIDTH} px, got ${k.width}`);
   positive(k.textSize, "card.textSize");

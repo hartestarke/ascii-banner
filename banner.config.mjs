@@ -184,9 +184,19 @@ export default {
     // prefers-reduced-motion the card is always still.
     intro: "once",
     period: 12, // s, one cycle of intro "loop"
-    // "avatar" (the GitHub avatar in four tones), "solid" (a turning torus,
-    // frozen) or "none"; null = avatar for a person, solid for a project.
+    // Rows as "key ···· value", the value right-aligned ("dots"), or as
+    // neofetch's "key: value" ("colon").
+    layout: "dots",
+    // #rrggbb of the values, the handle and the description: a grey that reads
+    // on light and dark pages alike; null = the accent, like the keys.
+    ink: "#7d8590",
+    swatches: false, // a row of colour blocks under the rows, as neofetch ends: the accent's shades, or the avatar's palette
+    // "avatar" (the GitHub avatar), "solid" (a turning torus, frozen) or
+    // "none"; null = avatar for a person, solid for a project.
     portrait: null,
+    // The avatar in four tones of the accent ("accent"), in its own colours
+    // ("natural", a 16-colour palette, about twice the bytes) or in 8 greys ("gray").
+    avatarColors: "accent",
     screen: "#0d1117", // #rrggbb behind the avatar, so it reads on light pages too; null = none
     width: 880, // px, at least 600
     textSize: 13, // px
