@@ -26,8 +26,9 @@ field: {
   gradient: null,     // 2–8 #rrggbb stops, left → right; not with colors
   bands: null,        // 1 | 2 | 3 alpha bands; null = the preset's default
   ramp: null,         // glyph ramp string or glyph set name; null = the preset's default
-  gamma: 1.35,        // applied to every preset's output (not to `sample`)
+  gamma: null,        // applied to every preset's output (not to `sample`); null = the preset's
   dither: 0,          // 0 = jittered quantising; 2 | 4 | 8 = Bayer ordered dither
+  cells: "ramp",      // or "half": two ▀ ▄ pixels per cell, see Half-block cells
   preset: "waves",    // or "none": no field, taglines only
   options: {},        // merged over the preset's defaults
   sample: null,       // (x, y, t) => [0, 1]; replaces the preset
@@ -57,10 +58,14 @@ field: {
   `binary` (two levels) gets at most 2 bands and `colors` is checked against,
   and drawn on, the bands that exist.
 - **`gamma`**: `pow(v, gamma)` on the preset's value; > 1 deepens the darks.
+  `null` takes the preset's: 1.35, but 1 for `solid`, whose shading already
+  is a brightness.
 - **`dither`**: `0` quantises as `floor((v ± 0.05 jitter) × levels)`. A
   matrix size `n` replaces the jitter with an n × n Bayer threshold,
   `floor(v × levels + bayer(col, row))`, so a gradient turns into a regular
   ordered-dither pattern. Try `dither: 4` with waves.
+- **`cells`**: `"ramp"`, one ramp glyph per cell, or `"half"`, two block
+  pixels per cell: see [Half-block cells](#half-block-cells).
 - **`options`**: unknown keys are a config error that names the preset, and
   each value must have the default's type. The legacy keys `field.waves` and
   `field.drive` are still accepted as aliases of the waves options. Giving
@@ -116,6 +121,39 @@ sample of each.
   alpha, so the hue follows x and the brightness still comes from the band.
   Giving both `colors` and `gradient` is an error. About 200 bytes.
 - The knockout is a mask and takes no colour.
+
+## Half-block cells
+
+`cells: "half"` splits every cell into a top and a bottom sample, each its
+own pixel. The preset is sampled on a grid with twice the rows, every sample
+is thresholded on its own (on the `dither` Bayer matrix laid over the sample
+grid, else at 0.5), and the cell draws the glyph its two samples make: blank,
+`▀`, `▄` or `█`. There is no ramp, so giving `ramp` is an error. Brightness
+comes from the density of lit pixels and, with `bands` 2 or 3, from alpha,
+which follows the mean of the cell's two samples. Twice the rows is what
+keeps a [`solid`](#solid) legible at banner height.
+
+```js
+field: { preset: "solid", cells: "half", fontSize: 10, rowPitch: 12, dither: 4 }
+```
+
+- **Row pitch.** A block glyph spans the font's full ascent + descent,
+  `fontSize × font.blockHeight` (13.2 px for JetBrains Mono at 10 px). Rows
+  exactly a block apart ought to tile, but Firefox snaps every text row to
+  whole device pixels, so the spacing alternates and hairline gaps open
+  between rows (on 17–47 % of columns at device pixel ratios 1, 1.25 and 2).
+  Rows that overlap by 1 px or more stay closed at any ratio, so `rowPitch`
+  must lie between ¾ of a block and a block less 1 px; the build names the
+  range. `fontSize: 10, rowPitch: 12` gives 147 × 20 cells of square 6 × 6 px
+  pixels at the template size. Where rows overlap, a band below `alpha.hi`
+  draws a faint line of double alpha; with `bands: 1` it does not show.
+- **Size.** A block glyph costs 3 bytes, and a row starts at its first drawn
+  cell, so a field that lights a small part of the banner stays small:
+  `solid` is 605,634 bytes (376,404 with `bands: 1`) and `sharks` 622,520.
+  The preset sees the sample grid, so one that counts cells gets more of
+  them: `stars` doubles its stars and needs `bands: 1` (764,647; 1,088,945
+  with its 3 bands). A field that lights most cells does not fit: `waves` is
+  1,542,966 bytes even at `bands: 1`.
 
 ## Presets
 
@@ -236,6 +274,30 @@ Outlines after [ascii-sharks](https://github.com/stackedlol/ascii-sharks)
   school that drifts right → left, sways and wanders in place (try 0.015).
 - `seed`: 1.
 - ramp `: ; t % S X 8 # @`, bands 3. **459,544 bytes**.
+
+### solid
+One lit solid turning in place: a torus, a trefoil knot or a rounded cube,
+ray-marched for every sample through a perspective camera and shaded by a key
+light in front (Lambert plus a Blinn highlight). It turns a whole number of
+times per loop about each axis, so the loop closes exactly. In ramp cells it
+is about a dozen glyphs tall, the donut.c look; it is drawn for
+[half-block cells](#half-block-cells), as in the gallery. A torus or a cube
+reads at banner height, the knot only from some angles. Behind the taglines
+a torus seen edge-on vanishes into the knockout for a moment.
+- `shape`: `"torus"`, `"knot"` or `"cube"`.
+- `x`, `y`: 0.82, 0.5, the centre as fractions of the width and the height.
+  Taglines are centred, so keep the solid clear of them or right behind them.
+- `size`: 0.92, the diameter of the sphere the solid turns in, as a fraction
+  of the height.
+- `turns`: `[1, 0, 2]`, whole turns per loop about x (right), y (up) and z
+  (into the banner), applied in that order (integers).
+- `light`: `[-0.4, 0.5, -0.75]`, the direction towards the light, same axes.
+- `ambient`: 0.15, the brightness of the side facing away from the light.
+- `specular`: 0.35, the highlight's share of a fully lit sample; `shininess`:
+  18, its exponent.
+- ramp `. , - ~ : ; = ! * # $ @` (donut.c's), bands 3, gamma 1.
+  **553,424 bytes**; 605,634 in half cells at `fontSize: 10, rowPitch: 12,
+  dither: 4`.
 
 ## Writing your own
 

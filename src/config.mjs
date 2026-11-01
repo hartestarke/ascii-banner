@@ -65,8 +65,15 @@ export const DEFAULTS = {
     // interchangeable, so bands don't degrade into rings of one character.
     // Level 0 (empty) is implicit. A GLYPH_SETS name stands for its ramp; null = the preset's ramp.
     ramp: null,
-    gamma: 1.35, // >1 deepens the dark side of the gradient (presets only)
+    gamma: null, // >1 deepens the dark side of the gradient (presets only); null = the preset's, 1.35 unless it sets one
     dither: 0, // 0 = quantise with a little per-cell jitter; 2 / 4 / 8 = Bayer matrix size
+    // "ramp" = one ramp glyph per cell; "half" = each cell split into a top and
+    // a bottom sample drawn as ▀ ▄ █, each its own pixel: twice the resolution,
+    // no ramp. Block rows must overlap by at least 1 px (Firefox snaps each row
+    // to whole device pixels and opens hairline gaps otherwise): rowPitch ≤
+    // fontSize × font.blockHeight − 1. The bundled font at fontSize 10, rowPitch
+    // 12 gives square 6 × 6 px samples.
+    cells: "ramp",
     preset: "waves", // FIELD_PRESETS name, or "none" (NO_FIELD) for taglines only
     // Merged over the preset's defaults. field.waves and field.drive are legacy
     // aliases of the waves options.
@@ -78,11 +85,18 @@ export const DEFAULTS = {
   font: {
     file: null, // null = bundled JetBrains Mono subset; or a path to your own .woff2
     advance: 0.6, // glyph advance in em (JetBrains Mono = 0.6); sets the column pitch
+    blockHeight: 1.32, // full block █ height in em (JetBrains Mono = 1.32); field.cells "half" bounds rowPitch by it
   },
   budget: {
     maxBytes: 1048576, // fail the build above this many raw bytes; 0 = no limit
   },
 };
+
+/** field.gamma for a preset that sets none. */
+export const PRESET_GAMMA = 1.35;
+/** Block rows' overlap under field.cells "half": at least MIN px, at most a MAX share of a block. */
+const BLOCK_OVERLAP_MIN = 1;
+const BLOCK_OVERLAP_MAX = 0.25;
 
 /** field.preset value that draws no field: taglines only, no knockout. */
 export const NO_FIELD = "none";
@@ -101,6 +115,7 @@ const NULLABLE = {
   "field.ramp": "string",
   "reveal.pool": "string",
   "field.bands": "number",
+  "field.gamma": "number",
   "font.file": "string",
   "tagline.layout": "string",
   "tagline.shadowGlyphs": "string",
@@ -319,8 +334,23 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   const preset = f.preset === NO_FIELD ? NO_FIELD_PRESET : FIELD_PRESETS[f.preset];
   f.options = presetOptions(preset, withAliases(f.preset, field.options, field.aliases), "field.options",
     (key, takes) => `field.options.${key}: unknown option for preset "${f.preset}" (it takes ${takes || "no options"})`, { field: f });
+  oneOf(f.cells, "field.cells", ["ramp", "half"]);
+  check(f.cells === "ramp" || f.ramp === null, "field.ramp",
+    `has no effect with field.cells "${f.cells}", which draws block glyphs; remove it or set cells: "ramp"`);
+  if (f.cells !== "ramp") {
+    // Blocks span the font's full ascent + descent. Rows a block apart still
+    // gap in Firefox, which snaps each row to whole device pixels, so they
+    // overlap by 1 px or more; past a quarter block the samples drift off their cells.
+    positive(c.font.blockHeight, "font.blockHeight");
+    const block = f.fontSize * c.font.blockHeight;
+    const lo = block * (1 - BLOCK_OVERLAP_MAX), hi = block - BLOCK_OVERLAP_MIN;
+    check(f.rowPitch >= lo && f.rowPitch <= hi, "field.rowPitch",
+      `must be within [${+lo.toFixed(2)}, ${+hi.toFixed(2)}] with field.cells "${f.cells}" (blocks are ` +
+      `fontSize × font.blockHeight = ${+block.toFixed(2)} px tall, and rows overlap by 1 px to a quarter of that); got ${f.rowPitch}`);
+  }
   f.ramp = glyphSet(f.ramp ?? preset.ramp, "field.ramp");
   f.bands ??= preset.bands;
+  f.gamma ??= preset.gamma ?? PRESET_GAMMA;
   plainText(f.ramp, "field.ramp");
   check(parseRamp(f.ramp).length >= 2, "field.ramp", "needs at least one level of glyphs");
   d.pool = d.pool === null ? f.ramp : glyphSet(d.pool, "reveal.pool");

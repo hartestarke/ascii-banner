@@ -26,9 +26,13 @@ const MAX_BYTES = 200 * 1024;
 // loop; the default, 7 s, does not.
 const SIZE = { width: 440, height: 120 };
 const FIELD = { fps: 6, loopSeconds: 6, stillAt: 3 };
-// Options a preset needs at this short loop: sharks turn round between
-// crossings, and two in 6 s would race, so the sample shows one crossing.
-const FIELD_OPTIONS = { sharks: { speed: 1 } };
+// Field settings a preset is shown with. Sharks turn round between crossings,
+// and two in 6 s would race, so the sample shows one crossing; a solid is a
+// dozen ramp glyphs tall, so it shows in half-block cells, as it is meant to.
+const FIELD_SETTINGS = {
+  sharks: { options: { speed: 1 } },
+  solid: { cells: "half", fontSize: 10, rowPitch: 12, dither: 4 },
+};
 // At 120 px the letter height, not the width, bounds the tagline: the default
 // maxHeight (0.34) sets 6- to 8-row fonts at 4.3-5.7 px, under the build's 6 px
 // legibility warning. 0.5 keeps them at 6 px or more.
@@ -87,11 +91,12 @@ const FAMILIES = [
     config: (name) => ({
       ...BASE,
       taglines: FIELD_TAGLINES,
-      field: { ...FIELD, preset: name, options: FIELD_OPTIONS[name] ?? {} },
+      field: { ...FIELD, preset: name, ...FIELD_SETTINGS[name] },
     }),
     intro:
       `\`field.preset\` with its default options (see [fields.md](../fields.md); \`sharks\` at ` +
-      `\`speed: 1\`, one crossing in this short loop). ${looks}; ` +
+      `\`speed: 1\`, one crossing in this short loop; \`solid\` in \`cells: "half"\` at fontSize 10, ` +
+      `rowPitch 12, \`dither: 4\`). ${looks}; ` +
       `tagline ${quoted(FIELD_TAGLINES)} in \`${TAGLINE.font}\`, scramble reveal.`,
   },
   {

@@ -5,7 +5,7 @@
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { buildBanner, ConfigError, DEFAULTS, NO_FIELD } from "../src/index.mjs";
+import { buildBanner, ConfigError, DEFAULTS, NO_FIELD, PRESET_GAMMA } from "../src/index.mjs";
 import { describeLayout, figlet, loadFlf } from "../src/figlet.mjs";
 import { listFonts } from "../src/fonts.mjs";
 import { FIELD_PRESETS } from "../src/fields/index.mjs";
@@ -154,7 +154,7 @@ function presets(argv) {
   const { pos, flags } = parseArgs(argv, [], ["--json"]);
   if (pos.length) throw new ConfigError(`presets takes no positional arguments\n\n${USAGE}`);
   const fields = Object.fromEntries(
-    Object.entries(FIELD_PRESETS).map(([name, p]) => [name, { ramp: p.ramp, bands: p.bands, options: p.defaults }]),
+    Object.entries(FIELD_PRESETS).map(([name, p]) => [name, { ramp: p.ramp, bands: p.bands, gamma: p.gamma ?? PRESET_GAMMA, options: p.defaults }]),
   );
   const reveals = Object.fromEntries(Object.entries(REVEAL_PRESETS).map(([name, p]) => [name, { options: p.defaults }]));
   if (flags.json) {
@@ -164,9 +164,9 @@ function presets(argv) {
 
   const width = Math.max(...Object.keys(fields).map((n) => n.length));
   const options = (o) => Object.entries(o).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join(", ") || "(no options)";
-  console.log(`Field presets (field.preset; "${NO_FIELD}" draws no field). field.options overrides the defaults shown; null field.ramp / field.bands take the preset's.\n`);
+  console.log(`Field presets (field.preset; "${NO_FIELD}" draws no field). field.options overrides the defaults shown; null field.ramp / field.bands / field.gamma take the preset's.\n`);
   for (const [name, p] of Object.entries(fields))
-    console.log(`  ${name.padEnd(width)}  ramp ${JSON.stringify(p.ramp)}, bands ${p.bands}\n      ${options(p.options)}`);
+    console.log(`  ${name.padEnd(width)}  ramp ${JSON.stringify(p.ramp)}, bands ${p.bands}, gamma ${p.gamma}\n      ${options(p.options)}`);
   console.log(`\nReveal presets (reveal.preset). reveal.options overrides the defaults shown.\n`);
   for (const [name, p] of Object.entries(reveals)) console.log(`  ${name}\n      ${options(p.options)}`);
   console.log(`\nGlyph sets (field.ramp, reveal.pool): ${Object.keys(GLYPH_SETS).join(", ")}`);

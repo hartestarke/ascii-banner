@@ -2,7 +2,7 @@
 
 # ascii-banner
 
-An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Eleven field presets (or your own function, or none), seven reveals (or none), nineteen bundled fonts and eight glyph sets, all picked in one config file. Zero dependencies, Node ≥ 20.
+An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Twelve field presets (or your own function, or none), seven reveals (or none), nineteen bundled fonts and eight glyph sets, all picked in one config file. Zero dependencies, Node ≥ 20.
 
 ## Examples
 
@@ -130,7 +130,7 @@ The previews are animated SVGs: 440 × 120, a 6 s field loop at 6 fps, default o
 </tr>
 <tr>
 <td align="center"><img src="docs/gallery/field-sharks.svg" width="440" alt="sharks field"><br><code>sharks</code></td>
-<td></td>
+<td align="center"><img src="docs/gallery/field-solid.svg" width="440" alt="solid field"><br><code>solid</code> (<code>cells: "half"</code>)</td>
 </tr>
 </table>
 
@@ -248,9 +248,10 @@ export default {
 | `field.gradient` | `null` | 2–8 `#rrggbb` stops spread left → right across the width, every band at its own alpha; not with `colors` |
 | `field.bands` | `null` | alpha bands the ramp levels fold into: `3` = lo / mid / hi, `2` = lo / hi, `1` = all at hi (smallest file); `null` = the preset's |
 | `field.ramp` | `null` | glyph ramp, dim → bright, levels separated by spaces, the characters of one level interchangeable variants. Or a glyph set: `classic`, `digits`, `dots`, `squares`, `shapes`, `shade`, `binary`, `lines` (a single lowercase word is read as a set name). A glyph beyond ASCII costs 3 bytes: on a dense field pair those sets with `bands: 1`. `null` = the preset's (waves: `classic`, `":. !/ \\\| 1? 7* 25 %0 &# 8@"`) |
-| `field.gamma` | `1.35` | > 1 deepens the dark side of the gradient (not applied to `sample`) |
+| `field.gamma` | `null` | > 1 deepens the dark side of the gradient (not applied to `sample`); `null` = the preset's: 1.35, `solid` 1 |
 | `field.dither` | `0` | `0` = plain quantising with a little per-cell jitter; `2`, `4` or `8` = ordered (Bayer) dither of that size |
-| `field.preset` | `"waves"` | `waves`, `stars`, `rain`, `caustics`, `ripples`, `interference`, `halo`, `mesh`, `contour`, `vortex` or `sharks`; `"none"` = no field and no knockout mask, taglines only |
+| `field.cells` | `"ramp"` | `"ramp"` = one ramp glyph per cell; `"half"` = each cell split into a top and a bottom pixel drawn with `▀ ▄ █`, twice the resolution and no ramp (pair it with `dither`). Rows must overlap: `rowPitch` from ¾ of `fontSize × font.blockHeight` up to 1 px less than it, e.g. `fontSize: 10, rowPitch: 12` (square 6 px pixels). Block glyphs cost 3 bytes: `solid` and `sharks` fit the budget, `stars` with `bands: 1`, `waves` not at all ([docs/fields.md](docs/fields.md#half-block-cells)) |
+| `field.preset` | `"waves"` | `waves`, `stars`, `rain`, `caustics`, `ripples`, `interference`, `halo`, `mesh`, `contour`, `vortex`, `sharks` or `solid`; `"none"` = no field and no knockout mask, taglines only |
 | `field.options` | the preset's | the preset's own knobs, merged over its defaults; unknown keys are an error. `ascii-banner presets` lists them, [docs/fields.md](docs/fields.md) explains them |
 | `field.sample` | `null` | `(x, y, t) => [0, 1]` replacing the preset; x, y = cell centre in px, t = seconds into the loop. Keep it periodic over `loopSeconds` or the build warns |
 
@@ -260,6 +261,7 @@ export default {
 | --- | --- | --- |
 | `font.file` | `null` | `null` = the bundled JetBrains Mono subset; or a path to your own `.woff2` |
 | `font.advance` | `0.6` | that font's glyph advance in em |
+| `font.blockHeight` | `1.32` | that font's full block `█` height in em; bounds `field.rowPitch` under `cells: "half"` |
 | `budget.maxBytes` | `1048576` | the build fails above this many raw bytes; `0` = no limit |
 
 **Legacy keys.** Configs from before the presets still build: a top-level `decode: { seconds, hold, fps, ...options }` means `reveal: { preset: "scramble", ... }` (giving both is an error), and `field.waves` / `field.drive` are aliases of the waves preset's options.
@@ -306,7 +308,7 @@ A reusable field or reveal is a preset: a module in `src/fields/` or `src/reveal
 
 **Another figlet font.** `tagline.font: "./fonts/doom.flf"` (relative to the config file). Glyphs not in the font render as its `?`; set `tagline.shadowGlyphs` to whatever that font uses for its shadow, or leave it `null` for a single tone.
 
-**Custom font.** The bundled subset covers printable ASCII, a few dots, Box Drawing, Block Elements and the Geometric Shapes JetBrains Mono has (303 glyphs, listed in `fonts/NOTICE.md`). For anything else, subset your own monospace font and point `font.file` at it (set `font.advance` if it isn't 0.6 em):
+**Custom font.** The bundled subset covers printable ASCII, a few dots, Box Drawing, Block Elements and the Geometric Shapes JetBrains Mono has (303 glyphs, listed in `fonts/NOTICE.md`). For anything else, subset your own monospace font and point `font.file` at it (set `font.advance` if it isn't 0.6 em, and `font.blockHeight` for `cells: "half"` if its `█` isn't 1.32 em tall):
 
 ```sh
 pyftsubset YourMono.ttf --text-file=glyphs.txt --flavor=woff2 \

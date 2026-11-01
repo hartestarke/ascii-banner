@@ -3,6 +3,7 @@
 //             type mismatches are config errors
 //   ramp      glyph ramp for a null field.ramp, dim → bright
 //   bands     alpha band count for a null field.bands
+//   gamma     optional, field.gamma for a null field.gamma (else 1.35)
 //   validate  optional (o, v) => void, range checks through v (config.mjs
 //             optionChecks; v.field is the field config)
 //   make      (g, o, cfg) => (col, row, f) => brightness in [0, 1], where
@@ -20,6 +21,7 @@ import mesh from "./mesh.mjs";
 import contour from "./contour.mjs";
 import vortex from "./vortex.mjs";
 import sharks from "./sharks.mjs";
+import solid from "./solid.mjs";
 
 export const FIELD_PRESETS = {
   waves,
@@ -33,4 +35,5 @@ export const FIELD_PRESETS = {
   contour,
   vortex,
   sharks,
+  solid,
 };

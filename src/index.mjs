@@ -9,7 +9,7 @@ import { figletLaid, loadFlf } from "./figlet.mjs";
 import { layoutTaglines } from "./layout.mjs";
 import { renderReveal, renderSvg } from "./svg.mjs";
 
-export { ConfigError, DEFAULTS, NO_FIELD, resolveConfig } from "./config.mjs";
+export { ConfigError, DEFAULTS, NO_FIELD, PRESET_GAMMA, resolveConfig } from "./config.mjs";
 
 // Below this the block letters stop reading as letters at README scale.
 const MIN_TAGLINE_PX = 6;
@@ -54,10 +54,13 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
   // grid drifts out of register. A reveal's extraGlyphs include the pool noise
   // it actually draws; a null reveal.pool resolved to field.ramp, so that is
   // the key such glyphs are blamed on unless the user gave a pool of their own.
+  // Under block cells the field draws field.cells' glyphs, not the ramp's.
   const inPool = new Set(pool);
   const extra = [...reveal.extraGlyphs];
+  const blocks = cfg.field.cells !== "ramp";
   const drawnBy = {
-    "field.ramp": field.ramp.flat(),
+    "field.ramp": blocks ? [] : field.ramp.flat(),
+    "field.cells": blocks ? field.ramp.flat() : [],
     "reveal.pool": [],
     "the tagline font": figs.flat().flatMap((r) => [...r]).filter((c) => c !== " "),
     "reveal.options": extra.filter((c) => !inPool.has(c)),
@@ -97,7 +100,7 @@ export async function buildBanner(userConfig = {}, { baseDir } = {}) {
       `lower field.fps or field.loopSeconds, shrink size, or raise field.fontSize (fewer cells). ` +
       `Set budget.maxBytes: 0 to disable the check.` +
       (wide.length
-        ? ` field.ramp has glyphs outside ASCII (${show(wide)}), which cost up to ` +
+        ? ` ${blocks ? `field.cells "${cfg.field.cells}" draws` : "field.ramp has"} glyphs outside ASCII (${show(wide)}), which cost up to ` +
           `${Math.max(...wide.map((c) => Buffer.byteLength(c)))} bytes each against 1: field.bands: 1 or field.fps: 0 brings the size down.`
         : "") +
       (warnings.length ? `\nWarnings before this error:\n${warnings.map((w) => `  ${w}`).join("\n")}` : ""),

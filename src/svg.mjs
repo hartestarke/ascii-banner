@@ -110,7 +110,7 @@ export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
   const { width: W, height: H } = cfg.size;
   const { fontSize: FONT, fps: FPS, loopSeconds: DUR, alpha: ALPHA, colors: COLORS, gradient: GRADIENT } = cfg.field;
   const { shadowAlpha: SHADOW_A, knockout: CUT, color: TCOLOR, shadowColor: SCOLOR } = cfg.tagline;
-  const { PY, NF, STILL, y0 } = grid;
+  const { PX, PY, NF, STILL, y0 } = grid;
   const { TFONT } = layout;
   const hasField = cfg.field.preset !== NO_FIELD;
   const flips = hasField && FPS > 0;
@@ -119,15 +119,16 @@ export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
   // defaults to 0, xml:space comes from the root, y drops its decimal on whole pixels.
   const DELAY_DP = delayDecimals(FPS);
   // Each row takes the shorter of two encodings, both glyph-exact and x-free
-  // (white-space:pre advances through the spaces): one <text> per band, or tspan
-  // runs in one <text>. The runs keep no glyph in the bare <text>: Firefox places
-  // a glyph in a tspan 1/60 px off one directly in <text>, flipping its pixel snap.
-  const perBand = (y, chars, bands) =>
+  // (white-space:pre advances through the spaces) but for a left-trimmed block
+  // row's x: one <text> per band, or tspan runs in one <text>. The runs keep no
+  // glyph in the bare <text>: Firefox places a glyph in a tspan 1/60 px off one
+  // directly in <text>, flipping its pixel snap.
+  const perBand = (at, chars, bands) =>
     field.bands.map((_, b) => {
       const s = chars.map((c, i) => (bands[i] === b ? c : " ")).join("").trimEnd();
-      return s ? `<text class="b${b}" y="${y}">${esc(s)}</text>` : "";
+      return s ? `<text class="b${b}"${at}>${esc(s)}</text>` : "";
     }).join("");
-  const rowRuns = (y, chars, bands) => {
+  const rowRuns = (at, chars, bands) => {
     const count = field.bands.map(() => 0);
     for (const b of bands) if (b >= 0) count[b]++;
     const base = count.indexOf(Math.max(...count)); // ties → the dimmer band
@@ -142,12 +143,12 @@ export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
       gap = "";
       body += esc(c);
     });
-    return `<text class="b${base}" y="${y}">${body}</tspan></text>`;
+    return `<text class="b${base}"${at}>${body}</tspan></text>`;
   };
   // Both encodings carry each glyph once, so string length ranks UTF-8 bytes too.
-  const fieldRow = ({ row, chars, bands }) => {
-    const y = num(y0 + row * PY + PY / 2);
-    const a = perBand(y, chars, bands), b = rowRuns(y, chars, bands);
+  const fieldRow = ({ row, start, chars, bands }) => {
+    const at = `${start ? ` x="${num2(start * PX)}"` : ""} y="${num(y0 + row * PY + PY / 2)}"`;
+    const a = perBand(at, chars, bands), b = rowRuns(at, chars, bands);
     return a.length <= b.length ? a : b;
   };
   const frames = field.frames.map((rows, f) => {

@@ -40,6 +40,18 @@ function bayer(n) {
   return m.map((r) => r.map((v) => v / (n * n)));
 }
 
+// field.cells modes that split a cell into SX × SY samples: sample k (row-major
+// within the cell) sets bit k of the index into glyphs.
+const CELLS = {
+  half: { SX: 1, SY: 2, glyphs: " ▀▄█" },
+};
+
+/** The grid a sampler sees: the cell grid, or its samples under field.cells "half". */
+function sampleGrid(cfg, g) {
+  const m = CELLS[cfg.field.cells];
+  return m ? { ...g, PX: g.PX / m.SX, PY: g.PY / m.SY, COLS: g.COLS * m.SX, ROWS: g.ROWS * m.SY } : g;
+}
+
 /** Grid geometry of the field: no cells and no frames for NO_FIELD, one frame for fps 0. */
 export function fieldGrid(cfg) {
   const { width: W, height: H } = cfg.size;
@@ -93,17 +105,29 @@ function sampler(cfg, g) {
 /**
  * Bake the flipbook: frames[f] = [{ row, chars, bands }] for the non-empty
  * rows, chars = one glyph per column (" " for blank), bands = each cell's
- * colour band (-1 for blank), both right-trimmed. Also `seam`: the largest
+ * colour band (-1 for blank), both right-trimmed; block cells also left-trim
+ * to `start`, the row's first drawn column. Also `seam`: the largest
  * brightness jump between frame 0 and one full loop later (0 for an exactly
  * periodic sampler, and for a still field, which never wraps).
  */
 export function bakeField(cfg, g) {
   if (cfg.field.preset === NO_FIELD) return { frames: [], ramp: [], bands: [], seam: 0 };
+  const sg = sampleGrid(cfg, g);
+  const at = sampler(cfg, sg);
+  const baked = CELLS[cfg.field.cells] ? bakeBlocks(cfg, g, at) : bakeRamp(cfg, g, at);
+  let seam = 0;
+  if (cfg.field.fps)
+    for (let row = 0; row < sg.ROWS; row++)
+      for (let col = 0; col < sg.COLS; col++) seam = Math.max(seam, Math.abs(at(col, row, sg.NF) - at(col, row, 0)));
+  return { ...baked, seam };
+}
+
+/** field.cells "ramp": one ramp glyph per cell. */
+function bakeRamp(cfg, g, at) {
   const RAMP = parseRamp(cfg.field.ramp);
   const N = RAMP.length;
   const BANDS = bands(N, cfg.field.bands);
   const bandOf = RAMP.map((_, lv) => BANDS.findIndex((b) => lv >= b.lo && lv <= b.hi));
-  const at = sampler(cfg, g);
   const { COLS, ROWS, NF } = g;
   const D = cfg.field.dither;
   const BAYER = D ? bayer(D) : null;
@@ -137,9 +161,54 @@ export function bakeField(cfg, g) {
     }
     frames.push(out);
   }
-  let seam = 0;
-  if (cfg.field.fps)
-    for (let row = 0; row < ROWS; row++)
-      for (let col = 0; col < COLS; col++) seam = Math.max(seam, Math.abs(at(col, row, NF) - at(col, row, 0)));
-  return { frames, ramp: RAMP, bands: BANDS, seam };
+  return { frames, ramp: RAMP, bands: BANDS };
+}
+
+/**
+ * field.cells "half": every sample is thresholded on its own (Bayer on
+ * the sample grid, else at 0.5) and the cell's lit samples pick its block
+ * glyph. The band follows the mean of the cell's samples, so with field.bands
+ * above 1 alpha carries the gradient on top of the dither. Rows start at their
+ * first drawn column: block glyphs cost 3 bytes each, and a field drawn
+ * off-centre would otherwise lead every row with blanks.
+ */
+function bakeBlocks(cfg, g, at) {
+  const { SX, SY, glyphs } = CELLS[cfg.field.cells];
+  const GLYPHS = [...glyphs];
+  const S = SX * SY;
+  const n = cfg.field.bands;
+  const BANDS = Array.from({ length: n }, (_, b) => ({ a: n === 1 ? 1 : b / (n - 1) }));
+  const D = cfg.field.dither;
+  const BAYER = D ? bayer(D) : null;
+  const { COLS, ROWS, NF } = g;
+  const frames = [];
+  for (let f = 0; f < NF; f++) {
+    const out = [];
+    for (let row = 0; row < ROWS; row++) {
+      const chars = [];
+      const cellBands = [];
+      let start = -1, end = 0;
+      for (let col = 0; col < COLS; col++) {
+        let bits = 0, sum = 0;
+        for (let k = 0; k < S; k++) {
+          const sc = col * SX + (k % SX), sr = row * SY + Math.floor(k / SX);
+          const v = at(sc, sr, f);
+          sum += v;
+          if (v > (BAYER ? BAYER[sr % D][sc % D] + 0.5 / (D * D) : 0.5)) bits |= 1 << k;
+        }
+        if (!bits) {
+          chars.push(" ");
+          cellBands.push(-1);
+          continue;
+        }
+        if (start < 0) start = col;
+        chars.push(GLYPHS[bits]);
+        cellBands.push(Math.min(n - 1, Math.floor((sum / S) * n)));
+        end = col + 1;
+      }
+      if (end) out.push({ row, start, chars: chars.slice(start, end), bands: cellBands.slice(start, end) });
+    }
+    frames.push(out);
+  }
+  return { frames, ramp: [[], GLYPHS.slice(1)], bands: BANDS };
 }

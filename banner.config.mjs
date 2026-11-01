@@ -104,12 +104,21 @@ export default {
     // "lines". null = the preset's ramp (waves: "classic"). Non-ASCII glyphs
     // cost 3 bytes each, so on a dense field like waves pair them with bands: 1.
     ramp: null,
-    gamma: 1.35, // > 1 deepens the dark side of the gradient (not applied to `sample`)
+    // > 1 deepens the dark side of the gradient (not applied to `sample`);
+    // null = the preset's (1.35, solid: 1).
+    gamma: null,
     // 0 = plain quantising with a little per-cell jitter; 2, 4 or 8 = ordered
     // (Bayer) dither of that size, which turns gradients into regular patterns.
     dither: 0,
+    // "ramp" = one ramp glyph per cell. "half" = each cell split into a top and
+    // a bottom pixel drawn with ▀ ▄ █: twice the resolution, no ramp (pair with
+    // dither). Block rows must overlap: rowPitch ≤ fontSize × font.blockHeight
+    // − 1, so fontSize 10 with rowPitch 12 (square 6 px pixels). Block glyphs
+    // cost 3 bytes each: solid and sharks fit the budget, stars with bands: 1,
+    // a dense field like waves not at all.
+    cells: "ramp",
     // The brightness field: waves, stars, rain, caustics, ripples, interference,
-    // halo, mesh, contour, vortex or sharks (see docs/fields.md), or "none" for
+    // halo, mesh, contour, vortex, sharks or solid (see docs/fields.md), or "none" for
     // taglines without a field (no options). `options` tunes
     // the chosen preset: omitted keys keep its defaults, unknown keys are an
     // error. Shown: waves' options, with their defaults.
@@ -138,6 +147,7 @@ export default {
   font: {
     file: null, // a .woff2 path, relative to this file; null = the bundled JetBrains Mono subset
     advance: 0.6, // em, that font's glyph advance (JetBrains Mono: 0.6)
+    blockHeight: 1.32, // em, that font's full block █ height (JetBrains Mono: 1.32); field.cells "half" uses it
   },
 
   budget: {
