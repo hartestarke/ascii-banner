@@ -158,4 +158,37 @@ export default {
   budget: {
     maxBytes: 1048576, // raw bytes above which the build fails; 0 = no limit
   },
+
+  // The info card: a second SVG, laid out like neofetch, of a GitHub user or
+  // repository. `build` ignores this block. `ascii-banner fetch` takes a
+  // snapshot of GitHub (needs GITHUB_TOKEN; public, non-fork repos only) and
+  // `ascii-banner card` renders card.svg from it offline. See docs/card.md.
+  card: {
+    mode: "person", // "person": a GitHub user; "project": a repository
+    user: null, // GitHub login, mode "person"
+    repo: null, // "owner/name", mode "project"
+    data: "card.data.json", // the snapshot fetch writes and card reads, relative to this file
+    title: null, // the header's leading name; null = the name on GitHub, else the login / repo
+    // Your own [key, value] rows, shown before GitHub's, e.g.
+    //   [["role", "backend engineer"], ["stack", "Go · Postgres · k8s"]]
+    rows: [],
+    // GitHub's rows in order; null = all of the mode's:
+    //   person: "uptime", "repos", "languages", "contributions"
+    //   project: "release", "license", "stats", "commits", "languages"
+    show: null,
+    // Mode "person", the last year: "sparkline" (per week), "calendar" (per
+    // day, in GitHub's shades) or "none"; null = sparkline for a person.
+    activity: null,
+    // On load the portrait develops, the rows type in and the numbers count
+    // up: "once", "loop" (again every `period` s) or "none" (still). Under
+    // prefers-reduced-motion the card is always still.
+    intro: "once",
+    period: 12, // s, one cycle of intro "loop"
+    // "avatar" (the GitHub avatar in four tones), "solid" (a turning torus,
+    // frozen) or "none"; null = avatar for a person, solid for a project.
+    portrait: null,
+    screen: "#0d1117", // #rrggbb behind the avatar, so it reads on light pages too; null = none
+    width: 880, // px, at least 600
+    textSize: 13, // px
+  },
 };

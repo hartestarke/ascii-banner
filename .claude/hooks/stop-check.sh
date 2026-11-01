@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Claude Code Stop hook (.claude/settings.json): a fast check after every turn.
 #   1. `node --check` on every .mjs/.js under CHECK_DIRS;
-#   2. if that passes, one build of the repo's own banner.config.mjs into a
-#      temp file, judged by its exit code only.
+#   2. if that passes, one build of the repo's own banner.config.mjs and one
+#      card per CARD_CONFIGS (offline, from the snapshots beside them) into a
+#      temp dir, each judged by its exit code only.
 # Green: exit 0, no output. Red: the first MAX_LINES lines of output on stderr,
 # exit 2 (Claude Code feeds stderr back to the model and keeps the turn open).
 # No node: exit 0 silently.
@@ -24,6 +25,7 @@ MAX_LINES=60
 CHECK_DIRS=(bin src tools)
 CLI=bin/ascii-banner.mjs
 CONFIG=banner.config.mjs
+CARD_CONFIGS=docs/examples/card-*.config.mjs
 # The distro used when the repo is not opened over \\wsl.localhost\<distro>\.
 DEFAULT_WSL_DISTRO=${STOP_CHECK_WSL_DISTRO:-Ubuntu}
 
@@ -82,4 +84,9 @@ done < <(sort -z "$tmp/files")
 
 node "$CLI" build --config "$CONFIG" --out "$tmp/smoke.svg" >>"$log" 2>&1 \
   || fail "smoke build of $CONFIG failed (node $CLI build, exit $?)"
+for card in $CARD_CONFIGS; do
+  [ -f "$card" ] || continue # the glob matched nothing
+  node "$CLI" card --config "$card" --out "$tmp/card.svg" >>"$log" 2>&1 \
+    || fail "smoke card of $card failed (node $CLI card, exit $?)"
+done
 exit 0

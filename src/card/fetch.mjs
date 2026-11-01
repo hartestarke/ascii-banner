@@ -7,26 +7,29 @@ const GRAPHQL = "https://api.github.com/graphql";
 const TIMEOUT_MS = 20_000;
 const AVATAR_PX = 460; // requested avatar size; the portrait is resampled from it
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
-export const SNAPSHOT_VERSION = 1;
+export const SNAPSHOT_VERSION = 2; // 2: GitHub's day levels in, fields the card never drew out
+// GitHub's shade of a contribution day, as the calendar level 0–4 it draws.
+const DAY_LEVELS = { NONE: 0, FIRST_QUARTILE: 1, SECOND_QUARTILE: 2, THIRD_QUARTILE: 3, FOURTH_QUARTILE: 4 };
 
 // Public, non-fork repos only: a card is public, so private repos' names,
 // stars and languages never enter the snapshot. The 100 most-starred count.
+// Only what the card draws is asked for, since a snapshot may get committed.
 const PERSON_QUERY = `query($login: String!) {
   user(login: $login) {
-    login name bio company location createdAt avatarUrl(size: ${AVATAR_PX})
+    login name createdAt avatarUrl(size: ${AVATAR_PX})
     followers { totalCount }
     repositories(ownerAffiliations: OWNER, privacy: PUBLIC, isFork: false, first: 100,
                  orderBy: { field: STARGAZERS, direction: DESC }) {
       totalCount
       nodes { stargazerCount languages(first: 10, orderBy: { field: SIZE, direction: DESC }) { edges { size node { name } } } }
     }
-    contributionsCollection { contributionCalendar { totalContributions weeks { contributionDays { contributionCount date } } } }
+    contributionsCollection { contributionCalendar { totalContributions weeks { contributionDays { contributionCount contributionLevel date } } } }
   }
 }`;
 
 const PROJECT_QUERY = `query($owner: String!, $name: String!) {
   repository(owner: $owner, name: $name) {
-    nameWithOwner description stargazerCount forkCount createdAt pushedAt isPrivate
+    nameWithOwner description stargazerCount forkCount isPrivate
     owner { login avatarUrl(size: ${AVATAR_PX}) }
     licenseInfo { spdxId }
     issues(states: OPEN) { totalCount }
@@ -76,6 +79,12 @@ const languageTotals = (lists) => {
   return [...by].sort((a, b) => b[1] - a[1]).map(([name, bytes]) => ({ name, bytes }));
 };
 
+const dayLevel = (d) => {
+  const level = DAY_LEVELS[d.contributionLevel];
+  if (level === undefined) throw new ConfigError(`fetch: GitHub sent an unknown contribution level "${d.contributionLevel}"`);
+  return level;
+};
+
 async function person(login, token, withAvatar) {
   const u = (await graphql(PERSON_QUERY, { login }, token)).user;
   if (!u) throw new ConfigError(`fetch: no GitHub user "${login}"`);
@@ -84,9 +93,6 @@ async function person(login, token, withAvatar) {
     person: {
       login: u.login,
       name: u.name || null,
-      bio: u.bio || null,
-      company: u.company || null,
-      location: u.location || null,
       createdAt: u.createdAt,
       followers: u.followers.totalCount,
       repos: u.repositories.totalCount,
@@ -94,7 +100,11 @@ async function person(login, token, withAvatar) {
       languages: languageTotals(u.repositories.nodes.map((n) => n.languages.edges)),
       contributions: {
         total: cal.totalContributions,
-        weeks: cal.weeks.map((w) => ({ start: w.contributionDays[0].date, days: w.contributionDays.map((d) => d.contributionCount) })),
+        weeks: cal.weeks.map((w) => ({
+          start: w.contributionDays[0].date,
+          days: w.contributionDays.map((d) => d.contributionCount),
+          levels: w.contributionDays.map(dayLevel),
+        })),
       },
     },
     avatar: withAvatar ? await avatar(u.avatarUrl) : null,
@@ -121,7 +131,6 @@ async function project(fullName, token, withAvatar) {
       branch: r.defaultBranchRef?.name ?? null,
       commits: head?.history.totalCount ?? 0,
       lastCommit: head?.committedDate ?? null,
-      createdAt: r.createdAt,
     },
     avatar: withAvatar ? await avatar(r.owner.avatarUrl) : null,
   };

@@ -1,6 +1,7 @@
 // buildBanner(config) → { svg, stats, warnings }: one self-contained SVG
 // animated by CSS alone, since README images run no JS. Reads the font files
-// the config names; writes nothing.
+// the config names; writes nothing. The info card's fetchCard / buildCard
+// come from ./card/index.mjs.
 import { readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { ConfigError, BUNDLED_GLYPHS, assetPaths, parseRamp, resolveConfig } from "./config.mjs";
@@ -10,6 +11,7 @@ import { layoutTaglines } from "./layout.mjs";
 import { renderReveal, renderSvg } from "./svg.mjs";
 
 export { ConfigError, DEFAULTS, NO_FIELD, PRESET_GAMMA, resolveConfig } from "./config.mjs";
+export { buildCard, fetchCard } from "./card/index.mjs";
 
 // Below this the block letters stop reading as letters at README scale.
 const MIN_TAGLINE_PX = 6;

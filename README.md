@@ -2,7 +2,7 @@
 
 # ascii-banner
 
-An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Twelve field presets (or your own function, or none), seven reveals (or none), nineteen bundled fonts and eight glyph sets, all picked in one config file. Zero dependencies, Node ≥ 20.
+An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Twelve field presets (or your own function, or none), seven reveals (or none), nineteen bundled fonts and eight glyph sets, all picked in one config file. Next to it, an [info card](#info-card) of you or your repository, neofetch-style, with live numbers from GitHub. Zero dependencies, Node ≥ 20.
 
 ## Examples
 
@@ -100,6 +100,25 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Rebuild banner" && git push
 ```
+
+## Info card
+
+A second SVG for under the banner: your avatar in four tones (or a solid emblem), your own rows, and GitHub's numbers. On load the portrait develops, the rows type in, the numbers count up, and a wave runs over a year of contributions.
+
+<img src="docs/examples/card-person.svg" width="880" alt="info card of hartestarke: an avatar in four red tones, rows typing in, a contribution calendar">
+
+```js
+export default {
+  card: {
+    user: "hartestarke",
+    title: "[HARTE]",
+    rows: [["role", "software engineer"], ["focus", "backend · distributed systems · AI agents"]],
+    activity: "calendar", // or "sparkline" (the default), "none"
+  },
+};
+```
+
+`ascii-banner fetch` snapshots GitHub (one GraphQL query; public, non-fork repositories only) and `ascii-banner card` renders `card.svg` from the snapshot, offline. A project card, the intro's options (`once`, `loop`, `none`), and a workflow that refreshes the card daily: [docs/card.md](docs/card.md).
 
 ## Pick a look
 
@@ -272,6 +291,8 @@ export default {
 ```sh
 ascii-banner init [dir] [--force]                    # write the commented banner.config.mjs into dir (default .)
 ascii-banner build [--config <path>] [--out <path>]  # render it (default ./banner.config.mjs → ./banner.svg)
+ascii-banner fetch [--config <path>] [--out <path>]  # snapshot GitHub for the info card (default → card.data); needs GITHUB_TOKEN
+ascii-banner card [--config <path>] [--data <path>] [--out <path>]  # render the card from it, offline (default → ./card.svg)
 ascii-banner fonts [--sample <text>]                 # list the bundled tagline fonts; --sample renders <text> in each
 ascii-banner presets [--json]                        # list the field and reveal presets with their option defaults
 ```
@@ -284,6 +305,7 @@ Run it as `npx --yes github:hartestarke/ascii-banner <command>`, or `node bin/as
 - [docs/reveals.md](docs/reveals.md): the reveal contract, every preset's options and bytes, `tagline.color`, `reveal.pool`; writing a preset.
 - [docs/fonts.md](docs/fonts.md): the bundled fonts, `tagline.font`, `tagline.layout`, `tagline.shadowGlyphs`.
 - [docs/block-fonts.md](docs/block-fonts.md): the five original block faces, their bitmap format and generator.
+- [docs/card.md](docs/card.md): the info card: its rows, activity, portrait and intro, the daily workflow, what the snapshot keeps.
 - [docs/gallery/README.md](docs/gallery/README.md): every field, reveal, font and glyph set rendered small, and three colour samples.
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version and what breaks a config on upgrade.
 

@@ -85,13 +85,6 @@ const languageList = (langs) => {
   return shown.slice(0, LANGUAGES_SHOWN);
 };
 
-/** Day counts to calendar levels: 0 for none, else 1–4 by the quartiles of the days that have any. */
-function dayLevels(days) {
-  const some = days.filter((n) => n > 0).sort((a, b) => a - b);
-  const quartiles = [0.25, 0.5, 0.75].map((q) => some[Math.floor(q * (some.length - 1))] ?? 0);
-  return days.map((n) => (n <= 0 ? 0 : 1 + quartiles.filter((t) => n > t).length));
-}
-
 /** Floyd–Steinberg to `levels` tones; tone k ≥ 1 becomes its own rows of half blocks. */
 function toneLayers(values, cols, rows, levels) {
   const v = Float32Array.from(values), q = new Uint8Array(cols * rows);
@@ -297,14 +290,13 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
       const n = Math.min(weeks.length, Math.floor((cols * PX + cell * CALENDAR_GAP) / (cell * (1 + CALENDAR_GAP))));
       // spread to end where the rows' values end, the gaps at most doubled
       const cp = n > 1 ? Math.min(cell * (1 + 2 * CALENDAR_GAP), (cols * PX - cell) / (n - 1)) : cell;
-      const shown = weeks.slice(-n);
-      const levels = dayLevels(shown.flatMap((w) => w.days));
-      // rows Sunday to Saturday, as GitHub's weeks run; days not yet come stay empty
+      // GitHub's own shades, rows Sunday to Saturday as its weeks run; days not yet come stay empty
       const grid = Array.from({ length: WEEK_DAYS }, () => Array(n).fill(null));
-      let at = 0;
-      shown.forEach((w, c) => {
+      weeks.slice(-n).forEach((w, c) => {
         const first = new Date(w.start).getUTCDay();
-        for (let i = 0; i < w.days.length; i++, at++) if (first + i < WEEK_DAYS) grid[first + i][c] = levels[at];
+        w.levels.forEach((level, i) => {
+          if (first + i < WEEK_DAYS) grid[first + i][c] = level;
+        });
       });
       items.push({ calendar: { grid, cell, cp } });
     }

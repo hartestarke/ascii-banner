@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "mode": "project",
+  "fetchedAt": "2026-11-01T22:28:28.487Z",
+  "project": {
+    "name": "hartestarke/ascii-banner",
+    "description": "Animated ASCII-field SVG banners for GitHub READMEs: wave field, figlet taglines, CSS-only animation, zero dependencies",
+    "stars": 0,
+    "forks": 0,
+    "issues": 0,
+    "license": "MIT",
+    "languages": [
+      {
+        "name": "JavaScript",
+        "bytes": 148919
+      }
+    ],
+    "release": {
+      "tag": "v0.3.0",
+      "date": "2026-10-26T15:32:39Z"
+    },
+    "branch": "main",
+    "commits": 28,
+    "lastCommit": "2026-10-26T15:03:59Z"
+  },
+  "avatar": null
+}
