@@ -179,11 +179,15 @@ export default {
     // Mode "person", the last year: "sparkline" (per week), "calendar" (per
     // day, in GitHub's shades) or "none"; null = sparkline for a person.
     activity: null,
-    // On load the portrait develops, the rows type in and the numbers count
+    // On load the portrait develops, the rows come in and the numbers count
     // up: "once", "loop" (again every `period` s) or "none" (still). Under
     // prefers-reduced-motion the card is always still.
     intro: "once",
     period: 12, // s, one cycle of intro "loop"
+    // How each row comes in: "type" (typed at a cursor; intro "loop" backspaces
+    // it out), "decode" (noise locking into the words, left to right), "slide"
+    // (in from the right) or "glitch" (flickers in, jumping sideways).
+    reveal: "type",
     // Rows as "key ···· value", the value right-aligned ("dots"), or as
     // neofetch's "key: value" ("colon").
     layout: "dots",

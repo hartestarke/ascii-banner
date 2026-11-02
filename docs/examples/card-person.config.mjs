@@ -8,5 +8,6 @@ export default {
       ["focus", "backend · distributed systems · AI agents"],
     ],
     activity: "calendar",
+    reveal: "decode",
   },
 };

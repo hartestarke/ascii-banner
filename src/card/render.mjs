@@ -5,12 +5,14 @@
 // builds the same until the next fetch.
 //
 // The intro is CSS alone, as GitHub runs no script in an <img>: masks reveal
-// the portrait tone by tone and the lines one by one, numbers count up through
-// stacked frames, and a band of light crosses a brighter copy of the activity.
+// the portrait tone by tone, the lines come in one by one (typed at a cursor,
+// decoded out of noise frames, slid or glitched in: card.reveal), numbers count
+// up through stacked frames, and a band of light crosses a brighter copy of the activity.
 // The markup itself is the finished card, so intro "none" and
 // prefers-reduced-motion, which drops every animation, show it still.
 import { ConfigError, resolveConfig } from "../config.mjs";
-import { bakeField, fieldGrid } from "../field.mjs";
+import { bakeField, fieldGrid, jitter } from "../field.mjs";
+import { noiseRow } from "../reveals/common.mjs";
 import { autocontrast, decodeImage, ImageError, resample } from "./image.mjs";
 
 // Avatar portrait: a 240 px box of 2.4 × 2.1 px samples (fontSize 4 half
@@ -48,8 +50,7 @@ const INTRO = {
   tone: 0.9, // a portrait tone develops top to bottom,
   toneStep: 0.35, // the next one this much later,
   toneSpread: 0.7, // and the last one at most this long after the first (a natural palette has many)
-  line: 0.35, // a text line types in,
-  lineStep: 0.18, // the next one this much later
+  lineStep: 0.18, // a text line comes in (card.reveal, below), the next one this much later
   calendar: 0.7, // the calendar, week by week
   count: 0.9, // numbers count up,
   countFrames: 10, // in this many frames
@@ -60,6 +61,15 @@ const INTRO = {
   pause: 0.8, // intro "loop": blank time before the replay
   minHold: 2, // intro "loop": the least time the whole card stays up
 };
+// card.reveal: how a text line comes in, s; the calendar always wipes in week by week.
+const REVEAL = {
+  // a column a step behind a cursor bar `cursor` columns wide; intro "loop" backspaces it
+  type: { dur: 0.35, cursor: 0.5 },
+  decode: { dur: 0.6, frames: 8, pool: "!#$%&*+-/<=>?@[]^_{}~0123456789abcdef" }, // noise locking into the text left to right
+  slide: { dur: 0.5, timing: "cubic-bezier(.2,.8,.3,1)" }, // in from the right, fading up
+  glitch: { dur: 0.5 }, // flickers in, jumping sideways
+};
+const EPS = 0.01; // s, a cut between two keyframes
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const escAttr = (s) => esc(s).replace(/"/g, "&quot;");
@@ -234,34 +244,70 @@ function portrait(cfg, snap, adv) {
   return { ...box, groups: halfLayers(q, cols, rows, palette.map((_, k) => k), (k) => `c${k}`), fills: palette.map(hex) };
 }
 
+// Reveal keyframes: [share of the way in, declarations], hidden first, shown last.
+// A wipe slides a mask rect from `d` px before what it opens onto it (Firefox scales a rect
+// inside a mask about the page's origin whatever its transform-box, so no scaling). At rest the
+// rect covers it, so with every animation off (prefers-reduced-motion) the card shows whole.
+// Hidden, it stands WIPE_CLEAR px further off: glyphs ink a pixel past their cell.
+const WIPE_CLEAR = 2;
+const wipe = (axis, d) => [[0, `transform:translate${axis}(${n2(-d - WIPE_CLEAR)}px)`], [1, "transform:none"]];
+const FADE = [[0, "opacity:0"], [1, "opacity:1"]];
+// card.reveal "slide" and "glitch" move a whole line; "type" and "decode" open it with a mask
+const SLIDE = [[0, "opacity:0;transform:translateX(24px)"], [1, "opacity:1;transform:none"]];
+const GLITCH = [
+  [0, "opacity:0;transform:none"], [0.15, "opacity:1;transform:translateX(-7px)"], [0.3, "opacity:.35;transform:translateX(5px)"],
+  [0.45, "opacity:1;transform:translateX(-3px)"], [0.6, "opacity:.6;transform:translateX(2px)"], [0.8, "opacity:1;transform:translateX(-1px)"],
+  [1, "opacity:1;transform:none"],
+];
+
 /**
- * The intro's CSS. `reveals` = the classes of the mask rects and the screen,
- * each { cls, prop: "x" | "y" (scale from the top left) | "o" (opacity), dur,
- * steps, after? }. Intro "once" plays them a single time. Intro "loop" plays
- * them every card.period s, each hiding again `hold` (+ `after`) s after its
- * own start, so the card goes away in the order it came in.
+ * The intro's CSS. `reveals` = the animated classes, each { cls, frames, dur,
+ * timing, after? }. Intro "once" plays them a single time. Intro "loop" plays
+ * them every card.period s, each running its frames backwards `hold` (+ `after`)
+ * s after its own start, so the card goes away in the order it came in.
+ * `cursors` = reveal "type"'s, a class per line length { cls, steps, travel
+ * (px), dur }; `decodeSlot` = how long a decode noise frame shows, s.
  */
-function introCss(k, reveals, hold, wave) {
+function introCss(k, reveals, hold, wave, { cursors = [], decodeSlot = 0 } = {}) {
   const pct = (s) => `${+((100 * s) / k.period).toFixed(3)}%`;
-  const hidden = { x: "transform:scaleX(0)", y: "transform:scaleY(0)", o: "opacity:0" };
-  const shown = { x: "transform:none", y: "transform:none", o: "opacity:1" };
   const slot = INTRO.count / INTRO.countFrames;
   const once = k.intro === "once";
   const css = [];
-  for (const { cls, prop, dur, steps, after = 0 } of reveals) {
-    const timing = steps ? `steps(${steps})` : "ease-out";
-    css.push(once
-      ? `@keyframes ${cls}{from{${hidden[prop]}}}.${cls}{animation:${cls} ${sec(dur)} ${timing} both}`
-      : `@keyframes ${cls}{0%{${hidden[prop]}}${pct(dur)},${pct(hold + after)}{${shown[prop]}}${pct(hold + after + dur)},100%{${hidden[prop]}}}` +
-        `.${cls}{animation:${cls} ${sec(k.period)} ${timing} infinite backwards}`);
+  for (const { cls, frames, dur, timing, after = 0 } of reveals) {
+    if (once) {
+      css.push(`@keyframes ${cls}{${frames.map(([t, d]) => `${+(100 * t).toFixed(3)}%{${d}}`).join("")}}` +
+        `.${cls}{animation:${cls} ${sec(dur)} ${timing} both}`);
+      continue;
+    }
+    const back = hold + after;
+    const keys = [
+      ...frames.map(([t, d]) => [pct(t * dur), d]),
+      [pct(back), frames.at(-1)[1]],
+      ...[...frames].reverse().map(([t, d]) => [pct(back + (1 - t) * dur), d]),
+      ["100%", frames[0][1]],
+    ];
+    css.push(`@keyframes ${cls}{${keys.map(([p, d]) => `${p}{${d}}`).join("")}}` +
+      `.${cls}{animation:${cls} ${sec(k.period)} ${timing} infinite backwards}`);
   }
-  css.push(`.${reveals.filter((r) => r.prop !== "o").map((r) => r.cls).join(",.")}{transform-box:fill-box;transform-origin:0 0}`);
-  // a count frame shows for its slot; the final number hides until the count is done
-  css.push(once
-    ? `@keyframes nf{from,to{opacity:1}}.nf{opacity:0;animation:nf ${sec(slot)}}` +
-      `@keyframes nv{from,to{opacity:0}}.nv{animation:nv ${sec(INTRO.count)} backwards}`
-    : `@keyframes nf{0%{opacity:1}${pct(slot)},100%{opacity:0}}.nf{opacity:0;animation:nf ${sec(k.period)} step-end infinite}` +
-      `@keyframes nv{0%{opacity:0}${pct(INTRO.count)},100%{opacity:1}}.nv{animation:nv ${sec(k.period)} step-end infinite backwards}`);
+  // a frame text (count, decode) shows for its slot; the final number hides until the count is done
+  const framed = (cls, s) => once
+    ? `@keyframes ${cls}{from,to{opacity:1}}.${cls}{opacity:0;animation:${cls} ${sec(s)}}`
+    : `@keyframes ${cls}{0%{opacity:1}${pct(s)},100%{opacity:0}}.${cls}{opacity:0;animation:${cls} ${sec(k.period)} step-end infinite}`;
+  css.push(framed("nf", slot) + (once
+    ? `@keyframes nv{from,to{opacity:0}}.nv{animation:nv ${sec(INTRO.count)} backwards}`
+    : `@keyframes nv{0%{opacity:0}${pct(INTRO.count)},100%{opacity:1}}.nv{animation:nv ${sec(k.period)} step-end infinite backwards}`));
+  if (decodeSlot) css.push(framed("df", decodeSlot));
+  // the cursor rides its line's mask edge in the same steps, shown only while it moves:
+  // typing in, and for intro "loop" backspacing out
+  for (const { cls, steps, travel, dur } of cursors) {
+    const at = (x, o = 1) => `opacity:${o};transform:translateX(${n2(x)}px)`;
+    const keys = once
+      ? [["0%", at(0)], ["100%", at(travel)]]
+      : [["0%", at(0)], [pct(dur), at(travel)], [pct(dur + EPS), at(travel, 0)], [pct(hold - EPS), at(travel, 0)],
+        [pct(hold), at(travel)], [pct(hold + dur), at(0)], [pct(hold + dur + EPS), at(0, 0)], ["100%", at(0, 0)]];
+    css.push(`@keyframes ${cls}{${keys.map(([p, d]) => `${p}{${d}}`).join("")}}` +
+      `.${cls}{opacity:0;animation:${cls} ${sec(once ? dur : k.period)} steps(${steps})${once ? "" : " infinite"}}`);
+  }
   if (wave) {
     const cycle = INTRO.wave + INTRO.waveRest;
     css.push(`@keyframes wv{0%{transform:none}${+((100 * INTRO.wave) / cycle).toFixed(3)}%,100%{transform:translateX(${n2(wave)}px)}}` +
@@ -433,6 +479,7 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
 
   // ---- layout ----
   const pitch = S * LINE;
+  const glyphH = S * cfg.font.blockHeight; // a full block's height, the cursor bar's
   // the calendar's first and last rows sit where a text line's middle would
   const heights = items.map((it) => (it.calendar ? (WEEK_DAYS - 1) * it.calendar.cp + pitch : pitch));
   const textH = heights.reduce((a, h) => a + h, 0);
@@ -470,21 +517,33 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     if (pad) {
       body.push(`<rect${moving ? ' class="sc"' : ""} x="${MARGIN}" y="${MARGIN}" width="${n2(pic.w + 2 * pad)}" height="${n2(pic.h + 2 * pad)}" rx="${SCREEN_RADIUS}" fill="${k.screen}"/>`);
       // going away, the screen waits for the last tone: alone on a light page they read as a negative
-      reveals.push({ cls: "sc", prop: "o", dur: INTRO.screen, after: toneEnd });
+      reveals.push({ cls: "sc", frames: FADE, dur: INTRO.screen, timing: "ease-out", after: toneEnd });
       reveal(0, INTRO.screen);
       screenGone = toneEnd + INTRO.screen;
     }
-    reveals.push({ cls: "tn", prop: "y", dur: INTRO.tone, steps: pic.rows });
+    const toneH = pic.rows * pic.pitch;
+    reveals.push({ cls: "tn", frames: wipe("Y", toneH), dur: INTRO.tone, timing: `steps(${pic.rows})` });
     pic.groups.forEach(({ cls, lines }, i) => {
       const delay = INTRO.start + i * toneStep;
-      if (moving) defs.push(mask(`p${i}`, [rect("tn", x0, y0 + pic.top, pic.w, pic.rows * pic.pitch, delay)]));
+      if (moving) defs.push(mask(`p${i}`, [rect("tn", x0, y0 + pic.top, pic.w, toneH, delay)]));
       reveal(delay, INTRO.tone);
       body.push(...group(`p${i}`, lines.map((l) => text(x0 + l.col * pic.fs * adv, y0 + pic.top + (l.row + 0.5) * pic.pitch, l.s, cls, pic.fs)).filter(Boolean)));
     });
   }
 
   const top = MARGIN + Math.max(0, (picH - textH) / 2);
+  const rv = REVEAL[k.reveal];
+  // "type" and "decode" open each line with a mask rect; "slide" and "glitch" move each line's own group
+  const masked = k.reveal === "type" || k.reveal === "decode";
   const lines = [], lineRects = [], over = []; // `over`: the activity the wave brightens
+  const loose = []; // above the mask: the decode noise
+  // "type": each line's cursor is a window moving in one mask over an accent block, so it is
+  // drawn in the same pass, with the same steps, as the line mask whose edge it rides
+  const cursorRects = [];
+  const movers = []; // "slide" / "glitch": [delay, a line's texts]
+  const wipes = new Set(); // "type": the line lengths, a wipe and a cursor class each
+  const steps = new Set(); // "decode": the columns a frame opens, a wipe class each
+  let overHost = lines; // where the wave's group goes: with a moving line, inside it
   let activity = null; // its box
   const slot = INTRO.count / INTRO.countFrames;
   let y = top;
@@ -505,37 +564,61 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
       if (moving) {
         draw(INTRO.boost, over);
         lineRects.push(rect("cl", X, y, n * cp, heights[i], delay));
-        reveals.push({ cls: "cl", prop: "x", dur: INTRO.calendar, steps: n });
+        reveals.push({ cls: "cl", frames: wipe("X", n * cp), dur: INTRO.calendar, timing: `steps(${n})` });
         reveal(delay, INTRO.calendar);
         activity = { x: X, y, w: n * cp - (cp - cell), h: heights[i] };
       }
     } else {
+      const own = []; // this line's texts
       let col = 0;
       for (const [s, cls] of it.runs) {
-        lines.push(text(X + col * PX, mid, s, cls, S));
+        own.push(text(X + col * PX, mid, s, cls, S));
         col += len(s);
       }
       if (moving) {
-        lineRects.push(rect("ln", X, y, cols * PX, pitch, delay));
-        reveal(delay, INTRO.line);
-        const from = delay + INTRO.line; // the count starts once the line is in
+        reveal(delay, rv.dur);
+        if (k.reveal === "type") {
+          wipes.add(col);
+          lineRects.push(rect(`w${col}`, X, y, col * PX, pitch, delay));
+          cursorRects.push(rect(`u${col}`, X, mid - glyphH / 2, rv.cursor * PX, glyphH, delay));
+        } else if (k.reveal === "decode") {
+          // the mask opens `step` columns a frame; ahead of it each frame draws fresh noise over the
+          // line's words (the leader dots and the rule just appear: noise there reads as a wall)
+          const step = Math.ceil(col / rv.frames);
+          const row = [...it.runs.map(([s, cls]) => (cls === "d" ? " ".repeat(len(s)) : s)).join("")];
+          steps.add(step);
+          lineRects.push(rect(`q${step}`, X, y, step * rv.frames * PX, pitch, delay));
+          for (let f = 0; f < rv.frames; f++) {
+            const noise = noiseRow(row.slice(f * step), rv.pool, (c) => jitter(i * 7919 + f * 131 + c * 31 + 7));
+            loose.push(text(X + f * step * PX, mid, noise, "m df", S, delay + (f * rv.dur) / rv.frames));
+          }
+        }
+        const from = delay + rv.dur; // the count starts once the line is in
         for (const { col: c, n } of it.nums ?? []) {
           const s = fmt(n);
-          lines.push(text(X + c * PX, mid, s, "v nv", S, from));
+          own.push(text(X + c * PX, mid, s, "v nv", S, from));
           for (let f = 0; f < INTRO.countFrames; f++)
-            lines.push(text(X + c * PX, mid, fmt(Math.round(n * (1 - (1 - f / INTRO.countFrames) ** 3))).padStart(len(s)), "v nf", S, from + f * slot));
+            own.push(text(X + c * PX, mid, fmt(Math.round(n * (1 - (1 - f / INTRO.countFrames) ** 3))).padStart(len(s)), "v nf", S, from + f * slot));
           introEnd = Math.max(introEnd, from + INTRO.count);
         }
         if (it.spark) {
           const lifted = it.spark.levels.map((l) => SPARK[Math.min(8, l + INTRO.boost)]).join("");
           over.push(text(X + it.spark.col * PX, mid, lifted, "h", S));
           activity = { x: X + it.spark.col * PX, y, w: it.spark.levels.length * PX, h: pitch };
+          if (!masked) overHost = own;
         }
       }
+      if (moving && !masked) movers.push([delay, own]);
+      else lines.push(...own);
     }
     y += heights[i];
   });
-  if (moving) reveals.push({ cls: "ln", prop: "x", dur: INTRO.line, steps: cols });
+  if (moving) {
+    for (const n of wipes) reveals.push({ cls: `w${n}`, frames: wipe("X", n * PX), dur: rv.dur, timing: `steps(${n})` });
+    for (const n of steps) reveals.push({ cls: `q${n}`, frames: wipe("X", n * rv.frames * PX), dur: rv.dur, timing: `steps(${rv.frames})` });
+    if (k.reveal === "slide") reveals.push({ cls: "sl", frames: SLIDE, dur: rv.dur, timing: rv.timing });
+    if (k.reveal === "glitch") reveals.push({ cls: "gl", frames: GLITCH, dur: rv.dur, timing: "step-end" });
+  }
 
   let hold = 0;
   if (k.intro === "loop") {
@@ -547,16 +630,24 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
         `${Math.ceil(INTRO.pause + out + introEnd + INTRO.minHold)} s (${n2(introEnd)} s to come in, ${n2(out)} s to go, ` +
         `${INTRO.minHold} s in full view, a ${INTRO.pause} s pause), got ${k.period}`);
   }
-  if (moving) defs.push(mask("tx", lineRects));
+  if (lineRects.length) defs.push(mask("tx", lineRects));
   let waveShift = 0; // px the wave's band travels: across the activity, from just before it to just past it
   if (moving && activity) {
     const band = Math.max(3 * PX, activity.w * INTRO.waveBand);
     waveShift = activity.w + band;
     defs.push(`<linearGradient id="wg"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`);
     defs.push(mask("wm", [rect("wv", activity.x - band, activity.y, band, activity.h, introEnd, "url(#wg)")]));
-    lines.push(...group("wm", over.filter(Boolean)));
+    overHost.push(...group("wm", over.filter(Boolean)));
   }
-  body.push(...group("tx", lines.filter(Boolean)));
+  const drawn = lines.filter(Boolean);
+  body.push(...(lineRects.length ? group("tx", drawn) : drawn));
+  const mover = k.reveal === "slide" ? "sl" : "gl";
+  for (const [delay, own] of movers) body.push(`<g class="${mover}"${delayed(delay)}>`, ...own.filter(Boolean), "</g>");
+  body.push(...loose.filter(Boolean));
+  if (cursorRects.length) {
+    defs.push(mask("cu", cursorRects));
+    body.push(...group("cu", [`<rect class="h" x="${n2(X)}" y="${n2(top)}" width="${n2(cols * PX)}" height="${n2(textH)}"/>`]));
+  }
 
   const a = (v) => `rgb(${rgb(cfg.accent)} / ${v})`;
   const calendar = items.find((it) => it.calendar)?.calendar;
@@ -573,7 +664,12 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
       : []),
     [...sizes].map((s) => `.${size(s)}{font-size:${s}px}`).join(""),
     ...(calendar ? [`.cg{letter-spacing:${n2(calendar.cp - calendar.cell)}px}`] : []),
-    ...(moving ? [introCss(k, reveals, hold, waveShift)] : []),
+    ...(moving
+      ? [introCss(k, reveals, hold, waveShift, {
+        cursors: [...wipes].map((n) => ({ cls: `u${n}`, steps: n, travel: n * PX, dur: rv.dur })),
+        decodeSlot: k.reveal === "decode" ? rv.dur / rv.frames : 0,
+      })]
+      : []),
   ].join("\n");
   const label = escAttr(snap.mode === "person" ? `${snap.person.login} on GitHub` : snap.project.name);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xml:space="preserve" role="img" aria-label="${label}">

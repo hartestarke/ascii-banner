@@ -6,17 +6,22 @@ text{font-family:B,monospace;white-space:pre;dominant-baseline:central;font-vari
 .d{fill:rgb(230 45 66 / 0.42)}.m{fill:rgb(230 45 66 / 0.68)}.h{fill:rgb(230 45 66 / 0.95)}.t1{fill:rgb(230 45 66 / 0.3)}.t2{fill:rgb(230 45 66 / 0.6)}.t3{fill:rgb(230 45 66 / 0.95)}.l0{fill:rgb(230 45 66 / 0.13)}.l1{fill:rgb(230 45 66 / 0.32)}.l2{fill:rgb(230 45 66 / 0.52)}.l3{fill:rgb(230 45 66 / 0.74)}.l4{fill:rgb(230 45 66 / 0.95)}
 .k{fill:rgb(230 45 66 / 0.95)}.v{fill:#7d8590}
 .f13{font-size:13px}.f8{font-size:8px}
-@keyframes tn{from{transform:scaleY(0)}}.tn{animation:tn 0.9s steps(25) both}
-@keyframes ln{from{transform:scaleX(0)}}.ln{animation:ln 0.35s steps(75) both}
-.tn,.ln{transform-box:fill-box;transform-origin:0 0}
+@keyframes tn{0%{transform:translateY(-239.5px)}100%{transform:none}}.tn{animation:tn 0.9s steps(25) both}
+@keyframes w75{0%{transform:translateX(-587px)}100%{transform:none}}.w75{animation:w75 0.35s steps(75) both}
+@keyframes w71{0%{transform:translateX(-555.8px)}100%{transform:none}}.w71{animation:w71 0.35s steps(71) both}
+@keyframes w47{0%{transform:translateX(-368.6px)}100%{transform:none}}.w47{animation:w47 0.35s steps(47) both}
 @keyframes nf{from,to{opacity:1}}.nf{opacity:0;animation:nf 0.09s}@keyframes nv{from,to{opacity:0}}.nv{animation:nv 0.9s backwards}
+@keyframes u75{0%{opacity:1;transform:translateX(0px)}100%{opacity:1;transform:translateX(585px)}}.u75{opacity:0;animation:u75 0.35s steps(75)}
+@keyframes u71{0%{opacity:1;transform:translateX(0px)}100%{opacity:1;transform:translateX(553.8px)}}.u71{opacity:0;animation:u71 0.35s steps(71)}
+@keyframes u47{0%{opacity:1;transform:translateX(0px)}100%{opacity:1;transform:translateX(366.6px)}}.u47{opacity:0;animation:u47 0.35s steps(47)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
 <defs>
 <mask id="p0" maskUnits="userSpaceOnUse" x="0" y="0" width="880" height="268"><rect class="tn" x="14" y="15.25" width="240" height="237.5" fill="#fff" style="animation-delay:0.15s"/></mask>
 <mask id="p1" maskUnits="userSpaceOnUse" x="0" y="0" width="880" height="268"><rect class="tn" x="14" y="15.25" width="240" height="237.5" fill="#fff" style="animation-delay:0.5s"/></mask>
 <mask id="p2" maskUnits="userSpaceOnUse" x="0" y="0" width="880" height="268"><rect class="tn" x="14" y="15.25" width="240" height="237.5" fill="#fff" style="animation-delay:0.85s"/></mask>
-<mask id="tx" maskUnits="userSpaceOnUse" x="0" y="0" width="880" height="268"><rect class="ln" x="276" y="49.76" width="585" height="21.06" fill="#fff" style="animation-delay:0.15s"/><rect class="ln" x="276" y="70.82" width="585" height="21.06" fill="#fff" style="animation-delay:0.33s"/><rect class="ln" x="276" y="91.88" width="585" height="21.06" fill="#fff" style="animation-delay:0.51s"/><rect class="ln" x="276" y="112.94" width="585" height="21.06" fill="#fff" style="animation-delay:0.69s"/><rect class="ln" x="276" y="134" width="585" height="21.06" fill="#fff" style="animation-delay:0.87s"/><rect class="ln" x="276" y="155.06" width="585" height="21.06" fill="#fff" style="animation-delay:1.05s"/><rect class="ln" x="276" y="176.12" width="585" height="21.06" fill="#fff" style="animation-delay:1.23s"/><rect class="ln" x="276" y="197.18" width="585" height="21.06" fill="#fff" style="animation-delay:1.41s"/></mask>
+<mask id="tx" maskUnits="userSpaceOnUse" x="0" y="0" width="880" height="268"><rect class="w75" x="276" y="49.76" width="585" height="21.06" fill="#fff" style="animation-delay:0.15s"/><rect class="w71" x="276" y="70.82" width="553.8" height="21.06" fill="#fff" style="animation-delay:0.33s"/><rect class="w47" x="276" y="91.88" width="366.6" height="21.06" fill="#fff" style="animation-delay:0.51s"/><rect class="w75" x="276" y="112.94" width="585" height="21.06" fill="#fff" style="animation-delay:0.69s"/><rect class="w75" x="276" y="134" width="585" height="21.06" fill="#fff" style="animation-delay:0.87s"/><rect class="w75" x="276" y="155.06" width="585" height="21.06" fill="#fff" style="animation-delay:1.05s"/><rect class="w75" x="276" y="176.12" width="585" height="21.06" fill="#fff" style="animation-delay:1.23s"/><rect class="w75" x="276" y="197.18" width="585" height="21.06" fill="#fff" style="animation-delay:1.41s"/></mask>
+<mask id="cu" maskUnits="userSpaceOnUse" x="0" y="0" width="880" height="268"><rect class="u75" x="276" y="51.71" width="3.9" height="17.16" fill="#fff" style="animation-delay:0.15s"/><rect class="u71" x="276" y="72.77" width="3.9" height="17.16" fill="#fff" style="animation-delay:0.33s"/><rect class="u47" x="276" y="93.83" width="3.9" height="17.16" fill="#fff" style="animation-delay:0.51s"/><rect class="u75" x="276" y="114.89" width="3.9" height="17.16" fill="#fff" style="animation-delay:0.69s"/><rect class="u75" x="276" y="135.95" width="3.9" height="17.16" fill="#fff" style="animation-delay:0.87s"/><rect class="u75" x="276" y="157.01" width="3.9" height="17.16" fill="#fff" style="animation-delay:1.05s"/><rect class="u75" x="276" y="178.07" width="3.9" height="17.16" fill="#fff" style="animation-delay:1.23s"/><rect class="u75" x="276" y="199.13" width="3.9" height="17.16" fill="#fff" style="animation-delay:1.41s"/></mask>
 </defs>
 <g mask="url(#p0)">
 <text x="86" y="39" class="d f8">▄           ▄</text>
@@ -110,5 +115,8 @@ text{font-family:B,monospace;white-space:pre;dominant-baseline:central;font-vari
 <text x="276" y="207.71" class="k f13">languages</text>
 <text x="354" y="207.71" class="h f13">█████████████████████████████████████████████████</text>
 <text x="744" y="207.71" class="v f13">JavaScript 100%</text>
+</g>
+<g mask="url(#cu)">
+<rect class="h" x="276" y="49.76" width="585" height="168.48"/>
 </g>
 </svg>

@@ -104,6 +104,7 @@ export const DEFAULTS = {
     activity: null, // mode "person", the last year: "sparkline" (per week), "calendar" (per day, as on GitHub) or "none"; null = sparkline for a person, none for a project
     intro: "once", // the card builds itself up on load: "once", "loop" (again every `period` s) or "none" (still)
     period: 12, // s, one cycle of intro "loop"
+    reveal: "type", // how a text line comes in: "type" (at a cursor), "decode" (out of noise), "slide" or "glitch"
     layout: "dots", // rows as "key ···· value" (value right-aligned) or "colon": "key: value", neofetch's
     // #rrggbb of the values, the handle and the description: a grey that reads
     // on light and dark pages alike; null = the accent, like the keys
@@ -125,6 +126,7 @@ export const CARD_ROWS = {
 const CARD_PORTRAITS = ["avatar", "solid", "none"];
 const CARD_ACTIVITIES = ["sparkline", "calendar", "none"];
 const CARD_INTROS = ["once", "loop", "none"];
+const CARD_REVEALS = ["type", "decode", "slide", "glitch"];
 const CARD_LAYOUTS = ["dots", "colon"];
 const CARD_AVATAR_COLORS = ["accent", "natural", "gray"];
 // The text column needs room next to a 240 px portrait.
@@ -456,6 +458,7 @@ function checkCard(k, abs) {
   check(k.mode === "person" || k.activity === "none", "card.activity", `mode "project" has no contribution activity; use "none", got ${JSON.stringify(k.activity)}`);
   oneOf(k.intro, "card.intro", CARD_INTROS);
   positive(k.period, "card.period");
+  oneOf(k.reveal, "card.reveal", CARD_REVEALS);
   oneOf(k.layout, "card.layout", CARD_LAYOUTS);
   if (k.ink !== null) hexColour(k.ink, "card.ink");
   k.portrait ??= k.mode === "person" ? "avatar" : "solid";
