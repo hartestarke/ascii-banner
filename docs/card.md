@@ -1,25 +1,27 @@
 # The info card
 
-A second SVG next to the banner, laid out like neofetch: a portrait at the
-left, a header and `key ··· value` rows at the right, and for a person the
-year's contributions. It shows a GitHub user (`mode: "person"`) or a
-repository (`mode: "project"`), with your own rows on top.
+neofetch for your GitHub profile: a second SVG for under the banner, with a
+portrait at the left and rows of facts at the right. It shows a GitHub user
+(`mode: "person"`) or a repository (`mode: "project"`), puts your own rows
+above GitHub's, and builds itself up on load in CSS alone.
 
-<img src="examples/card-person.svg" width="880" alt="info card of hartestarke: an avatar in four red tones, rows typing in, a contribution calendar">
+<img src="examples/card-person.svg" width="880" alt="info card of hartestarke: an avatar in four red tones, rows decoding out of noise, a contribution calendar">
 
-<img src="examples/card-project.svg" width="880" alt="info card of hartestarke/ascii-banner: a solid torus, the release, licence, stats, commits and a language bar">
+<img src="examples/card-project.svg" width="880" alt="info card of hartestarke/ascii-banner: a solid torus, rows typing in at a cursor, the release, licence, stats, commits and a language bar">
 
-Both come from [`examples/`](examples): [`card-person.config.mjs`](examples/card-person.config.mjs)
-and [`card-project.config.mjs`](examples/card-project.config.mjs), each with
-the snapshot it was built from.
+Both come from [`examples/`](examples), each config next to the snapshot it was
+built from: [`card-person.config.mjs`](examples/card-person.config.mjs) and
+[`card-project.config.mjs`](examples/card-project.config.mjs).
 
-The card takes two steps, so the network stays out of the build:
+## How it works
 
-1. `ascii-banner fetch` asks GitHub for the data (one GraphQL query, plus the
-   avatar) and writes a snapshot, `card.data.json` by default.
-2. `ascii-banner card` renders `card.svg` from that snapshot, offline. The same
-   snapshot always gives the same bytes: ages ("2y 8m", "6 days ago") count
-   to the moment of the fetch, not the build.
+A card takes two steps, so the network stays out of the build:
+
+1. `ascii-banner fetch` asks GitHub for the data, in one GraphQL query plus the
+   avatar, and writes a snapshot, `card.data.json` by default.
+2. `ascii-banner card` renders `card.svg` from that snapshot, offline. A
+   snapshot always renders to the same bytes: ages such as "2y 8m" or "6 days
+   ago" count to the moment of the fetch, not of the build.
 
 ## Quick start
 
@@ -42,9 +44,11 @@ npx --yes github:hartestarke/ascii-banner#v0.4.0 card    # writes card.svg
 ```
 
 Commit `card.svg` and put `<img src="card.svg" width="880" alt="">` in the
-README. The snapshot is only the build's input and need not be committed:
-it carries its fetch time, so it changes on every fetch. To keep the numbers
-fresh, let a workflow fetch and render once a day, `.github/workflows/card.yml`:
+README. The snapshot is only the build's input and need not be committed; it
+carries its fetch time, so it changes on every fetch.
+
+To keep the numbers fresh, let a workflow fetch and render once a day,
+`.github/workflows/card.yml`:
 
 ```yaml
 name: card
@@ -80,18 +84,18 @@ jobs:
           git commit -m "Refresh card" && git push
 ```
 
-The workflow's own token is enough, since everything the card shows is
-public. A day that changes nothing on the card commits nothing. GitHub disables a public
-repository's scheduled workflows after 60 days without activity in it; if
-yours stops, enable it again in the Actions tab.
+The workflow's own token is enough, since everything the card shows is public,
+and a day that changes nothing on the card commits nothing. GitHub disables a
+public repository's scheduled workflows after 60 days without activity in it;
+if yours stops, enable it again in the Actions tab.
 
 ## What it shows
 
-**Header:** `title login@github ───` for a person, the `owner/name` (or
-`title`) for a project. `title` defaults to the name on GitHub.
+**The header** is `title login@github` for a person and the repository's name
+for a project. `title` defaults to the name on GitHub.
 
-**Rows:** yours first (`rows`, `[key, value]` pairs), then GitHub's, in the
-order `show` gives (all of them by default):
+**The rows** are yours first (`rows`, `[key, value]` pairs), then GitHub's, in
+the order `show` gives them (all of them by default):
 
 | Mode | Row | Value |
 | --- | --- | --- |
@@ -105,41 +109,81 @@ order `show` gives (all of them by default):
 | project | `commits` | commits on the default branch, and how long ago the last one landed |
 | project | `languages` | a bar split by language, and the two largest |
 
-A project's description wraps under the header, two lines at most. A value
-too long for its row is cut with `..` and a warning.
+A project's description wraps under the header, two lines at most. A value too
+long for its row is cut with `..` and a warning.
 
-**Activity** (`activity`, person only): the last year of contributions.
+**The activity** (`activity`, a person only) is the last year of
+contributions:
 
-- `"sparkline"` (the default): one block per week, its height on a log scale,
-  `·` for a week without any.
-- `"calendar"`: one square per day, Sunday to Saturday down each week, in the
+- `"sparkline"` (the default): a block per week, its height on a log scale, `·`
+  for a week without any.
+- `"calendar"`: a square per day, Sunday to Saturday down each week, in the
   five shades GitHub gives each day.
 - `"none"`.
 
 A narrow card shows the latest weeks that fit.
 
-**Portrait** (`portrait`):
+**The portrait** (`portrait`):
 
-- `"avatar"` (a person's default): the GitHub avatar in four tones of the
-  accent on a dark screen (`screen`), so it reads as a photo on light pages
-  too. PNG and baseline JPEG avatars are decoded without dependencies.
+- `"avatar"` (a person's default): the GitHub avatar, on a dark screen
+  (`screen`) so that it reads as a photo on light pages too. PNG and baseline
+  JPEG avatars are decoded without dependencies.
 - `"solid"` (a project's default): the [`solid`](fields.md#solid) field's
   torus, frozen.
 - `"none"`: rows only.
 
+## Make it yours
+
+**Layout** (`layout`):
+
+- `"dots"` (the default): `key ········ value`, each value right-aligned at the
+  column's end, the header ruled to it.
+- `"colon"`: neofetch's own `key: value`, under an underlined header.
+
+**Colours.** The card draws in the banner's `accent` at different alphas, so
+it reads on light and dark pages alike. The keys, the title, the activity and
+the portrait take the accent; the values, the handle and the description take
+`ink`, a grey (`#7d8590`) that reads on both. `ink: null` draws them in the
+accent too, and the keys step back to a dimmer shade of it.
+
+**Swatches** (`swatches: true`) end the rows with eight colour blocks, as
+neofetch does: the accent from faint to full, or, with a `"natural"` or
+`"gray"` avatar, the portrait's own palette from dark to light.
+
+**Avatar colours** (`avatarColors`, with `portrait: "avatar"`):
+
+- `"accent"` (the default): four tones of the accent.
+- `"natural"`: the avatar's own colours, cut to a palette of 16 and dithered.
+  It costs about twice the bytes (see [Size](#size)).
+- `"gray"`: eight greys.
+
 ## The intro
 
 On load the card builds itself up. The screen fades in, the portrait develops
-top to bottom one tone at a time (dim first), the rows type in one after
+top to bottom one tone at a time, darkest first, the rows come in one after
 another, and each number counts up once its row is in. Then a band of light
 keeps crossing the activity, lifting every week or day two shades as it
-passes. The whole intro takes under 3 s.
+passes. All of it is over in under 3 s.
 
-- `intro: "once"` (the default) plays it on every page load.
-- `intro: "loop"` plays it every `period` seconds: the card holds, goes away
-  in the order it came in (the screen last), and comes back. A `period` too
-  short for the card's intro is an error that names the shortest one.
-- `intro: "none"` writes no animation at all.
+How a row comes in (`reveal`):
+
+| `reveal` | The row |
+| --- | --- |
+| `"type"` (the default) | is typed a column at a time behind a cursor |
+| `"decode"` | starts as noise over its words, which locks into the text from left to right; the leader dots appear behind the front |
+| `"slide"` | slides in from the right, fading up |
+| `"glitch"` | flickers in, jumping sideways |
+
+The calendar always wipes in week by week.
+
+When it plays (`intro`):
+
+- `"once"` (the default): on every page load.
+- `"loop"`: every `period` seconds. The card holds, goes away in the order it
+  came in (a typed row is backspaced out, the screen leaves last), and comes
+  back. A `period` too short for the card is an error that names the shortest
+  one that fits.
+- `"none"`: no animation at all.
 
 Under `prefers-reduced-motion` the card is always still: the markup itself is
 the finished card, and the animations only hide parts of it for a while.
@@ -160,27 +204,34 @@ Every key of the `card` block, with its default:
 | `activity` | `null` | `"sparkline"`, `"calendar"` or `"none"`; `null` = sparkline for a person, none for a project |
 | `intro` | `"once"` | `"once"`, `"loop"` or `"none"` |
 | `period` | `12` | s, one cycle of `intro: "loop"` |
+| `reveal` | `"type"` | how a row comes in: `"type"`, `"decode"`, `"slide"` or `"glitch"` |
+| `layout` | `"dots"` | `"dots"` (`key ··· value`) or `"colon"` (`key: value`) |
+| `ink` | `"#7d8590"` | `#rrggbb` of the values, the handle and the description; `null` = the accent |
+| `swatches` | `false` | a row of colour blocks under the rows |
 | `portrait` | `null` | `"avatar"`, `"solid"` or `"none"`; `null` = avatar for a person, solid for a project |
+| `avatarColors` | `"accent"` | `"accent"`, `"natural"` or `"gray"`; anything but `"accent"` needs `portrait: "avatar"` |
 | `screen` | `"#0d1117"` | `#rrggbb` behind the avatar; `null` = none |
 | `width` | `880` | px, at least 600 |
 | `textSize` | `13` | px; the text column needs room for 30 characters |
 
-The card draws in `accent` and the embedded font (`font.file`, `font.advance`)
-like the banner. Your own text must stay within the font's glyphs (an error
-names the missing ones); text from GitHub outside them is drawn as `?`, with a
-warning.
+The card uses the banner's `accent` and embedded font (`font.file`,
+`font.advance`, `font.blockHeight`). Your own text must stay within the font's
+glyphs, or an error names the missing ones; text from GitHub outside them is
+drawn as `?`, with a warning.
 
 ## Privacy
 
-A card is public, so the snapshot holds only public data and only what the
-card draws. A person's repositories count only if public and not forks; a
-private repository in mode `"project"` is refused. A person's snapshot keeps
-the login, name, account date, follower, repository and star counts,
-languages and the contribution calendar, plus the avatar image when the
-portrait is `"avatar"`.
+A card is public, so the snapshot holds only public data, and only what the
+card draws. A person's repositories count only if they are public and not
+forks; a private repository in mode `"project"` is refused. A person's
+snapshot keeps the login, name, account date, follower, repository and star
+counts, languages and the contribution calendar, plus the avatar image when
+the portrait is `"avatar"`.
 
 ## Size
 
-The animated cards above are 58 KB (person, avatar and calendar) and 20 KB
-(project) raw, 16 KB and 10 KB gzipped. The intro adds about 6 KB to a
-person's card.
+The cards above are 64 KB (the person, with the avatar, the calendar and
+`decode`) and 22 KB (the project) raw, 17 KB and 10 KB gzipped. The intro adds
+7 to 14 KB raw to a person's card, 1 to 2 KB gzipped; `decode` costs the most,
+for its noise frames. A `"natural"` avatar about doubles the raw size, to
+118 KB (23 KB gzipped); a `"gray"` one comes to 91 KB (20 KB).
