@@ -113,8 +113,13 @@ export function renderReveal(cfg, layout, figs, pool, spans) {
  * The banner document: field frames under the knockout mask, the reveal's
  * overlay on top. NO_FIELD leaves out the field and its mask; fps 0 leaves out
  * the flipbook animation, so with a static reveal no CSS animation is left.
+ * `extra` adds layers, each a string ("" = none): defs at the end of <defs>,
+ * css after the reveal's, reducedMotion inside the reduced-motion block,
+ * fieldMask in the field's mask after the taglines' knockout, overlay on top
+ * of the reveal's. Without them the output is what it was before they existed.
  */
-export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
+export function renderSvg(cfg, grid, field, layout, reveal, fontB64, extra = {}) {
+  const { defs = "", css = "", reducedMotion = "", fieldMask = "", overlay = "" } = extra;
   const { width: W, height: H } = cfg.size;
   const { fontSize: FONT, fps: FPS, loopSeconds: DUR, alpha: ALPHA, colors: COLORS, gradient: GRADIENT } = cfg.field;
   const { shadowAlpha: SHADOW_A, knockout: CUT, color: TCOLOR, shadowColor: SCOLOR } = cfg.tagline;
@@ -180,13 +185,14 @@ export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
   // which keeps the tagline legible on any page colour and over the field's hot
   // zones. The preset draws it so the hole follows the reveal: opened up front,
   // the letter-shaped hole would give the line away.
-  const mask = reveal.knockout
-    ? `<mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/>${reveal.knockout}</mask>`
+  const knockout = reveal.knockout + fieldMask;
+  const mask = knockout
+    ? `<mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/>${knockout}</mask>`
     : "";
   const rm = reveal.reducedMotionCss;
   const stop = [...(flips ? [".f"] : []), ...rm.stop];
   const reduced = (stop.length ? `${stop.join(",")}{animation:none}` : "") +
-    (flips ? ".f-still{visibility:visible}" : "") + rm.settle;
+    (flips ? ".f-still{visibility:visible}" : "") + rm.settle + reducedMotion;
   const style = [
     `@font-face{font-family:B;src:url(data:font/woff2;base64,${fontB64}) format('woff2')}`,
     "text{font-family:B,monospace;text-rendering:optimizeSpeed;font-variant-ligatures:none;white-space:pre;dominant-baseline:central}",
@@ -196,7 +202,7 @@ export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
       `@keyframes k{0%{visibility:visible}${(100 / NF).toFixed(3)}%{visibility:hidden}100%{visibility:hidden}}`,
     ] : []),
     `.tg{font-size:${TFONT}px}`,
-    `.tx{fill:${TCOLOR}}.s{fill:${rgbOf(SCOLOR)(SHADOW_A)}}${reveal.css}`,
+    `.tx{fill:${TCOLOR}}.s{fill:${rgbOf(SCOLOR)(SHADOW_A)}}${reveal.css}${css}`,
     ...(hasField ? [`mask text{fill:#000;stroke:#000;stroke-width:${CUT};stroke-linejoin:round}`] : []),
     ...(reduced ? [`@media (prefers-reduced-motion:reduce){${reduced}}`] : []),
   ];
@@ -210,8 +216,8 @@ export function renderSvg(cfg, grid, field, layout, reveal, fontB64) {
 <style>
 ${style.join("\n")}
 </style>
-<defs>${gradient}${reveal.defs}${mask}</defs>
-${fieldGroup}${reveal.overlay}
+<defs>${gradient}${reveal.defs}${mask}${defs}</defs>
+${fieldGroup}${reveal.overlay}${overlay}
 </svg>
 `;
 }
