@@ -1,13 +1,14 @@
 #!/usr/bin/env node
-// ascii-banner CLI: `init` drops a commented config, `build` renders it,
-// `fetch` snapshots GitHub for the info card and `card` renders the card,
-// `fonts` lists the bundled figlet fonts, `presets` the field and reveal presets.
+// ascii-banner CLI: `init` drops a commented config, `build` renders it
+// (cards included, offline from the snapshot), `fetch` snapshots GitHub for
+// every card of the config, `fonts` lists the bundled figlet fonts, `presets`
+// the field and reveal presets.
 // Exit codes: 0 ok, 1 user/config error (message only), 2 unexpected (stack).
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { buildBanner, ConfigError, DEFAULTS, NO_FIELD, PRESET_GAMMA } from "../src/index.mjs";
-import { buildCard, fetchCard } from "../src/card/index.mjs";
+import { buildBanner, ConfigError, DEFAULTS, NO_FIELD, PRESET_GAMMA, resolveConfig } from "../src/index.mjs";
+import { fetchCards } from "../src/card/index.mjs";
 import { describeLayout, figlet, loadFlf } from "../src/figlet.mjs";
 import { listFonts } from "../src/fonts.mjs";
 import { FIELD_PRESETS } from "../src/fields/index.mjs";
@@ -16,23 +17,22 @@ import { REVEAL_PRESETS } from "../src/reveals/index.mjs";
 
 const CONFIG_NAME = "banner.config.mjs";
 const OUT_NAME = "banner.svg";
-const CARD_OUT_NAME = "card.svg";
+// `card` built a separate card.svg before cards moved into the banner.
+const CARD_GONE = "there is no `card` command any more: cards are blocks of the banner (`cards: [...]` in the config), built by `ascii-banner build`";
 const TEMPLATE = fileURLToPath(new URL(`../${CONFIG_NAME}`, import.meta.url));
 
 const USAGE = `ascii-banner — animated ASCII-field SVG banner for READMEs
 
 Usage:
   ascii-banner init [dir] [--force]          write ${CONFIG_NAME} into dir (default .)
-  ascii-banner build [--config <path>] [--out <path>]
+  ascii-banner build [--config <path>] [--out <path>] [--data <path>]
                                              render the config (default ./${CONFIG_NAME})
-                                             to an SVG (default ./${OUT_NAME})
+                                             to an SVG (default ./${OUT_NAME}); its cards
+                                             come from the snapshot in \`data\` (or --data)
   ascii-banner fetch [--config <path>] [--out <path>]
-                                             snapshot GitHub for the info card (card.user
-                                             or card.repo) to card.data (or --out);
+                                             snapshot GitHub for every card (cards[].user
+                                             or cards[].repo) to \`data\` (or --out);
                                              needs a token in GITHUB_TOKEN or GH_TOKEN
-  ascii-banner card [--config <path>] [--data <path>] [--out <path>]
-                                             render the info card from the snapshot,
-                                             offline, to an SVG (default ./${CARD_OUT_NAME})
   ascii-banner fonts [--sample <text>]       list the bundled figlet fonts (tagline.font);
                                              --sample renders <text> in each
   ascii-banner presets [--json]              list the field and reveal presets
@@ -40,8 +40,8 @@ Usage:
                                              their option defaults
   ascii-banner --help                        this text
 
---config and --out are relative to the current directory; asset paths inside
-the config (font.file, tagline.font) are relative to the config file.
+--config, --out and --data are relative to the current directory; paths inside
+the config (font.file, tagline.font, data) are relative to the config file.
 tagline.font is a bundled font name or a path to any .flf.
 Flags also take the --flag=value form.
 `;
@@ -122,12 +122,12 @@ function writeOut(outPath, text) {
 const kb = (b) => `${(b / 1024).toFixed(0)} KB`;
 
 async function build(argv) {
-  const { pos, flags } = parseArgs(argv, ["--config", "--out"], []);
+  const { pos, flags } = parseArgs(argv, ["--config", "--out", "--data"], []);
   if (pos.length) throw new ConfigError(`build takes no positional arguments\n\n${USAGE}`);
   const outPath = resolve(flags.out ?? OUT_NAME);
   const { config, baseDir } = await loadConfig(flags.config);
 
-  const { svg, stats, warnings } = await buildBanner(config, { baseDir });
+  const { svg, stats, warnings } = await buildBanner(config, { baseDir, dataPath: flags.data && resolve(flags.data) });
   for (const w of warnings) console.error(`warning: ${w}`);
   writeOut(outPath, svg);
   console.log(
@@ -142,28 +142,14 @@ async function fetchCmd(argv) {
   const { pos, flags } = parseArgs(argv, ["--config", "--out"], []);
   if (pos.length) throw new ConfigError(`fetch takes no positional arguments\n\n${USAGE}`);
   const { config, baseDir } = await loadConfig(flags.config);
-  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-  const { snapshot, path } = await fetchCard(config, { baseDir, token });
-  const outPath = resolve(flags.out ?? path);
+  const cfg = resolveConfig(config, { baseDir });
+  const snapshot = await fetchCards(cfg, process.env.GITHUB_TOKEN || process.env.GH_TOKEN);
+  const outPath = resolve(flags.out ?? cfg.data);
   writeOut(outPath, `${JSON.stringify(snapshot, null, 2)}\n`);
-  const who = snapshot.mode === "person" ? snapshot.person.login : snapshot.project.name;
-  const avatar = snapshot.avatar ? `, avatar ${snapshot.avatar.type} ${kb(Buffer.byteLength(snapshot.avatar.base64, "base64"))}` : "";
-  console.log(`${shortPath(outPath)}: ${snapshot.mode} ${who}${avatar}, fetched ${snapshot.fetchedAt}`);
-}
-
-async function card(argv) {
-  const { pos, flags } = parseArgs(argv, ["--config", "--data", "--out"], []);
-  if (pos.length) throw new ConfigError(`card takes no positional arguments\n\n${USAGE}`);
-  const outPath = resolve(flags.out ?? CARD_OUT_NAME);
-  const { config, baseDir } = await loadConfig(flags.config);
-  const { svg, stats, warnings } = await buildCard(config, { baseDir, dataPath: flags.data && resolve(flags.data) });
-  for (const w of warnings) console.error(`warning: ${w}`);
-  writeOut(outPath, svg);
-  console.log(
-    `${shortPath(outPath)}: ${stats.width}x${stats.height}, ${stats.rawBytes} bytes raw (${kb(stats.rawBytes)}), ` +
-    `${stats.gzipBytes} gzip; ${stats.lines} rows, ${stats.textNodes} text nodes; ` +
-    `${stats.intro ? `intro ${stats.intro} s; ` : ""}data of ${stats.fetchedAt}; built in ${stats.buildMs} ms`,
-  );
+  const entries = Object.entries(snapshot.cards);
+  console.log(`${shortPath(outPath)}: ${entries.length} card${entries.length === 1 ? "" : "s"}, fetched ${snapshot.fetchedAt}`);
+  for (const [key, e] of entries)
+    console.log(`  ${key}${e.avatar ? `, avatar ${e.avatar.type} ${kb(Buffer.byteLength(e.avatar.base64, "base64"))}` : ""}`);
 }
 
 function fonts(argv) {
@@ -228,7 +214,7 @@ async function main(argv) {
   if (cmd === "init") return init(rest);
   if (cmd === "build") return build(rest);
   if (cmd === "fetch") return fetchCmd(rest);
-  if (cmd === "card") return card(rest);
+  if (cmd === "card") throw new ConfigError(CARD_GONE);
   if (cmd === "fonts") return fonts(rest);
   if (cmd === "presets") return presets(rest);
   throw new ConfigError(`unknown command "${cmd}"\n\n${USAGE}`);
