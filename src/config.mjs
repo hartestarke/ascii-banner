@@ -20,9 +20,17 @@ export class ConfigError extends Error {
   }
 }
 
+/** size.height of a canvas as tall as its laid-out blocks. */
+export const AUTO = "auto";
+/** px, the header's (taglines over the field) height when tagline.height is null, unless it fills a card-less canvas. */
+export const HEADER_HEIGHT = 240;
+/** The keyword widths of the header and of a card; any other width is px. */
+const BLOCK_WIDTHS = ["full", "half"];
+
 export const DEFAULTS = {
-  // viewBox size; README scales it down responsively
-  size: { width: 880, height: 240 },
+  // viewBox size; README scales it down responsively. height: AUTO = as tall as
+  // the blocks (header and cards) laid out; px = a fixed canvas they must fit.
+  size: { width: 880, height: AUTO },
   // the base hue: field, taglines and shadows are all this colour at different
   // alphas unless field.colors / field.gradient / tagline.color say otherwise
   accent: "#E62D42",
@@ -41,6 +49,9 @@ export const DEFAULTS = {
     font: "ansi-shadow", // BUNDLED_FONTS name, or a path to any .flf
     layout: null, // one of LAYOUTS; null = the font's default
     shadowGlyphs: null, // figlet glyphs drawn at shadowAlpha; null = the font's default
+    width: "full", // the header block: "full", "half" or px
+    // px; null = HEADER_HEIGHT, or the whole canvas when there are no cards and size.height is px
+    height: null,
   },
   reveal: {
     preset: "scramble", // REVEAL_PRESETS name; "none" = each line shown settled for its slot
@@ -91,31 +102,42 @@ export const DEFAULTS = {
   budget: {
     maxBytes: 1048576, // fail the build above this many raw bytes; 0 = no limit
   },
-  // The info card, a second SVG built by `ascii-banner card` from a snapshot
-  // that `ascii-banner fetch` takes of GitHub; `build` ignores this block.
-  card: {
-    mode: "person", // "person": a GitHub user; "project": a repository
-    user: null, // GitHub login, mode "person"
-    repo: null, // "owner/name", mode "project"
-    data: "card.data.json", // the snapshot fetch writes and card reads, relative to this config
-    title: null, // the header's leading name; null = the name on GitHub, else the login / repo
-    rows: [], // your own [key, value] rows, shown before GitHub's
-    show: null, // GitHub's rows in order, from CARD_ROWS[mode]; null = all of them
-    activity: null, // mode "person", the last year: "sparkline" (per week), "calendar" (per day, as on GitHub) or "none"; null = sparkline for a person, none for a project
-    intro: "once", // the card builds itself up on load: "once", "loop" (again every `period` s) or "none" (still)
-    period: 12, // s, one cycle of intro "loop"
-    reveal: "type", // how a text line comes in: "type" (at a cursor), "decode" (out of noise), "slide" or "glitch"
-    layout: "dots", // rows as "key ···· value" (value right-aligned) or "colon": "key: value", neofetch's
-    // #rrggbb of the values, the handle and the description: a grey that reads
-    // on light and dark pages alike; null = the accent, like the keys
-    ink: "#7d8590",
-    swatches: false, // a row of colour blocks under the rows, as neofetch ends
-    portrait: null, // "avatar", "solid" (a turning torus) or "none"; null = avatar for a person, solid for a project
-    avatarColors: "accent", // the avatar in four tones of the accent, "natural" (its own colours, 16) or "gray" (8 greys)
-    screen: "#0d1117", // #rrggbb behind the portrait, so its light-as-ink tones read on light pages too; null = none
-    width: 880, // px
-    textSize: 13, // px
-  },
+  // The snapshot of every card that `ascii-banner fetch` takes of GitHub and
+  // `build` reads, relative to this config.
+  data: "banner.data.json",
+  // Info cards inside the banner, each an object of CARD_DEFAULTS keys, laid
+  // out after the header in rows (src/blocks.mjs).
+  cards: [],
+};
+
+/** One entry of `cards`: a GitHub user (`user`) or repository (`repo`); exactly one of them. */
+export const CARD_DEFAULTS = {
+  user: null, // GitHub login: mode "person"
+  repo: null, // "owner/name": mode "project"
+  title: null, // the header's leading name; null = the name on GitHub, else the login / repo
+  rows: [], // your own [key, value] rows, shown before GitHub's
+  show: null, // GitHub's rows in order, from CARD_ROWS[mode]; null = all of them
+  activity: null, // mode "person", the last year: "sparkline" (per week), "calendar" (per day, as on GitHub) or "none"; null = sparkline for a person, none for a project
+  layout: "dots", // rows as "key ···· value" (value right-aligned) or "colon": "key: value", neofetch's
+  // #rrggbb of the values, the handle and the description: a grey that reads
+  // on light and dark pages alike; null = the accent, like the keys
+  ink: "#7d8590",
+  swatches: false, // a row of colour blocks under the rows, as neofetch ends
+  portrait: null, // "avatar", "solid" (a turning torus) or "none"; null = avatar for a person, solid for a project
+  avatarColors: "accent", // the avatar in four tones of the accent, "natural" (its own colours, 16) or "gray" (8 greys)
+  screen: "#0d1117", // #rrggbb behind the portrait, so its light-as-ink tones read on light pages too; null = none
+  textSize: 13, // px
+  width: "full", // "full", "half" or px (at least CARD_MIN_WIDTH)
+  at: null, // { x, y } px: placed there, out of the flow of rows; null = in the flow
+  // Under the card the field is "window" (cleared), "dim" (faint) or "cut"
+  // (cleared around the card's glyphs, by tagline.knockout px).
+  backdrop: "window",
+  // How the card comes in: "wave", "drops" or "crystal" (out of the field, as
+  // a whole), or line by line: "type" (at a cursor), "decode" (out of noise), "slide" or "glitch".
+  reveal: "wave",
+  intro: "once", // "once", "loop" (again every `period` s) or "none" (still, shown from the start)
+  period: null, // s, one cycle of intro "loop"; null = field.loopSeconds
+  delay: null, // s, when the intro starts; null = CARD_DELAY + CARD_STAGGER × the card's index
 };
 
 /** The GitHub rows each card mode can show, in their default order. */
@@ -123,14 +145,23 @@ export const CARD_ROWS = {
   person: ["uptime", "repos", "languages", "contributions"],
   project: ["release", "license", "stats", "commits", "languages"],
 };
+/** Card reveals that bring the whole card out of the field; they need one. */
+export const FIELD_REVEALS = ["wave", "drops", "crystal"];
+const LINE_REVEALS = ["type", "decode", "slide", "glitch"];
+export const CARD_REVEALS = [...FIELD_REVEALS, ...LINE_REVEALS];
 const CARD_PORTRAITS = ["avatar", "solid", "none"];
 const CARD_ACTIVITIES = ["sparkline", "calendar", "none"];
 const CARD_INTROS = ["once", "loop", "none"];
-const CARD_REVEALS = ["type", "decode", "slide", "glitch"];
+const CARD_BACKDROPS = ["window", "dim", "cut"];
 const CARD_LAYOUTS = ["dots", "colon"];
 const CARD_AVATAR_COLORS = ["accent", "natural", "gray"];
-// The text column needs room next to a 240 px portrait.
-const CARD_MIN_WIDTH = 600;
+/** px, the narrowest card; the renderer shrinks the portrait below 600 px to keep the text column. */
+export const CARD_MIN_WIDTH = 360;
+// s: the first card's intro starts at CARD_DELAY, each next one CARD_STAGGER later.
+const CARD_DELAY = 1.2;
+const CARD_STAGGER = 0.8;
+// Card delays are rounded to whole ms, so the stagger's float error never reaches the CSS.
+const MS_PER_S = 1000;
 
 /** field.gamma for a preset that sets none. */
 export const PRESET_GAMMA = 1.35;
@@ -149,7 +180,8 @@ const NO_FIELD_PRESET = {
   bands: FIELD_PRESETS[DEFAULTS.field.preset].bands,
 };
 
-// Keys whose default is null, with the type they may hold instead.
+// Keys whose default is null, with the type they may hold instead. `cards[]`
+// stands for every card (`cards[0]`, `cards[1]`, ...).
 const NULLABLE = {
   "field.sample": "function",
   "field.ramp": "string",
@@ -157,14 +189,18 @@ const NULLABLE = {
   "field.bands": "number",
   "field.gamma": "number",
   "font.file": "string",
-  "card.user": "string",
-  "card.repo": "string",
-  "card.title": "string",
-  "card.show": "array",
-  "card.activity": "string",
-  "card.ink": "string",
-  "card.portrait": "string",
-  "card.screen": "string",
+  "cards[].user": "string",
+  "cards[].repo": "string",
+  "cards[].title": "string",
+  "cards[].show": "array",
+  "cards[].activity": "string",
+  "cards[].ink": "string",
+  "cards[].portrait": "string",
+  "cards[].screen": "string",
+  "cards[].at": "object",
+  "cards[].period": "number",
+  "cards[].delay": "number",
+  "tagline.height": "number",
   "tagline.layout": "string",
   "tagline.shadowGlyphs": "string",
   "tagline.color": "string",
@@ -172,6 +208,8 @@ const NULLABLE = {
   "field.colors": "array",
   "field.gradient": "array",
 };
+// Keys that hold a keyword or a number of px; resolveConfig checks which.
+const KEYWORD_OR_PX = new Set(["size.height", "tagline.width", "cards[].width"]);
 
 // C0 controls other than tab, LF and CR, and DEL: XML 1.0 forbids the former.
 const CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
@@ -202,6 +240,15 @@ const colourList = (v, path, min, max) => {
   check(v.length >= min && v.length <= max, path, `must hold ${min} to ${max} #rrggbb colours, got ${v.length}`);
   v.forEach((x, i) => hexColour(x, `${path}[${i}]`));
 };
+/** A KEYWORD_OR_PX value: one of `keywords`, or a number of px that `px(v)` accepts, as `range` words it. */
+const keywordOrPx = (v, path, keywords, px, range) =>
+  typeof v === "number"
+    ? check(px(v), path, `must be ${range}, got ${v}`)
+    : check(keywords.includes(v), path, `must be ${keywords.map((k) => JSON.stringify(k)).join(", ")} or ${range}, got ${describe(v)}`);
+const finite = (v, path) => {
+  if (typeof v === "number" && !Number.isFinite(v)) throw new ConfigError(`${path}: expected a finite number, got ${v}`);
+  return v;
+};
 
 /** `user` deep-merged over `def`. Arrays and NULLABLE values replace the default whole. */
 function merge(def, user, path) {
@@ -214,18 +261,19 @@ function merge(def, user, path) {
     for (const key of Object.keys(def)) out[key] = merge(def[key], user[key], path ? `${path}.${key}` : key);
     return out;
   }
+  const key = path.replace(/\[\d+\]/g, "[]"); // the NULLABLE / KEYWORD_OR_PX name of a card's key
   if (def === null) {
-    if (user !== null && kind(user) !== NULLABLE[path])
-      throw new ConfigError(`${path}: expected ${NULLABLE[path]} or null, got ${describe(user)}`);
-    return user;
+    if (user !== null && kind(user) !== NULLABLE[key])
+      throw new ConfigError(`${path}: expected ${NULLABLE[key]} or null, got ${describe(user)}`);
+    return finite(user, path);
   }
   if (Array.isArray(def)) {
     if (!Array.isArray(user)) throw new ConfigError(`${path}: expected an array, got ${describe(user)}`);
     return user;
   }
+  if (KEYWORD_OR_PX.has(key)) return finite(user, path);
   if (typeof user !== typeof def) throw new ConfigError(`${path}: expected ${typeof def}, got ${describe(user)}`);
-  if (typeof def === "number" && !Number.isFinite(user)) throw new ConfigError(`${path}: expected a finite number, got ${user}`);
-  return user;
+  return finite(user, path);
 }
 
 /**
@@ -318,16 +366,21 @@ function glyphSet(value, path) {
 
 /**
  * Deep-merge `user` over DEFAULTS and validate. Relative paths (font.file,
- * tagline.font) resolve against `baseDir`. Nulls with a default are filled in
+ * tagline.font, data) resolve against `baseDir`. Nulls with a default are filled in
  * and paths made absolute in place, so a resolved config resolves to itself.
+ * size.height stays AUTO only with cards: their heights decide it (src/blocks.mjs).
  */
 export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
+  if (isObj(user) && Object.hasOwn(user, "card"))
+    throw new ConfigError('"card" became "cards: [{ ... }]", a list of cards inside the banner: move its keys into an entry ' +
+      'of cards (mode follows from user / repo; card.data is the top-level data)');
   const field = splitField(user);
   const reveal = splitReveal(field.rest);
   const c = merge(DEFAULTS, reveal.rest, "");
 
-  positive(c.size.width, "size.width");
-  positive(c.size.height, "size.height");
+  const s = c.size;
+  positive(s.width, "size.width");
+  keywordOrPx(s.height, "size.height", [AUTO], (v) => v > 0, "px > 0");
   hexColour(c.accent, "accent");
   c.taglines.forEach((line, i) => {
     check(typeof line === "string" && line.trim() !== "", `taglines[${i}]`, `must be a non-empty string, got ${describe(line)}`);
@@ -351,6 +404,14 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   if (t.shadowColor !== null) hexColour(t.shadowColor, "tagline.shadowColor");
   t.color ??= c.accent;
   t.shadowColor ??= t.color;
+  keywordOrPx(t.width, "tagline.width", BLOCK_WIDTHS, (v) => v > 0 && v <= s.width, `px within (0, size.width = ${s.width}]`);
+  // Without cards a px size.height is the pre-cards banner: the header fills it.
+  const fixed = typeof s.height === "number";
+  t.height ??= fixed && c.cards.length === 0 ? s.height : HEADER_HEIGHT;
+  positive(t.height, "tagline.height");
+  if (fixed) check(t.height <= s.height, "tagline.height", `must fit into size.height (${s.height}), got ${t.height}`);
+  // Without cards an auto canvas is the header; with them buildBanner resolves it from their heights.
+  if (!fixed && c.cards.length === 0) s.height = t.height;
 
   const d = c.reveal;
   const at = reveal.path === "decode" ? "decode" : "reveal"; // errors name the key the user wrote
@@ -366,7 +427,9 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   const f = c.field;
   positive(f.fontSize, "field.fontSize");
   positive(f.rowPitch, "field.rowPitch");
-  check(f.rowPitch <= c.size.height, "field.rowPitch", `must fit at least one row into size.height (${c.size.height})`);
+  // An auto canvas with cards is at least their rows plus the bottom margin tall.
+  if (typeof s.height === "number")
+    check(f.rowPitch <= s.height, "field.rowPitch", `must fit at least one row into size.height (${s.height})`);
   nonNeg(f.fps, "field.fps");
   positive(f.loopSeconds, "field.loopSeconds");
   // fps 0 bakes one still frame, so there is no frame count to keep whole.
@@ -433,43 +496,72 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   if (!isBundledFont(t.font)) t.font = abs(t.font);
   t.layout ??= fontDefaults.layout;
   t.shadowGlyphs ??= fontDefaults.shadowGlyphs;
-  checkCard(c.card, abs);
+  check(c.data.trim() !== "", "data", "must be a path to the cards' snapshot, relative to the config");
+  c.data = abs(c.data);
+  c.cards = c.cards.map((card, i) => resolveCard(card, i, f));
   return c;
 }
 
-/** card.*: shape checks; fills show / activity / portrait and resolves data. Which login or repo fetch needs is checked there. */
-function checkCard(k, abs) {
-  oneOf(k.mode, "card.mode", Object.keys(CARD_ROWS));
-  if (k.user !== null) check(/^[A-Za-z0-9-]{1,39}$/.test(k.user), "card.user", `must be a GitHub login, got ${describe(k.user)}`);
-  if (k.repo !== null) check(/^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/.test(k.repo), "card.repo", `must be "owner/name", got ${describe(k.repo)}`);
-  k.rows.forEach((r, i) => {
-    const at = `card.rows[${i}]`;
-    check(Array.isArray(r) && r.length === 2 && r.every((s) => typeof s === "string" && s.trim()), at,
+/**
+ * cards[i] merged over CARD_DEFAULTS and checked; adds mode and fills show,
+ * activity, portrait, period and delay. Which login or repo fetch needs is
+ * checked there; whether the width fits the canvas, by layoutBlocks.
+ */
+function resolveCard(user, i, field) {
+  const path = `cards[${i}]`;
+  const at = (key) => `${path}.${key}`;
+  // A resolved card carries its mode: let it through when it still matches,
+  // so a resolved config resolves to itself.
+  const { mode, ...rest } = isObj(user) ? user : {};
+  const k = merge(CARD_DEFAULTS, isObj(user) ? rest : user, path);
+  check((k.user === null) !== (k.repo === null), path,
+    k.user === null ? 'needs "user" (a GitHub login) or "repo" ("owner/name")' : 'give either "user" or "repo", not both');
+  k.mode = k.user !== null ? "person" : "project";
+  check(mode === undefined || mode === k.mode, at("mode"), `follows from user / repo ("${k.mode}" here); remove it, got ${describe(mode)}`);
+  if (k.user !== null) check(/^[A-Za-z0-9-]{1,39}$/.test(k.user), at("user"), `must be a GitHub login, got ${describe(k.user)}`);
+  if (k.repo !== null) check(/^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/.test(k.repo), at("repo"), `must be "owner/name", got ${describe(k.repo)}`);
+  k.rows.forEach((r, j) => {
+    const p = at(`rows[${j}]`);
+    check(Array.isArray(r) && r.length === 2 && r.every((s) => typeof s === "string" && s.trim()), p,
       `must be a [key, value] pair of non-empty strings, got ${JSON.stringify(r)}`);
-    r.forEach((s) => plainText(s, at));
+    r.forEach((s) => plainText(s, p));
   });
-  if (k.title !== null) plainText(k.title, "card.title");
+  if (k.title !== null) plainText(k.title, at("title"));
   const rows = CARD_ROWS[k.mode];
   if (k.show === null) k.show = [...rows];
-  k.show.forEach((s, i) => oneOf(s, `card.show[${i}]`, rows));
-  check(new Set(k.show).size === k.show.length, "card.show", `names a row twice: ${JSON.stringify(k.show)}`);
+  k.show.forEach((s, j) => oneOf(s, at(`show[${j}]`), rows));
+  check(new Set(k.show).size === k.show.length, at("show"), `names a row twice: ${JSON.stringify(k.show)}`);
   k.activity ??= k.mode === "person" ? "sparkline" : "none";
-  oneOf(k.activity, "card.activity", CARD_ACTIVITIES);
-  check(k.mode === "person" || k.activity === "none", "card.activity", `mode "project" has no contribution activity; use "none", got ${JSON.stringify(k.activity)}`);
-  oneOf(k.intro, "card.intro", CARD_INTROS);
-  positive(k.period, "card.period");
-  oneOf(k.reveal, "card.reveal", CARD_REVEALS);
-  oneOf(k.layout, "card.layout", CARD_LAYOUTS);
-  if (k.ink !== null) hexColour(k.ink, "card.ink");
+  oneOf(k.activity, at("activity"), CARD_ACTIVITIES);
+  check(k.mode === "person" || k.activity === "none", at("activity"), `mode "project" has no contribution activity; use "none", got ${JSON.stringify(k.activity)}`);
+  oneOf(k.layout, at("layout"), CARD_LAYOUTS);
+  if (k.ink !== null) hexColour(k.ink, at("ink"));
   k.portrait ??= k.mode === "person" ? "avatar" : "solid";
-  oneOf(k.portrait, "card.portrait", CARD_PORTRAITS);
-  oneOf(k.avatarColors, "card.avatarColors", CARD_AVATAR_COLORS);
-  check(k.avatarColors === "accent" || k.portrait === "avatar", "card.avatarColors",
-    `colours an avatar, but card.portrait is "${k.portrait}"`);
-  if (k.screen !== null) hexColour(k.screen, "card.screen");
-  check(k.width >= CARD_MIN_WIDTH, "card.width", `must be at least ${CARD_MIN_WIDTH} px, got ${k.width}`);
-  positive(k.textSize, "card.textSize");
-  k.data = abs(k.data);
+  oneOf(k.portrait, at("portrait"), CARD_PORTRAITS);
+  oneOf(k.avatarColors, at("avatarColors"), CARD_AVATAR_COLORS);
+  check(k.avatarColors === "accent" || k.portrait === "avatar", at("avatarColors"),
+    `colours an avatar, but ${at("portrait")} is "${k.portrait}"`);
+  if (k.screen !== null) hexColour(k.screen, at("screen"));
+  positive(k.textSize, at("textSize"));
+  keywordOrPx(k.width, at("width"), BLOCK_WIDTHS, (v) => v >= CARD_MIN_WIDTH, `px >= ${CARD_MIN_WIDTH}`);
+  if (k.at !== null) {
+    const keys = Object.keys(k.at);
+    check(keys.length === 2 && keys.includes("x") && keys.includes("y"), at("at"), `must be { x, y } in px, got ${JSON.stringify(k.at)}`);
+    for (const [key, v] of Object.entries(k.at))
+      check(Number.isFinite(v) && v >= 0, at(`at.${key}`), `must be a number of px >= 0, got ${typeof v === "number" ? v : describe(v)}`);
+    k.at = { x: k.at.x, y: k.at.y };
+  }
+  oneOf(k.backdrop, at("backdrop"), CARD_BACKDROPS);
+  oneOf(k.reveal, at("reveal"), CARD_REVEALS);
+  check(field.preset !== NO_FIELD || !FIELD_REVEALS.includes(k.reveal), at("reveal"),
+    `"${k.reveal}" brings the card out of the field, but field.preset is "${NO_FIELD}"; ` +
+    `use a line reveal: ${LINE_REVEALS.map((r) => JSON.stringify(r)).join(", ")}`);
+  oneOf(k.intro, at("intro"), CARD_INTROS);
+  k.period ??= field.loopSeconds;
+  positive(k.period, at("period"));
+  k.delay ??= Math.round((CARD_DELAY + i * CARD_STAGGER) * MS_PER_S) / MS_PER_S;
+  nonNeg(k.delay, at("delay"));
+  return k;
 }
 
 /** Absolute paths of the font files a resolved config draws with. */
