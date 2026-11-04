@@ -54,6 +54,21 @@ every build, yours or a workflow's, draws the same cards offline. A card is the
 config's `user` or `repo`, so a card added later needs a `fetch` before the
 next `build`, which otherwise names the card it has no data for.
 
+**A card on its own.** Leave out the taglines and the field, and the banner is
+just the card, like a plain card image to put under a banner of its own:
+
+```js
+export default {
+  taglines: [], // no taglines, no header: the cards start at the top
+  field: { preset: "none" }, // no field: no margins, and a line-by-line reveal ("type") by default
+  cards: [{ user: "your-login", reveal: "decode" }],
+};
+```
+
+`docs/examples/card-solo.config.mjs` builds one (880 × 288, 66 KB). With
+`taglines: []` and a field, the cards sit in the field with no header above
+them.
+
 ## Layout
 
 The banner is blocks on the field's grid (columns of `field.fontSize ×
@@ -96,7 +111,7 @@ and need one (with `field.preset: "none"` they are an error):
 
 | `reveal` | The card |
 | --- | --- |
-| `"wave"` (the default) | a front crosses it left to right, bent by the field's own brightness |
+| `"wave"` (the default; `"type"` when there is no field) | a front crosses it left to right, bent by the field's own brightness |
 | `"drops"` | rings spread from drops landing one after another, the first on the portrait |
 | `"crystal"` | scattered cells settle, the field's bright ones first |
 
@@ -236,7 +251,7 @@ Every key of a card, with its default; only `user` or `repo` is required:
 | `width` | `"full"` | `"full"`, `"half"` or px, at least 360 |
 | `at` | `null` | `{ x, y }` px: placed there, out of the rows |
 | `backdrop` | `"window"` | `"window"`, `"dim"` or `"cut"` |
-| `reveal` | `"wave"` | `"wave"`, `"drops"`, `"crystal"` (out of the field) or `"type"`, `"decode"`, `"slide"`, `"glitch"` (line by line) |
+| `reveal` | `null` | `null` = `"wave"`, or `"type"` with no field; `"wave"`, `"drops"`, `"crystal"` (out of the field) or `"type"`, `"decode"`, `"slide"`, `"glitch"` (line by line) |
 | `intro` | `"once"` | `"once"`, `"loop"` or `"none"` |
 | `period` | `null` | s, one cycle of `intro: "loop"`; `null` = `field.loopSeconds` |
 | `delay` | `null` | s, when the intro starts; `null` = 1.2 s, then 0.8 s later for each next card |

@@ -123,7 +123,7 @@ export default {
 };
 ```
 
-`ascii-banner fetch` snapshots GitHub for every card into `banner.data.json` (one GraphQL query per card; public, non-fork repositories only) and `build` draws the cards from it, offline; commit both. Cards are a whole row wide or two side by side, or placed with `at`, and `size.height: "auto"` grows the banner to hold them. The layout, the reveals and backdrops, a project card, two cards side by side and a workflow that fetches and builds daily (in place of the one above) are in [docs/card.md](docs/card.md).
+`ascii-banner fetch` snapshots GitHub for every card into `banner.data.json` (one GraphQL query per card; public, non-fork repositories only) and `build` draws the cards from it, offline; commit both. Cards are a whole row wide or two side by side, or placed with `at`, and `size.height: "auto"` grows the banner to hold them. A config with cards and nothing else (`taglines: []`, `field.preset: "none"`) is a plain card image, for under a banner of its own ([example](docs/examples/card-solo.config.mjs)). The layout, the reveals and backdrops, a project card, two cards side by side and a workflow that fetches and builds daily (in place of the one above) are in [docs/card.md](docs/card.md).
 
 ## Pick a look
 

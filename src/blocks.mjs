@@ -1,7 +1,7 @@
 // Block layout: the header (the taglines over the field, always at the top
 // left) and the cards, which flow after it in rows. Card boxes sit on the
 // field's character grid, so a card's edges line up with the field's cells.
-import { AUTO, CARD_MIN_WIDTH, ConfigError } from "./config.mjs";
+import { AUTO, CARD_MIN_WIDTH, ConfigError, NO_FIELD } from "./config.mjs";
 import { gridRows } from "./field.mjs";
 
 /** Spacing in grid cells: side margins and the gap between blocks in columns; the gap between rows and the bottom margin in rows. */
@@ -36,7 +36,10 @@ export function layoutBlocks(cfg, measure) {
   const t = cfg.tagline;
   const header = { x: 0, y: 0, w: t.width === "full" ? W : t.width === "half" ? Math.round(W / 2 / PX) * PX : t.width, h: t.height };
 
-  const inner = W - 2 * BLOCK.side * PX; // a row's room between the side margins
+  // The side and bottom margins frame the cards in the field; with no field a
+  // card reaches the edges, and cards alone are a plain card image.
+  const M = cfg.field.preset === NO_FIELD ? { ...BLOCK, side: 0, bottom: 0 } : BLOCK;
+  const inner = W - 2 * M.side * PX; // a row's room between the side margins
   const fullCols = Math.floor(inner / PX + EPS);
   const boxes = cfg.cards.map((k, i) => {
     const cols = k.width === "full" ? fullCols
@@ -47,7 +50,7 @@ export function layoutBlocks(cfg, measure) {
       throw new ConfigError(`cards[${i}].width: "${k.width}" is ${clean(w)} px at size.width ${W}; a card needs at least ${CARD_MIN_WIDTH} px`);
     if (k.at === null && cols > fullCols)
       throw new ConfigError(`cards[${i}].width: ${k.width} px is wider than a row, at most ${clean(fullCols * PX)} px ` +
-        `at size.width ${W} (${BLOCK.side}-column side margins); give "full" or place the card with "at"`);
+        `at size.width ${W} (${M.side}-column side margins); give "full" or place the card with "at"`);
     const contentH = measure(i, w);
     if (!(Number.isFinite(contentH) && contentH > 0)) throw new Error(`layoutBlocks: measure(${i}, ${w}) returned ${contentH}`);
     return { x: 0, y: 0, w, h: Math.ceil(contentH / PY - EPS) * PY, contentH, cols };
@@ -65,13 +68,16 @@ export function layoutBlocks(cfg, measure) {
     }
     return rowUp(next);
   };
-  const right = W - BLOCK.side * PX; // a block fits a row while it ends by here
-  let row = { header: true, top: 0, start: Math.ceil(header.w / PX - EPS) * PX, cols: 0, items: [] };
+  const right = W - M.side * PX; // a block fits a row while it ends by here
+  // No header (cards without taglines): the first row starts a bottom margin down, framed like the last.
+  let row = header.h
+    ? { header: true, top: 0, start: Math.ceil(header.w / PX - EPS) * PX, cols: 0, items: [] }
+    : { header: false, top: M.bottom * PY, start: M.side * PX, cols: 0, items: [] };
   boxes.forEach((b, i) => {
     if (cfg.cards[i].at !== null) return;
     let gap = row.items.length ? BLOCK.gapX : 0;
     if (row.start + (row.cols + gap + b.cols) * PX > right + EPS) {
-      row = { header: false, top: close(row), start: BLOCK.side * PX, cols: 0, items: [] };
+      row = { header: false, top: close(row), start: M.side * PX, cols: 0, items: [] };
       gap = 0;
     }
     b.x = row.start + (row.cols + gap) * PX;
@@ -97,7 +103,7 @@ export function layoutBlocks(cfg, measure) {
   });
 
   const bottom = Math.max(header.h, ...boxes.map((b) => b.y + b.h));
-  const H = fixed ? height : boxes.length ? clean(rowUp(bottom) + BLOCK.bottom * PY) : header.h;
+  const H = fixed ? height : boxes.length ? clean(rowUp(bottom) + M.bottom * PY) : header.h;
   if (fixed)
     for (const { box, name } of placed)
       if (box.y + box.h > H + EPS)

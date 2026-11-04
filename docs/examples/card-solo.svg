@@ -1,0 +1,369 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="288" viewBox="0 0 880 288" xml:space="preserve" role="img" aria-label="ASCII field">
+<title>ASCII field</title>
+<style>
+@font-face{font-family:B;src:url(data:font/woff2;base64,d09GMgABAAAAAB0wAA4AAAAAVlAAABzYAAJN0wAAAAAAAAAAAAAAAAAAAAAAAAAAGiIbIBwqBmAAhRYRCAqBj3TmBwE2AiQDiVALhGoABCAFhCYHIBsAPlUGcjsAVFT9bSD7/zqBGzLQGry+AA+KmBDe2KlQjK+qYelRT2Kx7/VV+Vn+YnedY1h57rCLGMtAUJ4FVhhjWF924YrhDsx1xBbx/AhJZn+gbf47wGBRro2EsYFDUCTqjoOTMPAM8CYgYYDRc+W6XaTL1FW6Lvnp9isW5UoKapn2nFQlJoBTol9cKQKaWKTiwg7QpgbYCMXiNhQgxmsjnRFKeMJfVGs2rF2moUe2VVWj/1Xdy+upWNQyTK8NfiosCaSQnnv84pGFinSJNjLA/82pGoG13QCLqOcCsgan5dcunTw6lTlNidwxFtgaF51BhpgAPLz0+YE7hApY0IrVbC79NcYl+b9lZrS/4oxjO88yp4Ail1MkKGKjql+/u7qrVRMlbbfGScG7o40zcho5qqZb61Y7Z7Y28jMzm7X8/FKIFzJghw6fmQE/vu/owaPsAGe3LVuTcHlcNK0BaYQI6OO5z73G0v9ZqPayJ3WMQwnZ4EqIIhCDmvfeP87LAAKgByh/GBo6RCwECwtimGQIBEA3YSIgRyep2RCMAQC6ugAAgGkPNg7aY+v1cl9XAYMJAN0Yk7XFAgDtQ54GYCqXRm4IQwENML0fejKgA8ke2MYD6HZe1Pp7+pdvXXCpIzz7SwPQNiY/gCiB+ueB7vfHALm3GdPUCgh7fzgM/fBJoSgFvHzGmeigY0sxMUNYy220yR633PXYb/72v/ddA0CUBDKYUZx8So2nP9NgFrC+aLbbYXc8mh/8/b0Gga7zoOvkODVOA5g0Fv9jAwD4//pf9t6+zu9ta19NLRlCCCAdgNV7Kb8atrOHIW+1Yv9/bKGTw8iqoJFypUlnQNHIgjHBadmMko8oXqZUJIfsEmWUwMzOKc9794rhB1888dVTnR765JF3LjnrrrcuOu1OERLeIN8XIqEN4I+R4Q10LrbLzX7ugHDq70wsbY1+8sbzBC44VXf41e0CeJFDhhRSD/hNewS/pMiw+jnfxR8BOkrgSn094Xc/eumGV246qNV1Jx1wzQn7i6qvliLr43C8Yh2LW4yjrjpuXxH1hkONKNoRf/nT3/7xv//864NvPnvtvmceu+WjLnjgOz4ubh6FihQr4VWjWpVKFcqVqTXJZFOUWm29bXZZY4Ptdttki7U22mGPdZrttNdmW823wEJzLDLNbHNNhUDG0BsAIDMAQHsAtFcQ8m0w5McAUADW9Qe0mI9+WiwmaxyIhGGKd7aYbkZ1EW0Ixz7eD4FHAHRjGHUAbKCPNK3ZWKzC8BAjOjJCmkIiz4hJY2xaZGNgWTH4FK5z7Fdc2nyK6dB24bB5uYn3NP5epsCdtzZxhXOzaXx7u1nuuS6B1NXI3EtKv/WZzmmD2T1T76oFjcLj2gANjNfP2vj00AyWDovNrbnVrEWLIhCdQ/vO3Epleb2LuPCSiN5E3s8ewQLfxb77HAJu/u2xk+NHvXmInClkY4MwnHM3CceW2osj1sn5lsQiWu6OISlNpiqscdjqMomkM2CXTPGMXRh6NGYLlC8KpcpJCcnMmoBfoShHqtlsqFobJcf5cXZt9sDVrox3SQbNYzxChpRj8xJPug1zOOQOgiYcgG9R81SUcodgCxMFxeysjdFvEYpPclYbwGuiyuNR0TfsgRfYTz1G+QVTJiQIIMubJ5O5KCMdAyhencc+B+STx8ghoQQKGGyGmcS6OqhaHCd5Sh1/z0uo5p1Vo0UG8xMNx8PrVSMPcR+dVUcfVPLsYrTaPJAPbgpWEnn+pB9q2gei39IRfY9FcGQk8k2OF7+Hm0xfVFvEXgY91Qw36l7uFLnHwAy2yVHOv0BTH5H5jod3W4w8udHssd2rHKbRp3jafZgxzC5l/YD9+h4/3Uali3nITbrNTFHsa3b+wdN+T3dP7jGeFSihJkG3x3N5xhbdbmbQILgpQnrOPfSNAZpjNrLEPAIKGRS/Oq4garvPiK3JAg5cIF7X9DKsACbwoPnc7bJHmcsGOTh1tYXvsZDHp3sAoh/MrqXyeTYA+4Rclhn2FjULyNPI59/Y0nMg59xi7opKjgLzRL+amDtnVcYTepLroDFfxwXKfqIjpW6cQF50RQcnXGYIjFqe9dxpZx7dU1lcmtlhh85nosnJtJmeWRrAwRVF+m402NjGTrFD/OafcyUQtu7O42bL4PXV5M78qVpisRQ97IjaDTS3+lp3plhn5LiKiapM17wwcSfyMPfkm//Pxm89D6zpkjG004e/HT5Tktyd61b3ybm7tzO4fKW0HfVqtqdqlTqsyE5Fk21b2LL1SROM28GEQst2LaP7X59CJ2/Zd3dRSt4mxCKsoh2gpnrRbZUosMqlH2+WvU5rfQlCXwSuY6ouuN5x8nV3fV06o6I7/s3kWQG0ipxuNYvJhQFtpNR9aJrOywa7SdrCLsL0O69JfGOYtT1T8LnjPqqjHSdVNZ2Ag1FRoeGpdcVRHlZIDztmcUsqYhg3cwCOB8WtgGL4+VtjH8XL32aLjNVvyoUPf4gMzc+Ud/Viq9XrZMGHcKpW5mE07X4whS2h2JLVlkA5sr5rLqEbfCub4HrWv3qnLPzevaYv0DuocTBI+4q+wV7Mp6x95Y1x2p9n+su9qZmpX4DqrpmjHre8WpfsZ5mX5PCf6nz7rCOiofbcfc47cw/WJR0zUOTH3YnIoSwvLKGacpJhv2+4OR70F124pRh6PU2taROIHjepYLSJNuI3w8hfy27lpkkZuDwUnAbG34vF4jt98l1tUQEzuFjAIoy/Vr66oy7MbBrPK3/d98Fg5HBZT1a/7f9463oa5zhP6cPXpNuPKYnzO8zHl3ygNTnLNdfxwfLAKbvlXh8CpA1+k/vu5fJOXeiOz18GxMMceH7OEwcMc4EX56I5n+Y+8Rq5ul+r2HynBtfZoETwy6wuYxOhDMoEPjfDQRsESpQLhF4W4aRflSjgmuUdKJT1BjIMDeX/BLQOjSyCa5sBiH5OaVU2oBZLmqRIN4ulneSmDtw/5LiW/PoYd79Y+SV1U00TIGghsjM/iA8dKopQ44YcoKSpM+0ki0+JqQJZHuDCxfExVOoTzbSCa5txrUGPN6bZ0a8F0KS4LjBUFvCM4g+SVFeVP7iwwAKL679nujXCL6sViXZG+NS09mXfYRhHBn+1w/lj3x//JbSZodOorSxQg4yVz/YUV6/qLdPjrfVG7QOeUzf07R+9sfWatLmXWpzbPnVyhVr8O2TrilKzR1Tu6JNn3qbbvh+e3aDUrFOmRDfayWKlWhYrxq1RzaeijdWcouM8JIbvydMtmofSJLotTFGgH4gCYJgL4CAXpC+sL70mw0gXhxresC96uNOUbwaaPl++EvZJksfzcr0YXi6eyV28crVEF2R6jM4VC8eo5MRx7rA/jv75ixcublzj6ZkUjluXt37mZFL1CiUybI5MaTXFVCpLP75+hSrFHNwKJVAgQkIZlGOBMuIXzMcSRMQGpPjnaKoacrC+Ofvj8oAGZcxRwbe5LqFgnCk3uC4oSFEB5hBoCibw4JYK+XSDAHk/xxYJWZVRid5InYOLixothyMjQ3RalCYpfTEPAgTWfCKIHAqkSvHQ2CJKUqTGsFEIgqzAQldvNjPOZ2+YmHpzHPlVjFPHqEeiDYB5k4SxdMI8N2Oa14757CXsfBdzlFIFjRiM1wyYigzTyC9kREbSr2tSDSRO98PCn9EgTVJegCvJUqH/Yw7ddXBcFBLvz/Vb6i+dvgf4x80AVlTFSxWt/91F1KWrfz4h2Yl3f9EKqxXkvGMolYHS5PwEch0UNhhupdecR4RBodz8cL5aGWUQQzclAlSU3n5pJAglMiNhMgOR9eCoQ3pn2E4CF9M0moDSvdfCTCC58Il0hE60FGS6zBYC58VYI26o81YUBT0PKHyXMnzuFlBDUfGLyB+ylV7SmpV5aPFovZyL10nkavIUY1KlKQW6pEiM/28z/tAp/3idezx13l/ubMSQdtp+Oz5yQXcJ7aq+d/88Ry3xF47XFlaazJ5fHpkObs3vzdPVHxu26bRZ02ryJA+OOTrz+7inOWNYr/u1vf5Lu/P68i/8sHTBeh4X/9xVpIWF0df2DWz+u54qd56EyJtL34oK4lJH2mvKPDM2j5ZplCIRppQ1SCao9RqZQm9UT4BEpqe20mV0Oc8Dz1DlpFSoRi7XaFRGlSZZaJlytp4G8v1nUopEEicei0tcsIkUV4ZbYzRoYrH1l+wGj38raXrOMXMYJhIc/v1k7msFKdMC362NqUyAz8ZVnuXkf0ddN9v8lOQvCbUtZf7LDF6yKbmJnFl3h55Mb0N9EYUTehSlnxMeTAUXjamHfD8lK9skdbU6zo4t3mX2ZsJUPzXbSILePyNfXiCf4bfkCWgTA6Yk1o9Jr6oMMgQccOcB5R/zY9Vghp5mjltjKct+qBpE78ZaA1ymq7ral+w7+66U94onnWa5KgGWqipTAzMcm/4uGlPnctHbKlrCa1wiJ/RKFZEiXwLbWop2MxYHFI6uc6EuDAp3bbjUra8739E5EhqUqKvo5bOhClWKv1iw+TswZ5LIpjaavL8sV7kXisYmz5otwQmZHNdJZgOf6WusdFHKNC2qMqTIeCPRUxUR2pD0IkKWaLElKFX2BFGulBLiKpEIUwk5O33VkfoQc0Vqwdhq6Jp98i/y2mzgMotKq5z9qH4KmU6pkOsUh4/R5auE/06150942dbHkpzcz9rW8L/tdDuU5rZnSUIT6ASjfyCRkBLqxMKuQUT//oyvXxaaYW2vxlgCOtq3Lx3FCBZw7ldfKS6pejqZTRnZk2ueuq847zcUT/h9MttkYk1u/AO6+r69VrCAe/zBoEHPj7NnM3P7Qg6lj9eSGy+//VkkfGZqtz0tMd6UOUK0m1tan/SuL8VAK7LzPT5H7rg8D60mR5Zg0qSpxWnNPA9v5CUwMVUZikLES/mpZmQCUmdWqrKc5Y5Ndmd5VZr0M96s/SQVozrVChWqu6KtBnuFq6Gro66QZqHiMIlETrhPeaWKwOUSTBpL0Sx1hdCdSbrK7ZsczvIslVlZhyATmik/5UUKMxSRaRK1I7Y+rUT6SduMfwYu0zm6rnhq8frb7sQKEkU21GVNUuoImRBlF1DB2lrzExOEYRpCqdQQGDyd00w212KZRv0mchMqq+0gO+ZAcwu5lp8dL0Ty6FVpSfIcZ6m9zu4sz5Gniatojjx2VlFBXp+4s/Z6GypM0igBvNb/IsORIpNcneUstNZQbpVKkyxBdagdcsi2qQdI5qMTJOS1kBNUWlx5hEHag5wN1YXg9FMrvaufFx8MOBnp3fg29x1MMORmE/+eJQerY3KjdpOgYKcbaNqe7LghWxA3ky1Spas3Z2+Jfh8W+i56qzHlQ8M2hnw25R16W5e6KzfIXVdbMtFbW+PxUOidWCLaXBlyDYYuRc/jchm+Y3A2jGqJ6RpVlrPMEe1lGUoP/WYbPsxcuKmlWTub7smY3RUOVxk57ze6/2FG/nI70d1oJ1SxKS/NY1KiuflFDj7FH1MvV+KoHQYE5XvIVIpNCXjCUk4KGrxyQIMyVa13ZVp4Zk+6elQYazhvpDROlrIgZF7I4jRPdj64tZnpGnwDuWEttbaD7MDDaKHNJIxgOqqrnHbKrlATYglKKF54u+r66iTL2VDd/MUF/X4xew7xtDA2j5UunsbKhj5akXYatXwqIg/0yWZJpxltLLdqvLyiD0w0YeNBeHHo0W6+sl2+6+Jh11n3o90vDPHVt/hu6SX/jONfBzjUYn58i55Nyar9js//zj0my9G3HSgqcSyPXEJJx+pI4DI3mi6YqMCVpElV6FNtWalHt5gjfx3aMyy0R+jyrYf1hJS8Iru8rHjruPGzN5OQm/WafphrGaHQEnIloVdRNFdDrbtwdLUrSVKrTbl0O5WEKGZhfZWTUuh0CqGE7FchI/3wGR65NPvAybzA4opRQufoKljcbFzA3Fs04Pywl4eprcDq8yriFbhOdtU9gxQgZ0cXllcUxtM/Lh6T8MnkJbqEWM9vO0d6WiTR5wWRWIEk2a0h5L4SOZGBmXN0OtJY82nBWfqsgaOpa/eykRnAZeq8IlmBWpfuxrrR5+NWmVSUW5CgRh0boyeT5fl0jellnbrfXiLSHZDgmEhEkUSsZQb7TrajGUaF0kchp1T8g6CtRRK9kYxS2yUityZF7vXKdSnesWXa/ZjDZbJuxrJus5bXEnsT7m9MFpTpBMBdO3xlTMzK4Y835mz7FkH06jgRtTuqP/E8UiIlN2hPunu+ZTfxd0P7Dg0jwn9+/tP1Gwq3n+wWokZCLjcSWGNOI1GUJHFopHwqW1TjUNDauW+TcDxJhGvok9NoREkaHA4WaRPQ/AttiS0/DfQNC00vHRYwttxAhDRmN4bkGhq9A0obrNk08KeWxEcHh/jgy7EdDD1xYughyGLft2Cu6BYnVpY94qia6877oaBfs5zTDMbygYl7HbQc9rXtvzQsjFx3c03rmjNL3Szf7FnCCRmt6cLG1PYNahosaC9bdV5jemtGiyHblSwdXw7cLLcW5wam99qinYjVmmuxidoL27P3Zmu8OZ4vk10aRowwBsYQSzMUJj1+KwJ7eburzzd4y2xpOmeYVDc7M8GbzfFyK5tnqIM5dfuxRnMjevYQ1vKMjeeQw63yve8S1/ZYa4am8uZv5N1emBdtRs0gd5t+NgHsC+IWBXKh37xptiBfCZJDCfblBu4wDjSXGsyu4qyg6YppZJC7GDIpfrcrHyfoB2aUG8mSUkvwtFVH4vnY7V+PBqzqETQqgTcSPdMCXfa2c+ZzbdZyDmSvNu837/vfvjLIRi2ilZwe1VPCg0SrqH1PPEBDgS3OoVxY8MsA3TdCnkLIWEMGbm/vzxcTOeVcIkX++LYgI+vwjOyDMzIrkdpLw6WPptUgcH8RatT3xHquAbqzVI2bi169Nl4ujz2MiI3EImMjqgr2rOephnpNPapJtTYi5iUfGf5IGLAZ4i7m1IoI82fmnw3EG6EjwY6m0baRGm0t1dpe1Mt+T9/bpbR0AgVwKFVRyRFl6Yz7ECN2A7oBNuAwcGZguocb49p3WN6D68TTRt7EWpXcCReuUtRqmhLq7trjJ1GiKupaRquZI1IaKHpm0vdxPPt9/6vwOXPAmWTWbXFLog8b+DBUBqO7Jxt1hh1pB2RFBzg8uWgk9fvq/eC6kiz9oS+RJcS6075wjb5nyXLw0RTZ4njcA3r/HvVPNMXYuGWLB0yI5yaYe9QoVFw97xdAAZxNZSfdml+3WrylDxp7jIcjHtGZjNsWiU6fcXs/cZfDEbsiriutS0yso7nKM8/jgjVvnrmcZ5UMEqLtVoGxHsfrjUZimDbKza/7bWcwuo7mizolPv6chKLKq8MDwsICcJ23SkF0/jjCXH+986hUHgf4lxl4PMPdNyH9+tHpNxwcg4Ez7yKv0DGPWWk/znt3jrf8S4DgQ1NCwpflgkEbyzmB2uMpZZmx41+cKJfQRtXxPo1/wu7S/U+FkDd3DRs6Ju0GldialGQVi4nxBcVSq1BolcrNxk1bBRdns3Eul5hJc/m9Bu7bn2IhVyB6eMlO7iqi39H7Azvvjfw+n70deNmCp7RoJ+7TpuzDNXJG+bZ/nCcjnaf+2VZenuPIP65Tka6TX2VQWK3Wr5AleIsFTfd5VIedgmsQgUWuFwSstwwieIyXpLKOXtY6T7WOtx8FWCtyhiAs29C3VmcZWBKcyTuBrR4suPL87JGI//xcpONl0cvGzBWwCJwQCQZfuTY/4DmbwHJ/5QFlxM9ZEB0tEvy9F89rut8kQv60eBPQ9NUB8xe+OgfXaPCP9eW0GwaPSzyGiKsotkPb68JldGGRQWT95/L5g4QMQxHs/MIvYLiY55B3EfACsjXyEqgdymWaGjtUkHgwErVSqKytyDY8CvRiXn2Rwii3f9mQtyCZQNmqUrShprdlYCKBLjq1IlsjCngJpB0adIRcgamjB5JYP6DhCWdvDOG9cVFemVYcg4XRVBYgkjKq8nKMVzHrqm+Y0IZ2RObLVZgCJbLCyzqyNWQURjFDk6tcvrOxD7MihvvaEUkoVxlqWDLRRwUJX0uSWY1BookUSt/MLnM+D3MF53V4xo+K1FG27JC41jKaYzo2TU+Erj7tZb3KsX7WPybFRnjhPgMrYoa+tiILvirIaiWE07Duk5oJBkyQHyNgVtRPHhddfalnesWlqKHOPlZrVMAwQvSm0VVNOAtXrmSyTKUpz0JXA0yYyWkpFGQYNPeVBaKWyUI34BhjnCNgYoRExcpVCOWbUV0S10ANIYYUi9GrhQG4qkYnIipXcealbiCyteKs9OjAekEi6iZfjdLEDD37xyiv3CzvSHMwF9pSkjvEj7onpkiXkgn7isj29sqNKocElC0is6Jn8KzDxmYJSB+QqSPzyotqsqH2CHNAIf022z/Egk2i8Xw6Ue4Lhfabr/uJX0jgrBJZK6oOgAF4Rs+OOu/NwZzmmAIK6mzkgY+juC4YiFZJWo2XYuAHaFhbUq2Tm9eyxAKTEYAV9ZMy6kQb9BrjmYHoU2gNgAJOEP20qDODhGSNLh7iNd1JkCSZscDJ+yrhz0M577TKxCjUYucKFCMkAlaugiiZzTlaQ2qgBs8GUgKyTmgaahSlkmQRX9s4ozj/cvYII4WypEhmnf+AfloXxcfyi6Cg59DkYjgIn0d7iitJiY2ZkFKbZDaRMPuxkrmq8aIjOT+HtYD4yT4lBF3lyBZvAXi7YUYXbpy06BsUylDnDQ/iB21hcipuRYiIsStouySzdtDlEhBRkopcdoTJ5SQiLhV5+QiTmxSN2a0MRJLnm/7H0N5Kyw8PLaGplY1dBVJJibQj9fQcymjItaTUGXVmdLhjHo3Iyc4zU+7akmyPr8ZWYYqJZy/m1vM2sNkbeXXcxfAkOCksskrNeQ4TvUVEiFMcljQxyR+ZLbUK03msf9nDLl38TFV7Fh5YfNpdMGnbEJLDMktrErEJGyP4vkRp4m7gXsBJM4qRGThOZmAoadaI2T9zOB1s1isO5yV8K99L7QXu7OjM8AgyOpqMCM8EzfSaeZ7yeZcDtA1xAIISTMWUfjbstBcAqyCL9aFyvwIEyn2qwCczJZys3nP9nTIEY0+XPiAH0HbnmLxspNb2dP4Imdh2i9rf9ekv815+PkttnmZUN9cXAoB2/afjg1BHb8X/4N70PwDAT+9FY+GJSqZ3en2r8r4yCvilaAha0P/7YoZ1cl0ONeO9jMzUCopACLb+fPCAQ1sr8Op4HKZqvY226mDWNp4Wu4P+wIFYyAFc53Ow6Gyq6yIrR4ATIrSC6+wGLLrKDHygIBkitVACpc0MUjUhwAQokFrDwA8PoB1uQ4eeikGrjvNfmwSc0LVcO+iwAuaDAhZBJ4DWu8jCwgICzLqX+xsYRC7e2NRTxphubrzHFinwBYqbagXTdtQKdrhAYLo31RizdCPSGcOr4x+BIKUEQ49lkgXXhASJ9XyK0zNN9DhKMIQR9QhZie2TC3RnNhICQpdYvHnIkDEsaQ6b3D65kGldeGoR4oeQLjqzGGpVfDgELboAvn0m/wL/XpshAJl1XIVZAm91AV0dD0K1lXlm2ek02AsR5vReNL0824tO4be9GHjF7BUgu/T3FmhEm+EqVRmrhlexEnWiCCUIhn52BYWRUaHqayZ8Z4gq1EKUpjJDZWRW431fP3DbRph69EvqoIakOC558KtEJMOP9WJeI5uZcRnJHfxyJWaAuEoOee2HexSRCs2B65VxqiHcb6IESeRKUydzmRVvlzzsTjTIxXADr2lx1JBBVPj1Is7EMBOU8KAuNdFogilfQpC0X7F4Ip6iK8CFe1mjez9zXYWEABAAAAA=) format('woff2')}
+text{font-family:B,monospace;text-rendering:optimizeSpeed;font-variant-ligatures:none;white-space:pre;dominant-baseline:central}
+.tg{font-size:0px}
+.tx{fill:#E62D42}.s{fill:rgb(230 45 66 / 0.50)}.nz{fill:rgb(230 45 66 / 0.65)}
+
+
+.st{animation:nk 0.3s steps(6) infinite}
+@keyframes nk{to{transform:translateY(0px)}}
+.c0d{fill:rgb(230 45 66 / 0.42)}.c0m{fill:rgb(230 45 66 / 0.68)}.c0h{fill:rgb(230 45 66 / 0.95)}.c0t1{fill:rgb(230 45 66 / 0.3)}.c0t2{fill:rgb(230 45 66 / 0.6)}.c0t3{fill:rgb(230 45 66 / 0.95)}.c0l0{fill:rgb(230 45 66 / 0.13)}.c0l1{fill:rgb(230 45 66 / 0.32)}.c0l2{fill:rgb(230 45 66 / 0.52)}.c0l3{fill:rgb(230 45 66 / 0.74)}.c0l4{fill:rgb(230 45 66 / 0.95)}
+.c0k{fill:rgb(230 45 66 / 0.95)}.c0v{fill:#7d8590}
+.c0f13{font-size:13px}.c0f4{font-size:4px}
+.c0cg{letter-spacing:3px}
+@keyframes c0sc{0%{opacity:0}100%{opacity:1}}.c0sc{animation:c0sc 0.3s ease-out both}
+@keyframes c0tn{0%{transform:translateY(-241.4px)}100%{transform:none}}.c0tn{animation:c0tn 0.9s steps(57) both}
+@keyframes c0cl{0%{transform:translateX(-574.4px)}100%{transform:none}}.c0cl{animation:c0cl 0.7s steps(53) both}
+@keyframes c0q10{0%{transform:translateX(-626px)}100%{transform:none}}.c0q10{animation:c0q10 0.6s steps(8) both}
+@keyframes c0nf{from,to{opacity:1}}.c0nf{opacity:0;animation:c0nf 0.09s}
+@keyframes c0nv{from,to{opacity:0}}.c0nv{animation:c0nv 0.9s backwards}
+@keyframes c0df{from,to{opacity:1}}.c0df{opacity:0;animation:c0df 0.075s}
+@keyframes c0wv{0%{transform:none}59.091%,100%{transform:translateX(649.12px)}}.c0wv{animation:c0wv 4.4s ease-in-out infinite}
+@keyframes c0_on{from,to{visibility:visible}}.c0_o{visibility:hidden;animation:c0_on 1ms linear forwards}
+@media (prefers-reduced-motion:reduce){g[clip-path],g[clip-path]>g,.st{animation:none}.e{transform:translateX(0px)}.ei{transform:translateX(0px)}.c0sc,.c0tn,.c0cl,.c0q10,.c0nf,.c0nv,.c0df,.c0wv{animation:none!important}.c0_o{animation:none;visibility:visible}}
+</style>
+<defs>
+<mask id="c0p0" maskUnits="userSpaceOnUse" x="0" y="0" width="873.6" height="280"><rect class="c0tn" x="20" y="20" width="240" height="239.4" fill="#fff" style="animation-delay:1.35s"/></mask>
+<mask id="c0p1" maskUnits="userSpaceOnUse" x="0" y="0" width="873.6" height="280"><rect class="c0tn" x="20" y="20" width="240" height="239.4" fill="#fff" style="animation-delay:1.7s"/></mask>
+<mask id="c0p2" maskUnits="userSpaceOnUse" x="0" y="0" width="873.6" height="280"><rect class="c0tn" x="20" y="20" width="240" height="239.4" fill="#fff" style="animation-delay:2.05s"/></mask>
+<mask id="c0tx" maskUnits="userSpaceOnUse" x="0" y="0" width="873.6" height="280"><rect class="c0q10" x="288" y="23.06" width="624" height="21.06" fill="#fff" style="animation-delay:1.35s"/><rect class="c0q10" x="288" y="44.12" width="624" height="21.06" fill="#fff" style="animation-delay:1.53s"/><rect class="c0q10" x="288" y="65.18" width="624" height="21.06" fill="#fff" style="animation-delay:1.71s"/><rect class="c0q10" x="288" y="86.24" width="624" height="21.06" fill="#fff" style="animation-delay:1.89s"/><rect class="c0q10" x="288" y="107.3" width="624" height="21.06" fill="#fff" style="animation-delay:2.07s"/><rect class="c0q10" x="288" y="128.36" width="624" height="21.06" fill="#fff" style="animation-delay:2.25s"/><rect class="c0q10" x="288" y="149.42" width="624" height="21.06" fill="#fff" style="animation-delay:2.43s"/><rect class="c0cl" x="288" y="170.48" width="572.4" height="85.86" fill="#fff" style="animation-delay:2.61s"/></mask>
+<linearGradient id="c0wg"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<mask id="c0wm" maskUnits="userSpaceOnUse" x="0" y="0" width="873.6" height="280"><rect class="c0wv" x="208.28" y="170.48" width="79.72" height="85.86" fill="url(#c0wg)" style="animation-delay:3.93s"/></mask></defs>
+
+<g transform="translate(0 4)"><rect class="c0sc" x="14" y="14" width="252" height="251.4" rx="4" fill="#0d1117" style="animation-delay:1.2s"/>
+<g mask="url(#c0p0)">
+<text x="188" y="22.1" class="c0t1 c0f4">▄▄▄  ▀▀    ▄▀█ ▀ ▄▀ ███▄</text>
+<text x="178.4" y="26.3" class="c0t1 c0f4">▀   █▄█        ▄▀█▀ ▀ ▄▀▄██▄▄</text>
+<text x="188" y="30.5" class="c0t1 c0f4">▄▀█        ▄▀█▀ ▀▄▀▄▀██▀█</text>
+<text x="92" y="34.7" class="c0t1 c0f4">█▀▀▀▀▀  ▀                               █▀█     █   █▀▀█▄▀▄▀█▀██▀█</text>
+<text x="48.8" y="38.9" class="c0t1 c0f4">▀ ▀ ▀ ▀  ▄        ▄        ▄▄▄ ▄                          ▀██▄█▀▀█▀  ▄▀█▄ ▀█▀█▄▀█▀█▄▀▄</text>
+<text x="46.4" y="43.1" class="c0t1 c0f4">▄         ▀       ▄█ ▄ █▀▄▀▄ ▄▄▀▄▄  ▀                  ▄    █▄██ ▄█▀  ▄▀█ █ █▀█▄████ █ ▄</text>
+<text x="46.4" y="47.3" class="c0t1 c0f4">▄        ▄▀  █▀▀ ▄  ▀ ▄▀▄ █ █ █ ▄▄     ▀                   █ █▄  █▄▀  ▄▀█ █ █▄▀▄██▄█▀▄▀ ▄</text>
+<text x="41.6" y="51.5" class="c0t1 c0f4">▄▄█  ▀▀▀        ▄  ▄ ▀ ▄▀▄ █ ▄▀ █ ▀█   ▀ ▄                   █▀▄▀ █▀▄█   ██▄█▀▄▀█▀██▀█▄▀▄▀</text>
+<text x="34.4" y="55.7" class="c0t1 c0f4">▀▄ ▄▄ ▀█         ▀  ▄ ▄▀ ▄▄ ▀▄ █ ▀▄▀▄▀█   ▄                     █▄▀▀ ▄▀▄▀  ▀▄█▄▀█▀█▄███▀█▄▀▄ ▀</text>
+<text x="34.4" y="59.9" class="c0t1 c0f4">▀ █ ▀▄▀▄         ▄▀ ▄▀ █ █ ▀▄▀▄ █ ▄▀ ▀█     ▀                   ▄▀█  ▄▀█▀  ▀██ █ █▀█▄███▀▄▀ ▀▄</text>
+<text x="36.8" y="64.1" class="c0t1 c0f4">▀ ▀▄ ▀  ▀   ▀   ▄▀▄▄▀▄████ ▄ ▀▄ ▀▄▀▄▀█  ▀ ▀ ▀                  ▄▀█ ▄█▀▄▀   ██▄▀█ █▄███▀█▄▀▄▀</text>
+<text x="36.8" y="68.3" class="c0t1 c0f4">▄▀   ▀  ▀  ▄ ▄  █▄▀▄██▄█ ▀█ ▀▄ ▀▄ ▄ ▀█▄ ▀ ▀ ▀                  ▀▀▄ ▀ ▀▄▀  ▀██ █ █▄█▄▀█▀█▄▀ ▄▀</text>
+<text x="36.8" y="72.5" class="c0t1 c0f4">▄ ▀ ▀  ▀ ▄█████ ██▀██▄▀█▄ ▀▄ ▀ ▀ ▀▄▀ █   ▀ ▀                ▀  ▀  ▄  ▄ ▄  ▄██▀██▄█▄████▀▄▀▄ ▄</text>
+<text x="39.2" y="76.7" class="c0t1 c0f4">▄  ▀  ▀   ▀ ▀   ▄ ▀     ▄ ▄▀ ▀▀▄▀ ▄▀▄  ▀ ▀ ▀               ▀  ▀ ▄  ▄  ▄   ██▄▀▄█▄▀█▀█▀█▄▀ ▄</text>
+<text x="36.8" y="80.9" class="c0t1 c0f4">▄  ▀  ▄            ▄ ▀ ▄▀ ▄ ▀ █  ▀▄ ▄▀▀  █ ▀                ▀ ▀▀▄  ▄   ▄  ▀██▄▀▄▀▄████▀█▄▀▄ ▀</text>
+<text x="22.4" y="85.1" class="c0t1 c0f4">▄ █▄  ▄ ▀  ▄  ▄        ▀▄ ▀▄▀ ▄▄ ▀ ▀▄ ▀▄ ▀▄   ▄▀▄ ▀           ▄   ▄█▀█▄ ▄  ▄ ▄  ▀██ █▄▀█▄████▄▀▄ ▄▀</text>
+<text x="20" y="89.3" class="c0t1 c0f4">█ █▄█ ▀█   ▄            ▄▄▀▄▄▀▄▄▄▀ ▀▄ ▀▄ ▀ ▄  ▄ ▀ ▄            ▄▄▄▄▄ ▀███   █ █  ▀███▄██▄████▄█▀▄ ▄</text>
+<text x="20" y="93.5" class="c0t1 c0f4">▄█▄██ ▀█     ▄  ▄       █ █▄▀▀▄▀▄█ ▀ ▄▀  ▀▄ ▄▄ ▄▀ ▄           █ ▀▄ ▀ █▄▀██    ▀ ▄███▄▀▄█▀█████▄█ ▀ ▄</text>
+<text x="20" y="97.7" class="c0t1 c0f4">████▄▀▄█  ▀      ▀█████▄████▀████▄ ▀▄ ▄▀ ▀▄   █ ▄ ▄           █▄▄▄▄▄▄ █ ▀▄ ▀ ▄█ ▀███▀▄▀▄█▀███▄█ █ ▀</text>
+<text x="20" y="101.9" class="c0t1 c0f4">▄▀▄▀██ ▀  ▄ ▀    ▀ ▀ ▀ ▀  ▀▀ ▀  ▄ ▀ ▄  ▀ ▀▄   █ ▄▀            ▄▀▀█ ▄ ▀▀▄▄     ▄   ██▄▀█▄██████▄█ ▄▀</text>
+<text x="22.4" y="106.1" class="c0t1 c0f4">█ ▄█▄▀█      ▄            ▄  ▀ ▄ █  ▀▄▀ ▀ ▄ ▀▄▀▄▀▄▀          ▀▀▄ ▄  █ ▀ ▄ ▀  ▀   ██▄▀█▄█▄████▄▀▄ ▄▀</text>
+<text x="27.2" y="110.3" class="c0t1 c0f4">▀▀█▀▄ ▄▄▄▄ ▄▄ ▄▄ ▄▄ ▄▄▄▀▄▄█▄▄▄█▄▄█▄▄▄█▄█▄▄█▄█▄▀▄▄   ▄   ▄▀▀▄▄▄ ▄ █▀▄▄▄▄ ▄▄▄█   ▀▀▀█████████▀█ ▄ ▄</text>
+<text x="32" y="114.5" class="c0t1 c0f4">█▄▀▄▀▄ ▀ ▀ █▄ ▄ ▄ ▄ ▄ ▄   ▄ ▄▄ ▄ ▄▄▄  ▄ ▄█▄█▀ ▄▄▄  █ ▀ ▄▄█▄▀  ▀ ██▄▀█▀▀█ █▄██ █▄█▄████▀███▀▄</text>
+<text x="36.8" y="118.7" class="c0t1 c0f4">█▄▀▀ ▀██▀ ▀ ▄▄ ▀▄█ ▄ ▀▄ ▄▀▀▀▄▄████▄▄▄ ▄██▄█ ▄▀▀▀  ▄ █████▀█▀ █▀ ▄  ▀ ▄ ▄ ████▄███████████ ▀</text>
+<text x="27.2" y="122.9" class="c0t1 c0f4">▄█ █▀▄ ▀ █ █▄▀  ▄▄ ▄ ▄▄ ▄▀▄ ▄  █ ▀▀▀█▀█▀▀ ▄▄ █▀▄   █ ▄▀ ▄ ▀████▄▄▀ ▄   █ ▄ ▄▄▄████▄█▀██▄▀█████▄</text>
+<text x="22.4" y="127.1" class="c0t1 c0f4">▄  █ ██▄ █▀▄█▀▄ ▀  ▄█ █ ▀ ▄ ▄▀▄  ▀▄     ▀█ ▀ ▀ ▀▀ ▄▀ █▄     ▀      ▄   ▄█▄██▄    ▀█████▄▀████▄█▄▄█▄</text>
+<text x="29.6" y="131.3" class="c0t1 c0f4">█  ▄  ▀▄▀▀▄▀▀▀ ▄▀█▄█▄▄ ▀▄ ▀  ▀▄  ▀ █▄▀▄ ▀▄▀ ▀█▀▀▄ ▄▀▄    █▄        ▄▄█████     █████ █ █▄ ▄▄▄</text>
+<text x="22.4" y="135.5" class="c0t1 c0f4">▄  ▄   ▀  ▀  ▀▀▀  █▀██▄█▄ ▄  ▄▀▀   █▀  ▀ ▀▄ █  ▀█▀█▀█▄▀  █▄ ▄█       ▀▄█▀██▀▄    ██▀██▀▄▀▄▀█ ██ ▀</text>
+<text x="29.6" y="139.7" class="c0t1 c0f4">▄  █    █  ▀ ▄  ▀ █▀   ▄▀ ▄ ▄ ▄▀█▀▄ ▄   ▄▄ ▀▄▄█▀█▄▀ █ ▄ █▀         ▀███▀ █    ██  ██ █ ██ █▄█▀</text>
+<text x="20" y="143.9" class="c0t1 c0f4">▄█▄███ █▄   ▄▀▄ ▀ ▄▄▄▀ ▄█▄  ▄ ▄ ▄ ▄ █▀ █ █▄▄ ▄ ▀█ █▄█▄▀█ ▄              █▀█ ▄█ ▄▄▄██ ▀▄█ █ ██▄▀▄█▄█▄</text>
+<text x="20" y="148.1" class="c0t1 c0f4">██▀███ █▄   ▀█▄▄██ ▀▄ ▄█▀▀ ▄ ▀  ▀ ▄ ▄      ▄█▄  ▄▄▄▄▀▄▀▄▀█            ▄▀▄▀  █    █▄▀  ▄▀▄▀ ██▄▀▄█▄█</text>
+<text x="20" y="152.3" class="c0t1 c0f4">██▀█▄█ █▀ ▄  ▄▀ ███  ▀▀   █▄  █▄█▄▄  ▄▀▄     ▀ ▀ ▀▄▄▀▄ ▄               █ █▀ ▀    ▄█   ▄█ █ █▄▀▀</text>
+<text x="22.4" y="156.5" class="c0t1 c0f4">████▀█▀█▄▄▀▄▄  ▀▄███▀▀    ▀▄  ▀   ▀▀  ▄▀▀▀▀ ▄ ▀ █  █▄▀  ▄ █           ▄▀█ █▄▄  ██▀   ▄█▀▄ █▀</text>
+<text x="20" y="160.7" class="c0t1 c0f4">██▄██▄█▀ ▀▀▀▀▀▄ █▄███▀▀▄    ▀▀▀▀ ▄      █▀▄▀▄  ▀▄▀▄▀ ▄ █                   ▄▀ ▄ ██    ▀█▄   █▄</text>
+<text x="20" y="164.9" class="c0t1 c0f4">▀▀            ▀▄▄▀█  █ ▄█▄█ ▄  ▀█▀ ▀▀ ▀    ▄ ▄▄▄▀ █  ▀  ▄  ▄▄       ▄█████▄▀▄ ▀██     ██ ▀ ▄ ▀</text>
+<text x="56" y="169.1" class="c0t1 c0f4">█ ██ ▀▄  █▄█▀▄█ ▀▄ ▀▄▀  ▀▀▄█▄ █▄█▄    ██ ▀ ▄ █ ▄ ▀  ▄▀  ▄▀  ▀ ▀▄▀█     ▄█▀     ▄</text>
+<text x="60.8" y="173.3" class="c0t1 c0f4">▀▄ ▄▄▀█▄▄▄███▄ ▀▀▄ █ ▄  ▄█▀██▀▀█▄ ▀  █ ▀ ▀  ▀     ▄  ▄    ▀   ▀      ▄▀▄</text>
+<text x="58.4" y="177.5" class="c0t1 c0f4">█ ▄ █ █▀█▀█▄▄██ ▀▄   ██  █ ▄ ▀   ▀▄▄▄   ▀██  ▄  ▄  ▀      ▀    ▀      ▄▀       ▀</text>
+<text x="63.2" y="181.7" class="c0t1 c0f4">█ ▀ ▀▄▄▀▄▄█▄█ ▄ ▀  ▀█▄█▀▄ ██▄  ██▀█ ▀ ▀██  █ ▄ █    ▀   ▀    ██▀▀   ▄█▄▄▄▄</text>
+<text x="60.8" y="185.9" class="c0t1 c0f4">█▄▀█  ▀▀▄▀█▀ ▀  ▄▄█▄▄▀▀██  ▀▀ █▀██▀▀█▄▀▄█▀   █▀█              █ █ ▄▄▄ ▄</text>
+<text x="65.6" y="190.1" class="c0t1 c0f4">▀ ▄  ▀  ▄ ▄ ▄▀ ▄█▀▀█▀▀▀█  ▄ ▀▄      ███▄   █▄██    ▀       ▄▀█▄█▄▄▄▀▀</text>
+<text x="63.2" y="194.3" class="c0t1 c0f4">▄███▄▄▄▄▄▄    ▀█▄▄▄ █ █▀█▄  ▀▄     ▄        ▄███▀▄██       ▄███▄█ ▀ ▀</text>
+<text x="53.6" y="198.5" class="c0t1 c0f4">▄▀ ▄▄▀███▄████████▄█▄▄▀██▀▀███    ▀ ▄       ▀   ▄█▀█▄█▀   ▄▄█▄█▄▀▀    ▀▄▀▀</text>
+<text x="63.2" y="202.7" class="c0t1 c0f4">▀ ████████▄████▀██▀███▄▄▄▄ ▄  ▀    ▄ ▀       █▄    ▄▄▀▀▄ ▄ ▄</text>
+<text x="70.4" y="206.9" class="c0t1 c0f4">▄███████████████████████████▄▄▄▄ ▄    ▀   ▀  ▄ ▀▀        ▀</text>
+<text x="63.2" y="211.1" class="c0t1 c0f4">▀ ▄ ▄  ▀▀▀▀██████▄██████████████████████▄▄▄▄ ▄▄▄▀                   ▀       ▄ ▄▄ ▀</text>
+<text x="63.2" y="215.3" class="c0t1 c0f4">▀   ▄ ▀  ▀ ▄  ▀ ▀▄▀▄▀█▀████▀██████████▀███████▀                              ▀▄ ▀▄</text>
+<text x="29.6" y="219.5" class="c0t1 c0f4">▀▀▄▄         ▀▄  ▀   ▀ ▀ ▄ ▀▄▀ ▄  ▀ ▀ █▀█████▄█▄██▄▀██▄████▄                              ▀▄ ▀▄█</text>
+<text x="39.2" y="223.7" class="c0t1 c0f4">▀▀ ▄▄       ▀ ▀ ▀▄▀▄ ▄ ▄ ▄  ▀ ▄ ▀▄ ▀▄ ▀ ▀▀▀█▀████▄█▄█▄█                               ▀ █ ▄█</text>
+<text x="22.4" y="227.9" class="c0t1 c0f4">▀▀█▀█▀       ▀ ▄▄▄         ▄ ▄▄ ▄ ▄▀   ▄ ▀  ▀▄▀▄▀▄ ▀▄▀▄▀▀█▀██▀                               ▀▄ ▀ █</text>
+<text x="22.4" y="232.1" class="c0t1 c0f4">▄▀                ▀███ █ ▄▄▄   ▄ ▄ ▄ ▀  ▄ ▀ ▀  ▄ ▄▀▀ █ █ █ █                        ▄        ▀ █ ▀</text>
+<text x="22.4" y="236.3" class="c0t1 c0f4">▀           ▄▄ ▀▀      ▄  ▄  ▀▀ ▄▄ ▄ ▀ ▄   ▀ ▄  ▄  ▀▄ ▀ ▀▄▀▄                       ▄         ▀▄ ▀ ▀</text>
+<text x="29.6" y="240.5" class="c0t1 c0f4">▄▄▄▄▄▄▀▀    ▄▄ ▄██▀▀▀▀▀▀▀ ▄▄  ▀▀▀▄▄ ▄ ▀▄▀  ▀  █ ▀▄▀▄▀▄ ▀                                  ▄ ▀▄▀</text>
+<text x="20" y="244.7" class="c0t1 c0f4">▄    ▄ ▀   ▄▄▀▀                ▀ █▄▄▄ ▀▀ ▀   ▀ ▀   █ ▄ ▄ ▀ ▀▄                                 ▄▀ ▄▀</text>
+<text x="22.4" y="248.9" class="c0t1 c0f4">▀▄▄▀  ▄▄▀▀               ▄ ▀   ▄ ██▀▀ ▄  ▀█▄▄  ▄▀▄▄▄ █ ▀▄▀ ▄                                 ▄ ▀▄ ▀</text>
+<text x="20" y="253.1" class="c0t1 c0f4">█▀  ▄ ▀                ▄ ▀   ▄ ▄█▀      ▄▀▄  ▀▀ ▄   ▄▀▄▀█ ▀                                   ▄▀ ▄▀</text>
+<text x="24.8" y="257.3" class="c0t1 c0f4">▄▀                 ▄▀   ▄ █ ▀             ▀ ▄   ▀▀▄▄▀▄ ▀                                    ▄▀ ▄▀</text>
+</g>
+<g mask="url(#c0p1)">
+<text x="20" y="22.1" class="c0t2 c0f4">█ █▀▄████████▀█▄▀█ █ █ █ ▀▄ ▀▄ ▄ ▄ ▄  ▄        ▄ ▄              ▄▀▄▄██ ▀▀█▀  ▀▀█▀▀▄ █▄█▀▄█   ▀█  ▄▀</text>
+<text x="20" y="26.3" class="c0t2 c0f4">▀▄▀█▄▀██████▄▀█▄▀█ █ █▄▄█▄█▄▄▄▄ ▀ ▄ ▄ ▄ ▄ █ ▀  ▄ ▀▄    ▄   ▀  ▄ ▄▀▄▀▀█         █▀▀▄ ▄█▄█▀▄▀  ▀▀▀  ▀▄</text>
+<text x="20" y="30.5" class="c0t2 c0f4">█ █ █▀████▄█▄▀█▄▀▄▀▄▀▄█▀     ▀█ ▀  ▄ ▄▄ ▄ ▀▄ ▀ ▄ ▄   ▄    ▀  ▄  ▄▀█  █        ▄█▀▀▄ ▄█▄▀▄▀▄  ▄ ██ ▀</text>
+<text x="20" y="34.7" class="c0t2 c0f4">▄▀▄▀▄▀███▄█▄▀█▄▀█ █ █ █ ▄    ▀      ▀▀▄▄ ▀ ▄ ▀ ▄  ▀▄     ▀  ▄  ▄ ▀█  █   ▄▄  ▄ ███ ▄▄ ▀▄▀▄    ▄ ██ ▀</text>
+<text x="20" y="38.9" class="c0t2 c0f4">▄▀▄▀▀███▄█▄█▄▀ ▀ ▀ ▀█▀█       ▀      ▄█ ▀▀▀▀▄▄▀  ▀ ▄   ▀  ▄  ▄  ▀▄█  ▀   ▀ ▄▄  █▀▀▄ ▀█▄ ▄ ▀  ▄ ▀▄▀█</text>
+<text x="20" y="43.1" class="c0t2 c0f4">▄▀▄▀▄▀▄█▄▀▄▀█       █▄█    ▄▄   ▀▀          ▀██▄██▄▄▄   ▀  ▄   ▀▄ ▀         ▀  █▀▀▄ █ █ ▄ ▀    █ █▀█</text>
+<text x="20" y="47.3" class="c0t2 c0f4">▄▀▄▀▄▀█▀▄▀█▀█     ▄▄▀ ▀▀                    ▀█████▄█   ▀  ▄  ▀ ▄ ▀█  ▄    ▀▄   █▀▀▄ █ █ ▀▄▀  ▀ ▄▀▄█▀</text>
+<text x="20" y="51.5" class="c0t2 c0f4">▄▀▄▀▄ ██▄▀  ▀                                ███▄█▀█  ▀ ▄  ▄ ▀  ▀▄█▀ ▄   ▄     ███  ▀ ▄▀▄ ▄  ▄ ▀▄▀▄█</text>
+<text x="22.4" y="55.7" class="c0t2 c0f4">█ ▄ ▄▄                                      ███▀███ ▄  ▄ ▄   ▀ ▀▄█▀ ▄   ▄█    █▄▄▀ ▀▄ ▄ ▀   ▄ ▀▄▀█▄</text>
+<text x="20" y="59.9" class="c0t2 c0f4">▄ ▄ ▄ ▄                                      █████▄█   ▄  ▄ ▀  ▀▄ ██     █     █▄▄  █ █ ▄ ▀   ▄▀▄█▄▀</text>
+<text x="22.4" y="64.1" class="c0t2 c0f4">▀▄ ▄▀█                                      ██▄█▄█▄  ▄ ▄  ▄ ▀  █ ██ ▄   █▀    ▄██  ▀▄ █ ▀   ▄ ▀▄▀▄█</text>
+<text x="20" y="68.3" class="c0t2 c0f4">▀▄ ▀ ▄█                        █▄            ▀█▄█▄█▄▄    ▄ ▄  ▀ ▄▀████         ▄█▄  █ █ ▀ ▀  ▄ ▀▄█▀▄</text>
+<text x="20" y="72.5" class="c0t2 c0f4">▄ ▀▄▀▄█                  ▄     ▀▀            ███▄█▄█   ▀  ▄  ▀  █ █▄██         ▄█▀  ▄  ▀ ▀    ▄▀▄▀█▀</text>
+<text x="22.4" y="76.7" class="c0t2 c0f4">█ ▀▄██                                      ██▄█▄█▄▄   ▀   ▀  ▀▄▀█▄██         ▄██  ▀▄▀ ▀▄   ▄ ▀▄█▀█</text>
+<text x="20" y="80.9" class="c0t2 c0f4">▄▀▄▀▄██                                      ▄██ █▄█▄  ▀  ▀ ▀ ▀ ▄▀█▄█▄         ▄█▄  ▀▄▀▄▀    ▄ ▀▄▀█▄</text>
+<text x="20" y="85.1" class="c0t2 c0f4">█▀█ ▀██                                      ██▀▄▀█▄▄   ▀ ▀  ▀  █▄▄▀           ▄█▄  █ ▀▄ ▀    ▀▄▀█▀▄</text>
+<text x="22.4" y="89.3" class="c0t2 c0f4">█ ▀ █▄                                      █▀█▄█▀█▀   ▀  ▀ ▄▀     █          ▄█    ▀  ▀    ▀ ▄▀█▀█</text>
+<text x="20" y="93.5" class="c0t2 c0f4">▀ ▀  █▄                                      ▀█▀▄█▀██   ▀  ▀ ▄         ▄       ▀▀   ▀▄▀ ▄     ▀ █▄█▀</text>
+<text x="29.6" y="97.7" class="c0t2 c0f4">▀▄▀                     ▄                █ █▀█▀██    ▀ ▄   ▀▀    ▀ ▀       █▄    ▀▄▀ ▄   ▀ █ █▄█</text>
+<text x="34.4" y="101.9" class="c0t2 c0f4">█▄                                     █ █▀▄███    ▀            ▄▀       ██   ▀▄ ▀      ▀ █▀▄█</text>
+<text x="32" y="106.1" class="c0t2 c0f4">▀▄                                      ▄▀▄▀▄▀▄▄   ▄ ▀  █▄       █        ██   ▀▄ ▀ ▀    ▀▄▀█▀▄</text>
+<text x="29.6" y="110.3" class="c0t2 c0f4">▄  ▀                                      ▀ ▀▄▀▀█▄▄       ▀      ▄▀        ▀█▄▄▄▄         ▄ █▀█▀</text>
+<text x="29.6" y="114.5" class="c0t2 c0f4">█    ▄ ▄▄▄▄▄                       ▀       ▀ ▄▄      ▄     ▀ ▄ ▄█  ▀     ▀ ▀  █ ▀ ▀        ▄▀███</text>
+<text x="29.6" y="118.7" class="c0t2 c0f4">██     ▀    ▀  ▀▀█▄          ▄▄▀▀    ▀      ▀ █▀▄▄    ▄                         ▀           █▄██</text>
+<text x="32" y="122.9" class="c0t2 c0f4">█       █     ▀▀█▀█▀        ▀ ▀▄▄  ▄ ▄   ▀█  ▀███                               ▀           ▀██</text>
+<text x="32" y="127.1" class="c0t2 c0f4">█      ▀      █▀ █ █            ███         ▄█▀         ▄            ▀  ▀  ▄ ▄           ▀ ▀▀ ▀</text>
+<text x="32" y="131.3" class="c0t2 c0f4">██            ▀▄ ▀ ▀     ▄       ▀                       ▀▄▀   ▀▄          ▀ █</text>
+<text x="32" y="135.5" class="c0t2 c0f4">██             ▄  ▀ ▀    ▀      ▄██▄█▄       ▄            ▀     ▄▄  ▄   ▀   ▄              █</text>
+<text x="20" y="139.7" class="c0t2 c0f4">▀▄▀█ ██      ▄    ▄  ▀ ▄█            ▄▀█ ███     ▀    ▄▄  ▀█ ▄▀      ▄█▄      ▀ ██             ▀</text>
+<text x="20" y="143.9" class="c0t2 c0f4">▀ ▀   █     ▀▄▀▄▄█▀▀                 ▄█ █ ▀▀█         ▄ █   ▀       ▀███ ▄      ▀▀           ▀▄▀ ▀ ▀</text>
+<text x="34.4" y="148.1" class="c0t2 c0f4">█       ▀▀  █▄▀   ▄▄           ▀▀████▀ ▀  ▀ ▀▀▄▀▄▀▄  █▄▀▄▄▄▄▄███▀▄▀▄   ▀ ▄█            ▀▄▀ ▀ █</text>
+<text x="34.4" y="152.3" class="c0t2 c0f4">█               ▄███   ▄         ▀█▀███     ▀▀▄▀█▀▀  █▄ ▄ ▀▄▀████ █   ▄▄▄██▀          ▀▄ █▀▀▄▀</text>
+<text x="72.8" y="156.5" class="c0t2 c0f4">▄█ █▀▄ ██▄███▄▄              ▀ ▀▄▀        ▄ ▀▄███▀▄   ▀                ▄▀ █ █▄</text>
+<text x="36.8" y="160.7" class="c0t2 c0f4">▄    ▄    ▀     ▀▄▀ █ ▄▄▄█▀██▀█                      ▄   ▄ ▀▄███▀█▀█▀                 ▀▄▀▄█▀▄</text>
+<text x="24.8" y="164.9" class="c0t2 c0f4">█▀▀▄ ▄▀▄█▄▀▄▄    █     ▀ ▀      ▀  ▀  ▄                   ▀   ▄ █▄▀        ▀▄               █▄▀█▀█</text>
+<text x="20" y="169.1" class="c0t2 c0f4">▀▄▀▄▀▄▄ █▄▄█▀█▀    █▄  █ ▀ ▄           ▄▄▀             ▀ ▀     ▀                              ▀▀▄▀█▄</text>
+<text x="20" y="173.3" class="c0t2 c0f4">▄▄ ▄▀▄ █ █▄▀█▀██   █▀▀▄  ▀             ██▀ ▄  ▄▄         ▄▄                                    █▄▀▄▀</text>
+<text x="20" y="177.5" class="c0t2 c0f4">▄▀▄▀▄▀▄█ █▄▀█▀▄▀   █   ▄ ▄  ▀          ▄█ █▀ ▄███     █       ▄▄ ▄                              ▄▀▄█</text>
+<text x="22.4" y="181.7" class="c0t2 c0f4">█ ▀▄▀▄ █ ▀▄▀▀▀▀▀  █   ▀  ▀  ▀         ▀ ▄▀   ▀█▄    ▀        █▀█                ▄▄▄▄▄      ▄▄▄ ▀▄ █</text>
+<text x="20" y="185.9" class="c0t2 c0f4">▄ ▄ ▄ ▀ ▀▀▀▀█▀██▀           ▄▀  ▄             ▀                                 █ █▀▀▀█▀▀▀       ▄▀</text>
+<text x="20" y="190.1" class="c0t2 c0f4">█▄█▄▄█ █ ▄▀▄ ▀ ▄▀ ▄              █▀ ▄▄ ▄▄▄                ▀                    ▄ ▀ ▀▀▀▄▄█          ▄</text>
+<text x="20" y="194.3" class="c0t2 c0f4">█▄█▀▄██▀███▄███▄██▀               ▀▀▀█ ▄ ▄                                       ▀ █▄█▄███         ▄</text>
+<text x="20" y="198.5" class="c0t2 c0f4">▄▄ █▀ █▀▄█████▀▄█▀▀▄   ▀                                        ▄ ▀           ▄▄████▄▀▄▄██      ▄ █</text>
+<text x="20" y="202.7" class="c0t2 c0f4">█▄▀█▀▄█▄█ █▀██████▄█        ▀    ▄  ▄                           ▀▀     ▄▄▀█▀█▀████████████▀   ▄ █▄▀█</text>
+<text x="20" y="206.9" class="c0t2 c0f4">▄▀▄▀█▀▄██████████████▀                                              ▄▄████████▄██████████▀█ ▄▀██████</text>
+<text x="20" y="211.1" class="c0t2 c0f4">▄▀▄▀▄▀▄█▀█████████▄█▀█▀██▄▄▄▄                                     ▄▀▀ ▄▀▀▀█▀██▀██▀████▄█▀▄▀▀██▀█▀▀█▄</text>
+<text x="20" y="215.3" class="c0t2 c0f4">▄▀▄▀▄█▀██▀████████▄███▀█▄██▄█▀██▄█▄▀▄▀▄ ▄                       ▄▀▄▀  ▄ ▀ ▀▄▀▀█▀▄███████ ▀▄████▄▀█▄▀</text>
+<text x="20" y="219.5" class="c0t2 c0f4">█▀██▄▄▀▀███▄█████▄▀██▄███▄█▄█▀█▄▀▄█▀██▄█▄█ ▄                   ▀ ▀▄ ▀    ▀ █ █▀▀█▄▀█████ ▀ ▄██▄▀█▄▀</text>
+<text x="20" y="223.7" class="c0t2 c0f4">▄█▄▄▀▀▀█ ▄█▀▀▄██████▄█▄█▄▀▄▀█▀█▀█▀██▄█▀█▄▀█▄▀█▄█▄▄▄ ▄          ██ █ █▀ █ ▀▄█▄█▀█▄█▀█▄█▄▀ ▄▀▄██▄█ █▀</text>
+<text x="20" y="227.9" class="c0t2 c0f4">█ ▄ ▄ ▄██▀▄▀█▀▄█▀▀▀█████████▀█▀▀█▀█▀▄███▀█▄██▄▀▄▀▄▀█▄▀▄▀▄▄ ▄  ▄█ ▀▄▀▄▀▄▀██▄█▄███████████▄ ▄▀██▄▀█▄█</text>
+<text x="20" y="232.1" class="c0t2 c0f4">▄▀▄██▄▀▄▀█▄▀▄█▄▀▄██▄   ▀ ▀▀▀▀███▀█▀█▀█▄██▀█▄█▄██▀█▀▄▄█ █ █ █ ███ ▀ ▄ ▀ ▀▄████████████▀██ ▄▀▀██▄█ █▄█</text>
+<text x="20" y="236.3" class="c0t2 c0f4">▀ ▄███▄▀█▄▀█▄▀▀▀                ▀▀▀█▀█▄█▀███▄█▀██▀██▄▀█▄█▄▀▄▀██▄▀   ▄ ▀ ▄▄ █▀███████▀███ ▄▀███▄▀█▄█▄</text>
+<text x="22.4" y="240.5" class="c0t2 c0f4">█▄█ ▀ ▀▀▀        ▄    ▄ ▄ ▄▄▄       ▀▀█▀█▄▀▄██▄██ █▄▀▄▀▄▀█▄███▄ ▀ ▄  ▀▄ █ █ █▄█▀██████▀ ▄ ███▀█▄▀▄█</text>
+<text x="22.4" y="244.7" class="c0t2 c0f4">████ ▀      ▄▄██▀█▄█▄█▀█▀█▀██▀         ▀▄███▄█▄███ █▀█▀█▄█▄▀██▄▀ ▄  ▀▄ ▄▀▄▀█ █▀██▀█▀█▀█  █▄██▀▄█▀▄█</text>
+<text x="20" y="248.9" class="c0t2 c0f4">█▄▀▀     ▄▄█▀█▄▀██▄█▄█▀█▀█▀▀        ▄▄▄     ▀▀██▀▄▀▀▀█ █▄▀▄█▀██▀▄▀ ▄▀ ▄▄ ▀▄▀▄▀▀█▄▀███████ ▄▀██▀█▄▀█▄</text>
+<text x="32" y="253.1" class="c0t2 c0f4">▄▄▀█ █ █▄▀█ █▄▀▄█▀▀▀        ▄██████▀▄     ▀▀███▀▄▀▄ █▄███▄█▄ ▄ ▀▄ ▀▄▀▄▀▄█▀▄▀█▄█▄█▄█▄ ▄▀██▀▄█▀▄█</text>
+<text x="27.2" y="257.3" class="c0t2 c0f4">▄▀█ █ █ █ ▄▀▄▀▄▀▄█▀       ▄▄█████████████▄▄      ▀▀▄▀█▄█████▀▄▀ ▄ ▄▀ █ █▀▄▀█▀█▀▄█▄█▄▀█▄ ███▀▄█▀▄█</text>
+</g>
+<g mask="url(#c0p2)">
+<text x="22.4" y="22.1" class="c0t3 c0f4">█ ▄▀        ▄ ▀▄ █ █ █ █▄▀█▄▀█▀█▀█▀██▀████████▀█▀██████████████▀▄▀▀  ▀   ▄▄▄▄▄ ▄              ██▀▄█</text>
+<text x="20" y="26.3" class="c0t3 c0f4">▄▀▄ ▀▄      ▀▄ ▀▄ █ █ ▀▀ ▀ ▀▀▀▀█▄█▀█▀█▀█▀█ █▄██▀█▄▀████▀███▄██▀█▀▄ ▄▄    ██████ ▄              ▄██▄▀</text>
+<text x="22.4" y="30.5" class="c0t3 c0f4">█ █ ▄    ▀ ▀▄ ▀▄▀▄▀▄▀ ▄█████▄ █▄██▀█▀▀█▀█▄▀█▄█▀█▀███▀████▄██▀██▀▄ ██    █████▀ ▄                █▄█</text>
+<text x="20" y="34.7" class="c0t3 c0f4">▀▄▀▄▀▄   ▀ ▀▄ ▀▄ █ █ █ █▀████▄ ▄▄▄▄▄▄▄ ▀█▄█▀█▄█▀██▄▀█████▄██▀██▀█▄ ██    ▀▀██▀                    █▄</text>
+<text x="20" y="38.9" class="c0t3 c0f4">▀▄▀▄▄   ▀ ▀  ▄▄▄▄▄▄▄   ███████ ██████▀ ▀    ▀▀▄██▄█▀███▄██▀██▀██▄▀ ██▄          ▄                  █</text>
+<text x="20" y="43.1" class="c0t3 c0f4">▀▄▀▄▀▄▀ ▀▄▀  ███████   ████▀▀▀ ▀                  ▀▀▀███▄██▀███▄▀█ ███     █    ▄</text>
+<text x="20" y="47.3" class="c0t3 c0f4">▀▄▀▄▀▄ ▄▀▄   █████▀▀                                ███▄██▀██▄█▀█▄ ██▀    ▄▀    ▄</text>
+<text x="20" y="51.5" class="c0t3 c0f4">▀▄▀▄▀█  ▀ ▀  ▀                                      ██▄█▀██▀█▄██▄▀ ▄█▀    █</text>
+<text x="20" y="55.7" class="c0t3 c0f4">█ █▀█▀                                              █▀██▀█▀███▄█▄▀ ▄█▀          ▀</text>
+<text x="20" y="59.9" class="c0t3 c0f4">▀█▀█▀█                                              ███▀██▀█▄██▄▀█  ██    █     ▀</text>
+<text x="20" y="64.1" class="c0t3 c0f4">█▄▀█▀▄                                              ██▀█▀██▀█▄██ █  █▀         ▀</text>
+<text x="20" y="68.3" class="c0t3 c0f4">▄▀█▄█▀                                              ▀████▀█▀██▄█▀▄             ▀</text>
+<text x="20" y="72.5" class="c0t3 c0f4">▀█▄▀▄▀                                              ███▄██▀██▄██ █             ▀</text>
+<text x="20" y="76.7" class="c0t3 c0f4">█ █▄▀                                               ▀███▄███▄██▄▀▄             ▀</text>
+<text x="20" y="80.9" class="c0t3 c0f4">▀▄▀▄▀                                               ▀██▄██▄█▄█▄█▀▄             ▀</text>
+<text x="144.8" y="85.1" class="c0t3 c0f4">▀███▄█▄██▄█▀ ▀▀            ▀</text>
+<text x="144.8" y="89.3" class="c0t3 c0f4">▄███▄██▄█▀▄▀▀▀▀▀ ▄         ▀</text>
+<text x="147.2" y="93.5" class="c0t3 c0f4">███▄██▄█▀        ▀        ▄</text>
+<text x="147.2" y="97.7" class="c0t3 c0f4">████▄█▀██   ▀▀▀▀  ▄</text>
+<text x="147.2" y="101.9" class="c0t3 c0f4">████▄████</text>
+<text x="144.8" y="106.1" class="c0t3 c0f4">▀███▀█▄██</text>
+<text x="147.2" y="110.3" class="c0t3 c0f4">▀▀▀███▀                   ▄</text>
+<text x="156.8" y="114.5" class="c0t3 c0f4">▀      ▄ ▄</text>
+<text x="111.2" y="122.9" class="c0t3 c0f4">▄</text>
+<text x="168.8" y="127.1" class="c0t3 c0f4">██████          ██▀█</text>
+<text x="171.2" y="131.3" class="c0t3 c0f4">▀▄███▄         ██▄█</text>
+<text x="171.2" y="135.5" class="c0t3 c0f4">▄█████▀        ███▀</text>
+<text x="20" y="139.7" class="c0t3 c0f4">▄▀▄                                     ▀                     ▄██████▀        ▄█</text>
+<text x="161.6" y="143.9" class="c0t3 c0f4">█▄███████▄         █▀</text>
+<text x="111.2" y="148.1" class="c0t3 c0f4">▄                     ▀▄▀▀▀▀▀          ▄█▀</text>
+<text x="118.4" y="152.3" class="c0t3 c0f4">▄                  ▀█▀█▄▀▄          ▀▀               ▄ ▄▄▀▄</text>
+<text x="77.6" y="156.5" class="c0t3 c0f4">█ ▄                                 ████▀█▄▀                         ▀▄█ █ ▀</text>
+<text x="39.2" y="160.7" class="c0t3 c0f4">▄▄▄▄ ▄          ▀▄█         ▄                       ▀███▀█▄▀   ▄ ▄  ▄                 ▀▄▀ ▄▀</text>
+<text x="20" y="164.9" class="c0t3 c0f4">▄▄ ▄▄▀█▀▄▀ ▀▄▀                                               ███▀█ ▀                           ▀▄ ▄</text>
+<text x="20" y="169.1" class="c0t3 c0f4">▄▀▄▀▄▀▀█ ▀▀ ▄ ▄                                              █▀                                ▄▀▄ ▀</text>
+<text x="20" y="173.3" class="c0t3 c0f4">▀▀█▀▄▀█ █ ▀▄ ▄                                                                                  ▀▄▀▄</text>
+<text x="20" y="177.5" class="c0t3 c0f4">▀▄▀▄▀▄▀ █ ▀▄ ▄▀▄                       ▀                                                        ▀▄▀</text>
+<text x="20" y="181.7" class="c0t3 c0f4">█ █▄▀▄▀█ █▄▀▄▄▄▄▄                               ▀                                              ▄▄▀█</text>
+<text x="20" y="185.9" class="c0t3 c0f4">▀█▀█▀█▄█▄▄▄▄ ▄  ▄                                                                       ▄▄███████▀▄█</text>
+<text x="22.4" y="190.1" class="c0t3 c0f4">▀ ▀▀ █ █▀▄▀█▄█▀▄█                                                                       ██████████▀</text>
+<text x="22.4" y="194.3" class="c0t3 c0f4">▀ ▄▀  ▄   ▀   ▀                       ▀                                                  █████████▀</text>
+<text x="20" y="198.5" class="c0t3 c0f4">▀▀█ ▄█ ▄▀                                                                                 ██████▀█ █</text>
+<text x="22.4" y="202.7" class="c0t3 c0f4">▀▄ ▄▀ ▀ █ ▄                                                                              ▄███▀█ ▀▄</text>
+<text x="20" y="206.9" class="c0t3 c0f4">▀▄▀▄ ▄▀                                                                                  ▄ █▀▄</text>
+<text x="20" y="211.1" class="c0t3 c0f4">▀▄▀▄▀▄▀ ▄                                                          ▄▄█▀▄▄▄ ▄  ▄  ▄      ▄▀▄▄</text>
+<text x="20" y="215.3" class="c0t3 c0f4">▀▄▀▄▀ ▄  ▄                                                       ▄▀▄██▀█▄█▄▀▄▄ ▄▀       █▄▀</text>
+<text x="22.4" y="219.5" class="c0t3 c0f4">▄         ▀                                                    █▄▀█▄████▄█ █ ▄▄ ▀▄     █▄█▀</text>
+<text x="20" y="223.7" class="c0t3 c0f4">▀ ▀▀▄▄▄ ▄    ▀                                                   █ █ ▄█ █▄▀ ▀ ▄ ▀ ▄ ▀ ▀▄█▀▄▀</text>
+<text x="22.4" y="227.9" class="c0t3 c0f4">▄       ▄▀▄ ▄                                                  █▄▀▄▀▄▀▄  ▀ ▀           ▀█▀▄</text>
+<text x="20" y="232.1" class="c0t3 c0f4">▀    ▀▄▀▄ ▀▄▀ ▀▄▀                                               █▄█▀█▄█▄▀               █▀▄▄</text>
+<text x="20" y="236.3" class="c0t3 c0f4">▄▄▀   ▀▄ ▀▄ ▀                                                  ▀▄███▀█▄█▀▀█ ▄           █▀▄</text>
+<text x="20" y="240.5" class="c0t3 c0f4">█ ▀ ▀ ▀               ▄ ▄ ▄                                    ▀█▄█▀██▄▀█ █ █ ▀ ▄      ▄█▀█</text>
+<text x="20" y="244.7" class="c0t3 c0f4">▀    ▀           ▄ ▀ ▀ ▄ ▄ ▄                                   ▀▄█▀██▄▀█▀▄▀▄ █ ▄  ▄ ▄ ▄ ██ ▀</text>
+<text x="48.8" y="248.9" class="c0t3 c0f4">▄ ▀▄  ▀ ▀ ▄ ▄                                      ▄▀▄█▀▄█▀▀█▄▀▄▀▄▄ ▀▄       █▀▄</text>
+<text x="36.8" y="253.1" class="c0t3 c0f4">▄ █ █ ▀▄ █ ▀▄▀ ▄                                       ▀ ▀█▀█▄▀█▄▀▄▀▄▀ ▄▀▄ ▀ ▀ ▀ ▀█▀▄</text>
+<text x="29.6" y="257.3" class="c0t3 c0f4">▄ █ █ █ █▀▄▀▄▀▄▀                                           ▄▀▄█▀█▀▄█ █ ▄▀▄ ▄ ▄▀ ▀ ▀▄ ▀█</text>
+</g>
+<g mask="url(#c0tx)">
+<text x="288" y="33.59" class="c0h c0f13">[HARTE]</text>
+<text x="350.4" y="33.59" class="c0v c0f13">hartestarke@github</text>
+<text x="498.6" y="33.59" class="c0d c0f13">──────────────────────────────────────────────</text>
+<text x="288" y="54.65" class="c0k c0f13">role</text>
+<text x="327" y="54.65" class="c0d c0f13">··················································</text>
+<text x="724.8" y="54.65" class="c0v c0f13">software engineer</text>
+<text x="288" y="75.71" class="c0k c0f13">focus</text>
+<text x="334.8" y="75.71" class="c0d c0f13">·························</text>
+<text x="537.6" y="75.71" class="c0v c0f13">backend · distributed systems · AI agents</text>
+<text x="288" y="96.77" class="c0k c0f13">uptime</text>
+<text x="342.6" y="96.77" class="c0d c0f13">····························································</text>
+<text x="818.4" y="96.77" class="c0v c0f13">2y 8m</text>
+<text x="288" y="117.83" class="c0k c0f13">repos</text>
+<text x="334.8" y="117.83" class="c0d c0f13">····························</text>
+<text x="576.6" y="117.83" class="c0v c0f13">public repos · 0 stars ·   followers</text>
+<text x="561" y="117.83" class="c0v c0nv c0f13" style="animation-delay:2.67s">2</text>
+<text x="561" y="117.83" class="c0v c0nf c0f13" style="animation-delay:2.67s">0</text>
+<text x="561" y="117.83" class="c0v c0nf c0f13" style="animation-delay:2.76s">1</text>
+<text x="561" y="117.83" class="c0v c0nf c0f13" style="animation-delay:2.85s">1</text>
+<text x="561" y="117.83" class="c0v c0nf c0f13" style="animation-delay:2.94s">1</text>
+<text x="561" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.03s">2</text>
+<text x="561" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.12s">2</text>
+<text x="561" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.21s">2</text>
+<text x="561" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.3s">2</text>
+<text x="561" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.39s">2</text>
+<text x="561" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.48s">2</text>
+<text x="771.6" y="117.83" class="c0v c0nv c0f13" style="animation-delay:2.67s">5</text>
+<text x="771.6" y="117.83" class="c0v c0nf c0f13" style="animation-delay:2.67s">0</text>
+<text x="771.6" y="117.83" class="c0v c0nf c0f13" style="animation-delay:2.76s">1</text>
+<text x="771.6" y="117.83" class="c0v c0nf c0f13" style="animation-delay:2.85s">2</text>
+<text x="771.6" y="117.83" class="c0v c0nf c0f13" style="animation-delay:2.94s">3</text>
+<text x="771.6" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.03s">4</text>
+<text x="771.6" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.12s">4</text>
+<text x="771.6" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.21s">5</text>
+<text x="771.6" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.3s">5</text>
+<text x="771.6" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.39s">5</text>
+<text x="771.6" y="117.83" class="c0v c0nf c0f13" style="animation-delay:3.48s">5</text>
+<text x="288" y="138.89" class="c0k c0f13">languages</text>
+<text x="366" y="138.89" class="c0d c0f13">···············································</text>
+<text x="740.4" y="138.89" class="c0v c0f13">JavaScript 100%</text>
+<text x="288" y="159.95" class="c0k c0f13">contributions</text>
+<text x="397.2" y="159.95" class="c0d c0f13">····································</text>
+<text x="732.6" y="159.95" class="c0v c0f13">in the last year</text>
+<text x="685.8" y="159.95" class="c0v c0nv c0f13" style="animation-delay:3.03s">2,268</text>
+<text x="717" y="159.95" class="c0v c0nf c0f13" style="animation-delay:3.03s">0</text>
+<text x="701.4" y="159.95" class="c0v c0nf c0f13" style="animation-delay:3.12s">615</text>
+<text x="685.8" y="159.95" class="c0v c0nf c0f13" style="animation-delay:3.21s">1,107</text>
+<text x="685.8" y="159.95" class="c0v c0nf c0f13" style="animation-delay:3.3s">1,490</text>
+<text x="685.8" y="159.95" class="c0v c0nf c0f13" style="animation-delay:3.39s">1,778</text>
+<text x="685.8" y="159.95" class="c0v c0nf c0f13" style="animation-delay:3.48s">1,985</text>
+<text x="685.8" y="159.95" class="c0v c0nf c0f13" style="animation-delay:3.57s">2,123</text>
+<text x="685.8" y="159.95" class="c0v c0nf c0f13" style="animation-delay:3.66s">2,207</text>
+<text x="685.8" y="159.95" class="c0v c0nf c0f13" style="animation-delay:3.75s">2,250</text>
+<text x="685.8" y="159.95" class="c0v c0nf c0f13" style="animation-delay:3.84s">2,266</text>
+<text x="288" y="181.01" class="c0l0 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ ■■ ■    ■</text>
+<text x="741.6" y="181.01" class="c0l1 c0cg c0f13">■  ■ ■ ■</text>
+<text x="828" y="181.01" class="c0l3 c0cg c0f13">■ ■</text>
+<text x="806.4" y="181.01" class="c0l4 c0cg c0f13">■</text>
+<text x="288" y="191.81" class="c0l0 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■ ■■■■ ■■■■■  ■ ■</text>
+<text x="558" y="191.81" class="c0l1 c0cg c0f13">■    ■     ■■ ■ ■■■ ■ ■   ■■</text>
+<text x="763.2" y="191.81" class="c0l2 c0cg c0f13">■   ■ ■</text>
+<text x="784.8" y="191.81" class="c0l3 c0cg c0f13">■</text>
+<text x="817.2" y="191.81" class="c0l4 c0cg c0f13">■</text>
+<text x="288" y="202.61" class="c0l0 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■ ■■■■ ■■■■■■     ■</text>
+<text x="558" y="202.61" class="c0l1 c0cg c0f13">■    ■      ■■■■■ ■■■■■ ■</text>
+<text x="806.4" y="202.61" class="c0l2 c0cg c0f13">■ ■■</text>
+<text x="288" y="213.41" class="c0l0 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■■  ■  ■■■■■ ■</text>
+<text x="568.8" y="213.41" class="c0l1 c0cg c0f13">■■ ■■     ■ ■■■■■■■ ■■ ■■</text>
+<text x="774" y="213.41" class="c0l2 c0cg c0f13">■  ■  ■</text>
+<text x="288" y="224.21" class="c0l0 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■ ■■ ■■ ■■■■■■■■</text>
+<text x="525.6" y="224.21" class="c0l1 c0cg c0f13">■  ■  ■        ■■■■■■■■ ■   ■■</text>
+<text x="774" y="224.21" class="c0l2 c0cg c0f13">■ ■ ■</text>
+<text x="806.4" y="224.21" class="c0l3 c0cg c0f13">■</text>
+<text x="288" y="235.01" class="c0l0 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■     ■■■■■■■      ■</text>
+<text x="558" y="235.01" class="c0l1 c0cg c0f13">■■■■■       ■■■■■  ■■■■  ■■</text>
+<text x="741.6" y="235.01" class="c0l2 c0cg c0f13">■      ■</text>
+<text x="806.4" y="235.01" class="c0l3 c0cg c0f13">■</text>
+<text x="288" y="245.81" class="c0l0 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ ■</text>
+<text x="730.8" y="245.81" class="c0l1 c0cg c0f13">■ ■■■■■■  ■</text>
+<text x="828" y="245.81" class="c0l2 c0cg c0f13">■</text>
+<text x="817.2" y="245.81" class="c0l3 c0cg c0f13">■</text>
+<g mask="url(#c0wm)">
+<text x="288" y="181.01" class="c0l2 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ ■■ ■    ■</text>
+<text x="741.6" y="181.01" class="c0l3 c0cg c0f13">■  ■ ■ ■</text>
+<text x="806.4" y="181.01" class="c0l4 c0cg c0f13">■ ■ ■</text>
+<text x="288" y="191.81" class="c0l2 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■ ■■■■ ■■■■■  ■ ■</text>
+<text x="558" y="191.81" class="c0l3 c0cg c0f13">■    ■     ■■ ■ ■■■ ■ ■   ■■</text>
+<text x="763.2" y="191.81" class="c0l4 c0cg c0f13">■ ■ ■■■</text>
+<text x="288" y="202.61" class="c0l2 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■ ■■■■ ■■■■■■     ■</text>
+<text x="558" y="202.61" class="c0l3 c0cg c0f13">■    ■      ■■■■■ ■■■■■ ■</text>
+<text x="806.4" y="202.61" class="c0l4 c0cg c0f13">■ ■■</text>
+<text x="288" y="213.41" class="c0l2 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■■  ■  ■■■■■ ■</text>
+<text x="568.8" y="213.41" class="c0l3 c0cg c0f13">■■ ■■     ■ ■■■■■■■ ■■ ■■</text>
+<text x="774" y="213.41" class="c0l4 c0cg c0f13">■  ■  ■</text>
+<text x="288" y="224.21" class="c0l2 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■ ■■ ■■ ■■■■■■■■</text>
+<text x="525.6" y="224.21" class="c0l3 c0cg c0f13">■  ■  ■        ■■■■■■■■ ■   ■■</text>
+<text x="774" y="224.21" class="c0l4 c0cg c0f13">■ ■■■</text>
+<text x="288" y="235.01" class="c0l2 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■     ■■■■■■■      ■</text>
+<text x="558" y="235.01" class="c0l3 c0cg c0f13">■■■■■       ■■■■■  ■■■■  ■■</text>
+<text x="741.6" y="235.01" class="c0l4 c0cg c0f13">■     ■■</text>
+<text x="288" y="245.81" class="c0l2 c0cg c0f13">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ ■</text>
+<text x="730.8" y="245.81" class="c0l3 c0cg c0f13">■ ■■■■■■  ■</text>
+<text x="817.2" y="245.81" class="c0l4 c0cg c0f13">■■</text>
+</g>
+</g>
+<text x="288" y="33.59" class="c0m c0df c0f13" style="animation-delay:1.35s">^=0&gt;&amp;@/ ~?46b-%}&amp;_&lt;!@{6b49</text>
+<text x="366" y="33.59" class="c0m c0df c0f13" style="animation-delay:1.425s">&lt;_&amp;}&gt;_@6e^+=/0@5</text>
+<text x="444" y="33.59" class="c0m c0df c0f13" style="animation-delay:1.5s">b1=0%#</text>
+<text x="288" y="54.65" class="c0m c0df c0f13" style="animation-delay:1.53s">0~9&amp;                                                    f202~&amp;_7 +400*&amp;49</text>
+<text x="724.8" y="54.65" class="c0m c0df c0f13" style="animation-delay:1.605s">]}%47?/[ ~&gt;-&lt;a?1]</text>
+<text x="724.8" y="54.65" class="c0m c0df c0f13" style="animation-delay:1.68s">654ae[&amp;9 83$5=?4!</text>
+<text x="724.8" y="54.65" class="c0m c0df c0f13" style="animation-delay:1.755s">_}?3]05[ e7{~}%d@</text>
+<text x="724.8" y="54.65" class="c0m c0df c0f13" style="animation-delay:1.83s">bb&gt;_ae9$ f={&lt;e+01</text>
+<text x="724.8" y="54.65" class="c0m c0df c0f13" style="animation-delay:1.905s">$=c#/+%] [_c98d3[</text>
+<text x="756" y="54.65" class="c0m c0df c0f13" style="animation-delay:1.98s">1f#] a[7291~7</text>
+<text x="834" y="54.65" class="c0m c0df c0f13" style="animation-delay:2.055s">9?&lt;</text>
+<text x="288" y="75.71" class="c0m c0df c0f13" style="animation-delay:1.71s">b$[a_                           1_98d?$ 7 a@-9f{b^*a9 $d9~/7^ = %6 f-c$5[</text>
+<text x="537.6" y="75.71" class="c0m c0df c0f13" style="animation-delay:1.785s">11&amp;0_-4 &amp; -8dd0&lt;d}f[~ 64a{61^ &amp; f&lt; %4-b#}</text>
+<text x="537.6" y="75.71" class="c0m c0df c0f13" style="animation-delay:1.86s">b4&amp;-_]- f 2/}2%$+be4^ 2}=#1c! 8 b8 3#38&gt;[</text>
+<text x="537.6" y="75.71" class="c0m c0df c0f13" style="animation-delay:1.935s">[[]6&gt;4$ 2 9&lt;0%+!=+c@3 -/]]2&amp;3 # a] %]b&gt;5&gt;</text>
+<text x="600" y="75.71" class="c0m c0df c0f13" style="animation-delay:2.01s">[ #0=!&lt;dfc57~ &gt;2%^#9d / f7 813**e</text>
+<text x="678" y="75.71" class="c0m c0df c0f13" style="animation-delay:2.085s">f&amp;d e&lt;f{8+= ^ +0 _!eb&gt;+</text>
+<text x="756" y="75.71" class="c0m c0df c0f13" style="animation-delay:2.16s">4 2 d2 bc_&gt;3@</text>
+<text x="834" y="75.71" class="c0m c0df c0f13" style="animation-delay:2.235s">~b}</text>
+<text x="288" y="96.77" class="c0m c0df c0f13" style="animation-delay:1.89s">=~&amp;4$[                                                              !5 &amp;?</text>
+<text x="818.4" y="96.77" class="c0m c0df c0f13" style="animation-delay:1.965s">7d -a</text>
+<text x="818.4" y="96.77" class="c0m c0df c0f13" style="animation-delay:2.04s">+} &gt;*</text>
+<text x="818.4" y="96.77" class="c0m c0df c0f13" style="animation-delay:2.115s">!$ /}</text>
+<text x="818.4" y="96.77" class="c0m c0df c0f13" style="animation-delay:2.19s">~f 2%</text>
+<text x="818.4" y="96.77" class="c0m c0df c0f13" style="animation-delay:2.265s">7e 1c</text>
+<text x="818.4" y="96.77" class="c0m c0df c0f13" style="animation-delay:2.34s">~^ }$</text>
+<text x="841.8" y="96.77" class="c0m c0df c0f13" style="animation-delay:2.415s">!$</text>
+<text x="288" y="117.83" class="c0m c0df c0f13" style="animation-delay:2.07s">~&lt;^&amp;3                                $32c#e }${f# ] % ]$6&gt;} 9   ]$?7=[&gt;[6</text>
+<text x="576.6" y="117.83" class="c0m c0df c0f13" style="animation-delay:2.145s">##2*&lt;f a@e1$ + 4 [%d[0 9   @42$6{+]&gt;</text>
+<text x="576.6" y="117.83" class="c0m c0df c0f13" style="animation-delay:2.22s">&amp;6%~{% /c[&lt;^ a + a2=~b %   &amp;c3}@%4={</text>
+<text x="576.6" y="117.83" class="c0m c0df c0f13" style="animation-delay:2.295s">@77e^[ &amp;8de5 ! # +~~@} 4   9+}!d}0$8</text>
+<text x="600" y="117.83" class="c0m c0df c0f13" style="animation-delay:2.37s">e_# ^1&amp;08 4 a 02@3&amp; 6   c!@f/b4!a</text>
+<text x="678" y="117.83" class="c0m c0df c0f13" style="animation-delay:2.445s">a { *{-e@ c   3+!3-&lt;_0]</text>
+<text x="756" y="117.83" class="c0m c0df c0f13" style="animation-delay:2.52s">1   7e83/c{fa</text>
+<text x="834" y="117.83" class="c0m c0df c0f13" style="animation-delay:2.595s">-$3</text>
+<text x="288" y="138.89" class="c0m c0df c0f13" style="animation-delay:2.25s">[*=$4+b&lt;$                                                 c4@]~?13-&lt; $3&amp;&amp;</text>
+<text x="740.4" y="138.89" class="c0m c0df c0f13" style="animation-delay:2.325s">4{#c!&gt;?~$1 /#-9</text>
+<text x="740.4" y="138.89" class="c0m c0df c0f13" style="animation-delay:2.4s">0c0}-_2-f/ 8[6a</text>
+<text x="740.4" y="138.89" class="c0m c0df c0f13" style="animation-delay:2.475s">-d}&gt;_3#771 -2^3</text>
+<text x="740.4" y="138.89" class="c0m c0df c0f13" style="animation-delay:2.55s">[157=*_+%* &gt;~62</text>
+<text x="740.4" y="138.89" class="c0m c0df c0f13" style="animation-delay:2.625s">{c!~&gt;#[]f- bc=d</text>
+<text x="756" y="138.89" class="c0m c0df c0f13" style="animation-delay:2.7s">3&amp;^4#0[! %b0&amp;</text>
+<text x="834" y="138.89" class="c0m c0df c0f13" style="animation-delay:2.775s">6++</text>
+<text x="288" y="159.95" class="c0m c0df c0f13" style="animation-delay:2.43s">8@cd8^6~*be$5                                            5= &lt;78 &lt;/a! #b70</text>
+<text x="366" y="159.95" class="c0m c0df c0f13" style="animation-delay:2.505s">[}a                                            _4 ~&amp;# 5~d3 }4b8</text>
+<text x="732.6" y="159.95" class="c0m c0df c0f13" style="animation-delay:2.58s">_d }3&gt; &gt;5$&lt; c-c=</text>
+<text x="732.6" y="159.95" class="c0m c0df c0f13" style="animation-delay:2.655s">a0 +/= fed_ [d/-</text>
+<text x="732.6" y="159.95" class="c0m c0df c0f13" style="animation-delay:2.73s">=] 1b* _^d&gt; @&gt;^$</text>
+<text x="732.6" y="159.95" class="c0m c0df c0f13" style="animation-delay:2.805s">2= $*6 ]^&amp;$ -*27</text>
+<text x="756" y="159.95" class="c0m c0df c0f13" style="animation-delay:2.88s">]3_ &lt;b#~ @&lt;96</text>
+<text x="834" y="159.95" class="c0m c0df c0f13" style="animation-delay:2.955s">&amp;*#</text></g>
+</svg>

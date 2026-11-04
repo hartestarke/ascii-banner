@@ -50,7 +50,8 @@ export const DEFAULTS = {
     layout: null, // one of LAYOUTS; null = the font's default
     shadowGlyphs: null, // figlet glyphs drawn at shadowAlpha; null = the font's default
     width: "full", // the header block: "full", "half" or px
-    // px; null = HEADER_HEIGHT, or the whole canvas when there are no cards and size.height is px
+    // px; null = HEADER_HEIGHT, or the whole canvas when there are no cards and size.height is px,
+    // or 0 (no header) when there are cards and no taglines
     height: null,
   },
   reveal: {
@@ -136,7 +137,8 @@ export const CARD_DEFAULTS = {
   backdrop: "window",
   // How the card comes in: "wave", "drops" or "crystal" (out of the field, as
   // a whole), or line by line: "type" (at a cursor), "decode" (out of noise), "slide" or "glitch".
-  reveal: "wave",
+  // null = "wave", or "type" when there is no field to come out of.
+  reveal: null,
   intro: "once", // "once", "loop" (again every `period` s) or "none" (still, shown from the start)
   period: null, // s, one cycle of intro "loop"; null = field.loopSeconds
   delay: null, // s, when the intro starts; null = CARD_DELAY + CARD_STAGGER × the card's index
@@ -203,6 +205,7 @@ const NULLABLE = {
   "cards[].at": "object",
   "cards[].period": "number",
   "cards[].delay": "number",
+  "cards[].reveal": "string",
   "tagline.height": "number",
   "tagline.layout": "string",
   "tagline.shadowGlyphs": "string",
@@ -411,8 +414,10 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   keywordOrPx(t.width, "tagline.width", BLOCK_WIDTHS, (v) => v > 0 && v <= s.width, `px within (0, size.width = ${s.width}]`);
   // Without cards a px size.height is the pre-cards banner: the header fills it.
   const fixed = typeof s.height === "number";
-  t.height ??= fixed && c.cards.length === 0 ? s.height : HEADER_HEIGHT;
-  positive(t.height, "tagline.height");
+  // Cards without taglines have no header: they start at the top.
+  const headless = c.taglines.length === 0 && c.cards.length > 0;
+  t.height ??= headless ? 0 : fixed && c.cards.length === 0 ? s.height : HEADER_HEIGHT;
+  (headless ? nonNeg : positive)(t.height, "tagline.height");
   if (fixed) check(t.height <= s.height, "tagline.height", `must fit into size.height (${s.height}), got ${t.height}`);
   // Without cards an auto canvas is the header; with them buildBanner resolves it from their heights.
   if (!fixed && c.cards.length === 0) s.height = t.height;
@@ -446,8 +451,8 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   unit(f.alpha.hi, "field.alpha.hi");
   const fieldNames = [...Object.keys(FIELD_PRESETS), NO_FIELD];
   check(fieldNames.includes(f.preset), "field.preset", `must be one of ${fieldNames.join(", ")}; got ${describe(f.preset)}`);
-  check(f.preset !== NO_FIELD || c.taglines.length > 0, "field.preset",
-    `"${NO_FIELD}" with taglines: [] leaves nothing to draw; give a tagline or a field preset`);
+  check(f.preset !== NO_FIELD || c.taglines.length > 0 || c.cards.length > 0, "field.preset",
+    `"${NO_FIELD}" with taglines: [] and no cards leaves nothing to draw; give a tagline, a card or a field preset`);
   const preset = f.preset === NO_FIELD ? NO_FIELD_PRESET : FIELD_PRESETS[f.preset];
   f.options = presetOptions(preset, withAliases(f.preset, field.options, field.aliases), "field.options",
     (key, takes) => `field.options.${key}: unknown option for preset "${f.preset}" (it takes ${takes || "no options"})`, { field: f });
@@ -557,6 +562,7 @@ function resolveCard(user, i, field) {
     k.at = { x: k.at.x, y: k.at.y };
   }
   oneOf(k.backdrop, at("backdrop"), CARD_BACKDROPS);
+  k.reveal ??= field.preset === NO_FIELD ? "type" : "wave";
   oneOf(k.reveal, at("reveal"), CARD_REVEALS);
   check(field.preset !== NO_FIELD || !FIELD_REVEALS.includes(k.reveal), at("reveal"),
     `"${k.reveal}" brings the card out of the field, but field.preset is "${NO_FIELD}"; ` +

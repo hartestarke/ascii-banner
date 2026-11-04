@@ -49,7 +49,8 @@ export default {
     // The taglines' block, at the top left: "full" (the whole width), "half"
     // (cards fill the rest of its row) or px.
     width: "full",
-    // px; null = 240, or the whole canvas when there are no cards and size.height is px.
+    // px; null = 240, or the whole canvas when there are no cards and size.height
+    // is px, or 0 (no header) when there are cards and no taglines.
     height: null,
   },
 
@@ -215,8 +216,9 @@ export default {
   //     // left to right), "drops" (rings) or "crystal" (scattered cells), which
   //     // need a field; or line by line, "type" (typed at a cursor), "decode"
   //     // (noise locking into the words), "slide" (in from the right) or
-  //     // "glitch" (flickers in, jumping sideways).
-  //     reveal: "wave",
+  //     // "glitch" (flickers in, jumping sideways). null = "wave", or "type"
+  //     // with no field.
+  //     reveal: null,
   //     // "once", "loop" (back into the field and out again every `period` s)
   //     // or "none" (still). Under prefers-reduced-motion a card is always still.
   //     intro: "once",
