@@ -2,6 +2,7 @@
 // left) and the cards, which flow after it in rows. Card boxes sit on the
 // field's character grid, so a card's edges line up with the field's cells.
 import { AUTO, CARD_MIN_WIDTH, ConfigError } from "./config.mjs";
+import { gridRows } from "./field.mjs";
 
 /** Spacing in grid cells: side margins and the gap between blocks in columns; the gap between rows and the bottom margin in rows. */
 export const BLOCK = { side: 3, gapX: 3, gapY: 1, bottom: 2 };
@@ -28,7 +29,7 @@ export function layoutBlocks(cfg, measure) {
   const PX = cfg.field.fontSize * cfg.font.advance, PY = cfg.field.rowPitch;
   const fixed = height !== AUTO;
   // A px canvas centres its whole rows (src/field.mjs fieldGrid); an auto one is whole rows.
-  const y0 = fixed ? (height - Math.floor(height / PY) * PY) / 2 : 0;
+  const y0 = fixed ? (height - gridRows(height, PY) * PY) / 2 : 0;
   const rowUp = (y) => y0 + Math.ceil((y - y0) / PY - EPS) * PY;
   const rowNear = (y) => y0 + Math.round((y - y0) / PY) * PY;
 
@@ -65,7 +66,7 @@ export function layoutBlocks(cfg, measure) {
     return rowUp(next);
   };
   const right = W - BLOCK.side * PX; // a block fits a row while it ends by here
-  let row = { header: true, top: 0, start: header.w, cols: 0, items: [] };
+  let row = { header: true, top: 0, start: Math.ceil(header.w / PX - EPS) * PX, cols: 0, items: [] };
   boxes.forEach((b, i) => {
     if (cfg.cards[i].at !== null) return;
     let gap = row.items.length ? BLOCK.gapX : 0;

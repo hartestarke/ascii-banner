@@ -365,7 +365,7 @@ export function renderCard(cfg, card, snap, { width, prefix, t0 = 0, glyphs = nu
   };
   const gitText = (s, what) => {
     const out = glyphs ? [...s].map((c) => (c === " " || glyphs.has(c) ? c : "?")).join("") : s;
-    if (out !== s) warnings.push(`${what}: characters outside the bundled font drawn as "?"`);
+    if (out !== s) warnings.push(`${where} ${what}: characters outside the bundled font drawn as "?"`);
     return out;
   };
 
@@ -382,7 +382,7 @@ export function renderCard(cfg, card, snap, { width, prefix, t0 = 0, glyphs = nu
   const cols = Math.floor((W - X - MARGIN) / PX + FIT_EPS);
   const fit = (s, room, what) => {
     if (len(s) <= room) return s;
-    warnings.push(`${what} cut to ${room} columns`);
+    warnings.push(`${what.startsWith(where) ? what : `${where} ${what}`} cut to ${room} columns`);
     return [...s].slice(0, Math.max(0, room - 2)).join("") + "..";
   };
   const colon = k.layout === "colon";
@@ -522,7 +522,7 @@ export function renderCard(cfg, card, snap, { width, prefix, t0 = 0, glyphs = nu
   const sizes = new Set([S]);
   const size = (s) => `f${String(s).replace(".", "_")}`;
   // delays below are s after t0
-  const delayed = (d) => (t0 + d > 0 ? ` style="animation-delay:${sec(t0 + d)}"` : "");
+  const delayed = (d) => (d !== null && t0 + d > 0 ? ` style="animation-delay:${sec(t0 + d)}"` : ""); // null: not animated
   /** s after t0 when the banner's field shows card-local (x, y): a field reveal's clock. */
   const shownAt = (x, y) => (startAt?.(x, y) ?? t0) - t0;
   /** The latest shownAt over a box, probed a column and half a line apart. */
@@ -535,7 +535,7 @@ export function renderCard(cfg, card, snap, { width, prefix, t0 = 0, glyphs = nu
   const cut = k.backdrop === "cut";
   const knock = []; // backdrop "cut": the glyphs' silhouette, keeping only what shapes them (size, the calendar's spacing)
   /** A <text> of `s`, its leading spaces turned into x; "" when blank. `solid`: part of the settled card's silhouette. */
-  const text = (x, y, s, cls, fs, delay = 0, solid = true) => {
+  const text = (x, y, s, cls, fs, delay = null, solid = true) => {
     const lead = s.length - s.trimStart().length;
     const t = s.trim();
     if (!t) return "";
@@ -583,7 +583,7 @@ export function renderCard(cfg, card, snap, { width, prefix, t0 = 0, glyphs = nu
         defs.push(mask(`p${i}`, [rect("tn", x0, y0 + pic.top, pic.w, toneH, delay)]));
         reveal(delay, INTRO.tone);
       }
-      body.push(...group(`p${i}`, lines.map((l) => text(x0 + l.col * pic.fs * adv, y0 + pic.top + (l.row + 0.5) * pic.pitch, l.s, cls, pic.fs, 0, !pad)).filter(Boolean)));
+      body.push(...group(`p${i}`, lines.map((l) => text(x0 + l.col * pic.fs * adv, y0 + pic.top + (l.row + 0.5) * pic.pitch, l.s, cls, pic.fs, null, !pad)).filter(Boolean)));
     });
   }
 
@@ -614,7 +614,7 @@ export function renderCard(cfg, card, snap, { width, prefix, t0 = 0, glyphs = nu
           if (!at.length) continue;
           const s = Array(at.at(-1) - at[0] + 1).fill(" ");
           for (const c of at) s[c - at[0]] = CELL;
-          out.push(text(X + at[0] * cp, mid + r * cp, s.join(""), `l${l} cg`, S, 0, solid));
+          out.push(text(X + at[0] * cp, mid + r * cp, s.join(""), `l${l} cg`, S, null, solid));
         }
       });
       draw(0, lines, true);

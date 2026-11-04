@@ -274,6 +274,7 @@ function merge(def, user, path) {
     if (!Array.isArray(user)) throw new ConfigError(`${path}: expected an array, got ${describe(user)}`);
     return user;
   }
+  if (user === null && NULLABLE[key]) return null; // e.g. cards[].screen: null = none
   if (KEYWORD_OR_PX.has(key)) return finite(user, path);
   if (typeof user !== typeof def) throw new ConfigError(`${path}: expected ${typeof def}, got ${describe(user)}`);
   return finite(user, path);
@@ -432,7 +433,8 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   positive(f.rowPitch, "field.rowPitch");
   // An auto canvas with cards is at least their rows plus the bottom margin tall.
   if (typeof s.height === "number")
-    check(f.rowPitch <= s.height, "field.rowPitch", `must fit at least one row into size.height (${s.height})`);
+    check(f.rowPitch <= s.height, "field.rowPitch",
+      `must fit at least one row into ${fixed ? "size.height" : "tagline.height, the banner's height here"} (${s.height})`);
   nonNeg(f.fps, "field.fps");
   positive(f.loopSeconds, "field.loopSeconds");
   // fps 0 bakes one still frame, so there is no frame count to keep whole.

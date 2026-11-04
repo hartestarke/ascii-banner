@@ -20,12 +20,15 @@ export function readCards(cfg, dataPath) {
   } catch (e) {
     throw new ConfigError(`data: cannot read ${path} (${e.code ?? e.message}); run \`ascii-banner fetch\` first`);
   }
+  if (snap?.version === SNAPSHOT_VERSION && typeof snap.fetchedAt !== "string")
+    throw new ConfigError(`data: ${path} has no fetch time; fetch again`);
   if (snap?.version !== SNAPSHOT_VERSION)
     throw new ConfigError(`data: ${path} is snapshot version ${snap?.version}, this build reads ${SNAPSHOT_VERSION}; fetch again`);
   return cfg.cards.map((card) => {
     const key = cardKey(card);
     const entry = snap.cards?.[key];
-    if (!entry?.[card.mode]) throw new ConfigError(`${path} has no data for ${key}; run \`ascii-banner fetch\``);
+    if (entry?.mode !== card.mode || typeof entry[card.mode] !== "object" || entry[card.mode] === null)
+      throw new ConfigError(`${path} has no data for ${key}; run \`ascii-banner fetch\``);
     const { mode, ...data } = entry;
     return { mode, fetchedAt: snap.fetchedAt, ...data };
   });

@@ -52,13 +52,19 @@ function sampleGrid(cfg, g) {
   return m ? { ...g, PX: g.PX / m.SX, PY: g.PY / m.SY, COLS: g.COLS * m.SX, ROWS: g.ROWS * m.SY } : g;
 }
 
+// Rows of slack when counting whole rows: H / rowPitch of a whole number of float rows
+// (554.4 / 18.48) can land a hair under it, and flooring that would lose a row.
+const ROW_EPS = 1e-9;
+/** Whole field rows in a canvas `H` px tall at `rowPitch`. */
+export const gridRows = (H, rowPitch) => Math.floor(H / rowPitch + ROW_EPS);
+
 /** Grid geometry of the field: no cells and no frames for NO_FIELD, one frame for fps 0. */
 export function fieldGrid(cfg) {
   const { width: W, height: H } = cfg.size;
   const f = cfg.field;
   const on = f.preset !== NO_FIELD;
   const PX = f.fontSize * cfg.font.advance; // column pitch = the font's advance
-  const ROWS = on ? Math.floor(H / f.rowPitch) : 0;
+  const ROWS = on ? gridRows(H, f.rowPitch) : 0;
   const NF = !on ? 0 : f.fps ? f.fps * f.loopSeconds : 1;
   return {
     PX,

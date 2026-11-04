@@ -29,8 +29,8 @@ const SEAM_TOLERANCE = 0.02;
 // Highest one-byte code point in UTF-8; ramp glyphs above it cost 2-4 bytes per cell.
 const ASCII_MAX = 0x7f;
 
-// budget.maxBytes null: `bytes` per `height` px of canvas height, so the
-// default 240 px banner keeps its 1 MiB and a taller one with cards scales.
+// budget.maxBytes null: `bytes` per `height` px of canvas height, never less
+// than `bytes`, so a banner up to 240 px keeps its 1 MiB and a taller one with cards scales.
 const AUTO_BUDGET = { bytes: 1048576, height: 240 };
 
 const show = (chars) => [...chars].map((c) => JSON.stringify(c)).join(" ");
@@ -223,12 +223,12 @@ export async function buildBanner(userConfig = {}, { baseDir, dataPath } = {}) {
 
   const raw = Buffer.byteLength(svg);
   const auto = cfg.budget.maxBytes === null;
-  const max = auto ? Math.round((AUTO_BUDGET.bytes * H) / AUTO_BUDGET.height) : cfg.budget.maxBytes;
+  const max = auto ? Math.max(AUTO_BUDGET.bytes, Math.round((AUTO_BUDGET.bytes * H) / AUTO_BUDGET.height)) : cfg.budget.maxBytes;
   if (max > 0 && raw > max) {
     const wide = [...new Set(field.ramp.flat())].filter((c) => c.codePointAt(0) > ASCII_MAX);
     throw new ConfigError(
       `banner is ${raw} bytes, over budget.maxBytes (${max}` +
-      (auto ? `, automatic: ${AUTO_BUDGET.bytes} bytes per ${AUTO_BUDGET.height} px of canvas height, which is ${H} px` : "") +
+      (auto ? `, automatic: ${AUTO_BUDGET.bytes} bytes per ${AUTO_BUDGET.height} px of canvas height (at least ${AUTO_BUDGET.bytes}), which is ${H} px` : "") +
       `). Raw size ∝ frames × rows × columns: ` +
       `lower field.fps or field.loopSeconds, shrink size, or raise field.fontSize (fewer cells). ` +
       `Set budget.maxBytes to a number of bytes to fix the limit, or to 0 to disable the check.` +
