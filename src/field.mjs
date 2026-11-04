@@ -103,6 +103,24 @@ function sampler(cfg, g) {
 }
 
 /**
+ * The field's brightness per cell: (col, row, f) → [0, 1], gamma applied as
+ * the bake applies it, f taken modulo the loop. Under field.cells "half" it is
+ * the mean of the cell's samples. NO_FIELD has no cells: always 0.
+ */
+export function cellBrightness(cfg, g) {
+  if (cfg.field.preset === NO_FIELD) return () => 0;
+  const { SX, SY } = CELLS[cfg.field.cells] ?? { SX: 1, SY: 1 };
+  const at = sampler(cfg, sampleGrid(cfg, g));
+  const clamp = (v) => Math.min(1, Math.max(0, v));
+  return (col, row, f) => {
+    const ff = ((f % g.NF) + g.NF) % g.NF;
+    let sum = 0;
+    for (let k = 0; k < SX * SY; k++) sum += clamp(at(col * SX + (k % SX), row * SY + Math.floor(k / SX), ff));
+    return sum / (SX * SY);
+  };
+}
+
+/**
  * Bake the flipbook: frames[f] = [{ row, chars, bands }] for the non-empty
  * rows, chars = one glyph per column (" " for blank), bands = each cell's
  * colour band (-1 for blank), both right-trimmed; block cells also left-trim
