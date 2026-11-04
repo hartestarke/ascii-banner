@@ -133,7 +133,8 @@ async function build(argv) {
   console.log(
     `${shortPath(outPath)}: ${stats.rawBytes} bytes raw (${kb(stats.rawBytes)}), ` +
     `${stats.gzipBytes} gzip (${kb(stats.gzipBytes)})\n` +
-    `  ${stats.frames} frames, ${stats.cells} cells, ${stats.textNodes} text nodes, ${stats.keyframes} @keyframes; ` +
+    `  ${stats.size} px, ${stats.cards} card${stats.cards === 1 ? "" : "s"}; ` +
+    `${stats.frames} frames, ${stats.cells} cells, ${stats.textNodes} text nodes, ${stats.keyframes} @keyframes; ` +
     `tagline ${stats.taglineCols} cols @ ${stats.taglineFontPx}px; built in ${stats.buildMs} ms`,
   );
 }

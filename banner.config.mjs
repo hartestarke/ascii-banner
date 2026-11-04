@@ -4,8 +4,10 @@
 // Unknown keys are an error, so a typo can't silently do nothing.
 export default {
   // px, the viewBox; the README <img> scales it down responsively. File size
-  // grows with width × height, so keep within the budget below.
-  size: { width: 880, height: 240 },
+  // grows with width × height, and so does the budget below. height: "auto" =
+  // as tall as the taglines' block and the cards need, or px: a fixed canvas
+  // they must fit into.
+  size: { width: 880, height: "auto" },
 
   // The base hue: field, taglines and shadows are this colour at different
   // alphas, so the banner reads on light, dark and dimmed themes alike.
@@ -44,6 +46,11 @@ export default {
     // for blocks-3d, "" (single tone) for every
     // other font and for paths.
     shadowGlyphs: null,
+    // The taglines' block, at the top left: "full" (the whole width), "half"
+    // (cards fill the rest of its row) or px.
+    width: "full",
+    // px; null = 240, or the whole canvas when there are no cards and size.height is px.
+    height: null,
   },
 
   // How each line appears. Every preset hides the line outside its slot, holds
@@ -156,53 +163,65 @@ export default {
   },
 
   budget: {
-    maxBytes: 1048576, // raw bytes above which the build fails; 0 = no limit
+    // Raw bytes above which the build fails; null = 1 MiB per 240 px of canvas
+    // height (1 MiB for a 240 px banner, more as cards make it taller); 0 = no limit.
+    maxBytes: null,
   },
 
-  // The info card: a second SVG, laid out like neofetch, of a GitHub user or
-  // repository. `build` ignores this block. `ascii-banner fetch` takes a
-  // snapshot of GitHub (needs GITHUB_TOKEN; public, non-fork repos only) and
-  // `ascii-banner card` renders card.svg from it offline. See docs/card.md.
-  card: {
-    mode: "person", // "person": a GitHub user; "project": a repository
-    user: null, // GitHub login, mode "person"
-    repo: null, // "owner/name", mode "project"
-    data: "card.data.json", // the snapshot fetch writes and card reads, relative to this file
-    title: null, // the header's leading name; null = the name on GitHub, else the login / repo
-    // Your own [key, value] rows, shown before GitHub's, e.g.
-    //   [["role", "backend engineer"], ["stack", "Go · Postgres · k8s"]]
-    rows: [],
-    // GitHub's rows in order; null = all of the mode's:
-    //   person: "uptime", "repos", "languages", "contributions"
-    //   project: "release", "license", "stats", "commits", "languages"
-    show: null,
-    // Mode "person", the last year: "sparkline" (per week), "calendar" (per
-    // day, in GitHub's shades) or "none"; null = sparkline for a person.
-    activity: null,
-    // On load the portrait develops, the rows come in and the numbers count
-    // up: "once", "loop" (again every `period` s) or "none" (still). Under
-    // prefers-reduced-motion the card is always still.
-    intro: "once",
-    period: 12, // s, one cycle of intro "loop"
-    // How each row comes in: "type" (typed at a cursor; intro "loop" backspaces
-    // it out), "decode" (noise locking into the words, left to right), "slide"
-    // (in from the right) or "glitch" (flickers in, jumping sideways).
-    reveal: "type",
-    // Rows as "key ···· value", the value right-aligned ("dots"), or as
-    // neofetch's "key: value" ("colon").
-    layout: "dots",
-    // #rrggbb of the values, the handle and the description: a grey that reads
-    // on light and dark pages alike; null = the accent, like the keys.
-    ink: "#7d8590",
-    swatches: false, // a row of colour blocks under the rows, as neofetch ends: the accent's shades, or the avatar's palette
-    // "avatar" (the GitHub avatar), "solid" (a turning torus, frozen) or
-    // "none"; null = avatar for a person, solid for a project.
-    portrait: null,
-    // The avatar in four tones of the accent ("accent"), in its own colours
-    // ("natural", a 16-colour palette, about twice the bytes) or in 8 greys ("gray").
-    avatarColors: "accent",
-    screen: "#0d1117", // #rrggbb behind the avatar, so it reads on light pages too; null = none
-    width: 880, // px, at least 600
-    textSize: 13, // px
-  },
+  // The snapshot of GitHub the cards are drawn from, relative to this file:
+  // `ascii-banner fetch` writes it (needs GITHUB_TOKEN; public, non-fork repos
+  // only) and `build` reads it, offline. Commit it next to the banner.
+  data: "banner.data.json",
+
+  // Info cards inside the banner, laid out like neofetch, each of a GitHub
+  // user or repository. They flow after the taglines in rows, left to right,
+  // and an "auto" size.height grows to hold them. [] = none. Every key of a
+  // card with its default; only user or repo is required. See docs/card.md.
+  //   cards: [{
+  //     user: "octocat", // a GitHub login: a person's card; or
+  //     repo: null, // "owner/name": a repository's card (give one of the two)
+  //     title: null, // the header's leading name; null = the name on GitHub, else the login / repo
+  //     // Your own [key, value] rows, shown before GitHub's, e.g.
+  //     //   [["role", "backend engineer"], ["stack", "Go · Postgres · k8s"]]
+  //     rows: [],
+  //     // GitHub's rows in order; null = all of them:
+  //     //   person: "uptime", "repos", "languages", "contributions"
+  //     //   project: "release", "license", "stats", "commits", "languages"
+  //     show: null,
+  //     // A person's last year: "sparkline" (per week), "calendar" (per day,
+  //     // in GitHub's shades) or "none"; null = sparkline (a project has none).
+  //     activity: null,
+  //     // Rows as "key ···· value", the value right-aligned ("dots"), or as
+  //     // neofetch's "key: value" ("colon").
+  //     layout: "dots",
+  //     // #rrggbb of the values, the handle and the description: a grey that
+  //     // reads on light and dark pages alike; null = the accent, like the keys.
+  //     ink: "#7d8590",
+  //     swatches: false, // a row of colour blocks under the rows, as neofetch ends: the accent's shades, or the avatar's palette
+  //     // "avatar" (the GitHub avatar), "solid" (a turning torus, frozen) or
+  //     // "none"; null = avatar for a person, solid for a project.
+  //     portrait: null,
+  //     // The avatar in four tones of the accent ("accent"), in its own colours
+  //     // ("natural", a 16-colour palette, about twice the bytes) or in 8 greys ("gray").
+  //     avatarColors: "accent",
+  //     screen: "#0d1117", // #rrggbb behind the avatar, so it reads on light pages too; null = none
+  //     textSize: 13, // px
+  //     width: "full", // "full" (a whole row), "half" (two side by side) or px, at least 360
+  //     at: null, // { x, y } px: placed there, out of the rows; null = in the rows
+  //     // What the field does under the card: "window" (cleared), "dim"
+  //     // (faint) or "cut" (cleared around its glyphs, by tagline.knockout px).
+  //     backdrop: "window",
+  //     // How the card comes in: out of the field as a whole, "wave" (a front
+  //     // left to right), "drops" (rings) or "crystal" (scattered cells), which
+  //     // need a field; or line by line, "type" (typed at a cursor), "decode"
+  //     // (noise locking into the words), "slide" (in from the right) or
+  //     // "glitch" (flickers in, jumping sideways).
+  //     reveal: "wave",
+  //     // "once", "loop" (back into the field and out again every `period` s)
+  //     // or "none" (still). Under prefers-reduced-motion a card is always still.
+  //     intro: "once",
+  //     period: null, // s, one cycle of intro "loop"; null = field.loopSeconds
+  //     delay: null, // s, when the intro starts; null = 1.2 s, then 0.8 s later for each card after it
+  //   }],
+  cards: [],
 };

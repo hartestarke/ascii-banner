@@ -100,7 +100,9 @@ export const DEFAULTS = {
     blockHeight: 1.32, // full block █ height in em (JetBrains Mono = 1.32); field.cells "half" bounds rowPitch by it
   },
   budget: {
-    maxBytes: 1048576, // fail the build above this many raw bytes; 0 = no limit
+    // fail the build above this many raw bytes; null = 1 MiB per 240 px of the
+    // canvas height (src/index.mjs AUTO_BUDGET), 0 = no limit
+    maxBytes: null,
   },
   // The snapshot of every card that `ascii-banner fetch` takes of GitHub and
   // `build` reads, relative to this config.
@@ -189,6 +191,7 @@ const NULLABLE = {
   "field.bands": "number",
   "field.gamma": "number",
   "font.file": "string",
+  "budget.maxBytes": "number",
   "cards[].user": "string",
   "cards[].repo": "string",
   "cards[].title": "string",
@@ -487,7 +490,7 @@ export function resolveConfig(user = {}, { baseDir = process.cwd() } = {}) {
   else f.colors ??= [c.accent];
 
   positive(c.font.advance, "font.advance");
-  int(c.budget.maxBytes, "budget.maxBytes", 0);
+  if (c.budget.maxBytes !== null) int(c.budget.maxBytes, "budget.maxBytes", 0);
 
   const abs = (p) => (isAbsolute(p) ? p : resolve(baseDir, p));
   if (c.font.file !== null) c.font.file = abs(c.font.file);
