@@ -33,6 +33,7 @@ const EPS = 0.001; // s, visible(): margin for the rounded delays and keyframe p
 const MAX_JOINT_LOOPS = 10; // visible() under intro "loop": field loops searched for a joint period
 
 const ON = "visibility:visible", OFF = "visibility:hidden";
+const RUN_KINDS = ["v", "g", "d", "k"]; // the mask runs: card body (v), field gone or screen shown (g), dim (d), cut (k)
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const n2 = (v) => +v.toFixed(2);
 const gcd = (a, b) => (b ? gcd(b, a % b) : a);
@@ -79,10 +80,12 @@ export function renderEmerge({ cfg, card, box, content, grid, brightness, prefix
   const pct = (s) => +((100 * s) / P).toFixed(3);
   const edge = (s) => (pct(s) * P) / 100;
   const ONCE = `@keyframes ${p}on{from,to{${ON}}}`;
-  /** Intro "loop": class `cls` (base declarations `base`) steps through `segs` ([s after its delay, declarations]) every period. */
+  // the selector of an animated kind: the mask runs' kinds animate the children of their group
+  const of = (kind) => `.${p}${kind}${RUN_KINDS.includes(kind) ? ">*" : ""}`;
+  /** Intro "loop": kind `cls` (base declarations `base`) steps through `segs` ([s after its delay, declarations]) every period. */
   const looped = (cls, segs, base = OFF) =>
     `@keyframes ${p}${cls}{${segs.map(([s, d], i) => `${i ? `${pct(s)}%` : "0%"}${i === segs.length - 1 ? ",100%" : ""}{${d}}`).join("")}}` +
-    `.${p}${cls}{${base};animation:${p}${cls} ${P}s step-end infinite}`;
+    `${of(cls)}{${base};animation:${p}${cls} ${P}s step-end infinite}`;
   const windows = (wins) => wins.flatMap(([a, b]) => [[a, ON], [b, OFF]]);
 
   /**
@@ -186,31 +189,33 @@ export function renderEmerge({ cfg, card, box, content, grid, brightness, prefix
   }
   const H = hold / fps, Ds = D / fps, tick = 1 / fps;
 
-  // --- per row, runs of cells turning on the same tick → one rect each
-  const runs = [];
+  // --- per row, runs of cells turning on the same tick; a tick's runs are one <path>, each run a
+  // subpath with the corners its own <rect x y width height> would have: x + width, y + height,
+  // back to x, closed by the fill
+  const runsAt = new Map(); // tick → path data
   for (let r = r0; r < r1; r++) {
-    let cur = null;
-    for (let c = c0; c < c1; c++) {
+    const y = num2(y0 + r * PY), h = num2(num2(y0 + (r + 1) * PY) - y);
+    for (let c = c0, to; c < c1; c = to) {
       const t = T[(r - r0) * NC + c - c0];
-      if (cur?.t === t) cur.to = c + 1;
-      else runs.push((cur = { r, from: c, to: c + 1, t }));
+      for (to = c + 1; to < c1 && T[(r - r0) * NC + to - c0] === t; to++);
+      const x = num2(c * PX);
+      runsAt.set(t, `${runsAt.get(t) ?? ""}M${x} ${y}h${num2(num2(to * PX) - x)}v${h}H${x}`);
     }
   }
-  const rects = (cls, shift) => runs.map(({ r, from, to, t }) => {
-    const x = num2(from * PX), y = num2(y0 + r * PY);
-    return `<rect class="${p}${cls}" style="animation-delay:${sec(t + shift)}s" x="${x}" y="${y}" width="${num2(num2(to * PX) - x)}" height="${num2(num2(y0 + (r + 1) * PY) - y)}"/>`;
-  }).join("");
+  const ticks = [...runsAt.keys()].sort((a, b) => a - b);
+  // the run kind's class sits on the group and its rule (`.kind>*`) animates each tick's path;
   // crispEdges: two runs meeting mid-pixel would each cover part of it, and the field (or the
   // card, through its mask) would show through the seam
-  const runGroup = (fill, body) => `<g fill="${fill}" shape-rendering="crispEdges">${body}</g>`;
-  const maskOf = (id, body) => `<mask id="${p}${id}" maskUnits="userSpaceOnUse" x="${num2(box.x)}" y="${num2(box.y)}" ` +
-    `width="${num2(box.w)}" height="${num2(box.h)}">${runGroup("#fff", body)}</mask>`;
+  const runGroup = (fill, kind, shift) => `<g class="${p}${kind}" fill="${fill}" shape-rendering="crispEdges">` +
+    `${ticks.map((t) => `<path style="animation-delay:${sec(t + shift)}s" d="${runsAt.get(t)}"/>`).join("")}</g>`;
+  const maskOf = (id, kind, shift) => `<mask id="${p}${id}" maskUnits="userSpaceOnUse" x="${num2(box.x)}" y="${num2(box.y)}" ` +
+    `width="${num2(box.w)}" height="${num2(box.h)}">${runGroup("#fff", kind, shift)}</mask>`;
 
   // the avatar's dark screen shows as the field goes, so a cell never shows the page between the two
   const screenMask = card.portrait === "avatar" && card.screen ? `${p}s` : null;
-  const defs = maskOf("b", rects("v", 0)) + (screenMask ? maskOf("s", rects("g", -D)) : "");
+  const defs = maskOf("b", "v", 0) + (screenMask ? maskOf("s", "g", -D) : "");
   const cls = card.backdrop === "dim" ? "d" : card.backdrop === "cut" ? "k" : "g";
-  let fieldMask = runGroup("#000", rects(cls, -D));
+  let fieldMask = runGroup("#000", cls, -D);
   if (card.backdrop === "cut") fieldMask += `<g mask="url(#${p}b)"><g transform="${at}">${knock}</g></g>`;
 
   // --- the kinds of animated element, each one rule: shown ones settle visible under reduced motion
@@ -227,13 +232,13 @@ export function renderEmerge({ cfg, card, box, content, grid, brightness, prefix
       e: looped("e", windows([[0, tick]])), // an echo frame, in only: on the way out the field is back
     }
     : {
-      g: `.${p}g{${OFF};animation:${p}on 1ms linear forwards}`,
-      v: `.${p}v{${OFF};animation:${p}on 1ms linear forwards}`,
-      d: `@keyframes ${p}dm{from{${opaque}}to{${dimmed}}}.${p}d{${OFF};fill-opacity:${DIM};animation:${p}dm ${n2(Ds)}s step-end forwards}`,
-      k: `.${p}k{${OFF};animation:${p}on ${n2(Ds)}s linear}`,
-      c: `.${p}c{${OFF};animation:${p}on ${n2(tick)}s linear}`,
+      g: `${of("g")}{${OFF};animation:${p}on 1ms linear forwards}`,
+      v: `${of("v")}{${OFF};animation:${p}on 1ms linear forwards}`,
+      d: `@keyframes ${p}dm{from{${opaque}}to{${dimmed}}}${of("d")}{${OFF};fill-opacity:${DIM};animation:${p}dm ${n2(Ds)}s step-end forwards}`,
+      k: `${of("k")}{${OFF};animation:${p}on ${n2(Ds)}s linear}`,
+      c: `${of("c")}{${OFF};animation:${p}on ${n2(tick)}s linear}`,
     };
-  const sel = (list, suffix = "") => list.map((k) => `.${p}${k}${suffix}`).join(",");
+  const sel = (list, suffix = "") => list.map((k) => of(k) + suffix).join(",");
   const css = [
     ...(loop ? [] : [ONCE]),
     ...[...shown, ...hidden].map((k) => rule[k]),
@@ -245,8 +250,9 @@ export function renderEmerge({ cfg, card, box, content, grid, brightness, prefix
   const ramp = parseRamp(cfg.field.ramp).slice(1).map((lvl) => lvl[lvl.length - 1]); // levels 1..L, dim → bright
   const L = ramp.length, NB = cfg.field.bands;
   const bandOf = (lv) => Math.ceil(((lv + 1) * NB) / L) - 1; // the field's split of levels 1..L into NB runs
+  // a frame's rows → [band, <text> without its class], in paint order: row by row, dim band first
   const textRows = (cells) => {
-    let out = "";
+    const out = [];
     for (let k = 0; k < cells.length;) {
       const r = cells[k].r;
       let e = k;
@@ -260,15 +266,23 @@ export function renderEmerge({ cfg, card, box, content, grid, brightness, prefix
           line += " ".repeat(c - col) + ramp[lv];
           col = c + 1;
         }
-        if (x0 >= 0) out += `<text class="b${b}" x="${num2(x0 * PX)}" y="${num(y0 + r * PY + PY / 2)}">${esc(line)}</text>`;
+        if (x0 >= 0) out.push([b, ` x="${num2(x0 * PX)}" y="${num(y0 + r * PY + PY / 2)}">${esc(line)}</text>`]);
       }
       k = e;
     }
     return out;
   };
+  // the frame's <g> carries its most frequent band (ties → the dimmer) and those texts inherit it;
+  // the paint order stays, as glyph ink may cross into a neighbouring row
   const frames = [];
   const frame = (k, n, cells) => {
-    if (cells.length) frames.push(`<g class="${p}${k}" style="animation-delay:${sec(n)}s">${textRows(cells)}</g>`);
+    if (!cells.length) return;
+    const texts = textRows(cells);
+    const count = new Array(NB).fill(0);
+    for (const [b] of texts) count[b]++;
+    const base = count.indexOf(Math.max(...count));
+    const body = texts.map(([b, t]) => `<text${b === base ? "" : ` class="b${b}"`}${t}`).join("");
+    frames.push(`<g class="${p}${k} b${base}" style="animation-delay:${sec(n)}s">${body}</g>`);
   };
   for (let n = tMin - D; n < tMax + E; n++) {
     const crest = [], rings = loop ? [] : crest; // intro "once": one frame holds both
