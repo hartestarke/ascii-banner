@@ -1,14 +1,18 @@
-// The info card, laid out like neofetch: a portrait at the left (the avatar on
+// An info card, laid out like neofetch: a portrait at the left (the avatar on
 // its own dark screen, or a solid field), a header and "key ··· value" rows at
 // the right, and for a person the year's contributions as a sparkline or a
 // calendar. Every value comes from the snapshot and its fetch time, so a card
-// builds the same until the next fetch.
+// builds the same until the next fetch. The card is a layer of the banner:
+// markup and CSS whose every class, id and @keyframes name starts with the
+// card's prefix, so any number of cards share one SVG.
 //
-// The intro is CSS alone, as GitHub runs no script in an <img>: masks reveal
-// the portrait tone by tone, the lines come in one by one (typed at a cursor,
-// decoded out of noise frames, slid or glitched in: card.reveal), numbers count
-// up through stacked frames, and a band of light crosses a brighter copy of the activity.
-// The markup itself is the finished card, so intro "none" and
+// The intro is CSS alone, as GitHub runs no script in an <img>. A line reveal
+// (reveal "type", "decode", "slide", "glitch"): masks reveal the portrait tone by
+// tone, the lines come in one by one (typed at a cursor, decoded out of noise
+// frames, slid or glitched in). A field reveal ("wave", "drops", "crystal"): the
+// card is drawn settled and the banner's field uncovers it. Either way numbers
+// count up through stacked frames, and a band of light crosses a brighter copy
+// of the activity. The markup itself is the finished card, so intro "none" and
 // prefers-reduced-motion, which drops every animation, show it still.
 import { ConfigError, resolveConfig } from "../config.mjs";
 import { bakeField, fieldGrid, jitter } from "../field.mjs";
@@ -18,7 +22,9 @@ import { autocontrast, decodeImage, ImageError, resample } from "./image.mjs";
 // Avatar portrait: a 240 px box of 2.4 × 2.1 px samples (fontSize 4 half
 // blocks, rows 4.2 px apart so they overlap by 1 px), four alpha tones.
 // card.avatarColors "natural" / "gray": the palette's size; more costs bytes, a layer of text rows each.
-const PORTRAIT = { box: 240, fontSize: 4, pitch: 4.2, tones: 4, cutoff: 0.02, colors: { natural: 16, gray: 8 } };
+// A card too narrow for the box and MIN_COLS beside it shrinks the box, down to minBox px.
+const PORTRAIT = { box: 240, minBox: 64, fontSize: 4, pitch: 4.2, tones: 4, cutoff: 0.02, colors: { natural: 16, gray: 8 } };
+const FIT_EPS = 1e-6; // px or cells: slack for float error when fitting whole cells into a width
 // The solid emblem: the solid preset in half cells at its usual 4.8 px samples.
 const SOLID = { fontSize: 8, pitch: 9.5, stillAt: 3.3 };
 const SCREEN_PAD = 6; // screen margin around the portrait, px
@@ -72,7 +78,6 @@ const REVEAL = {
 const EPS = 0.01; // s, a cut between two keyframes
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const escAttr = (s) => esc(s).replace(/"/g, "&quot;");
 const n2 = (v) => +v.toFixed(2);
 const sec = (v) => `${+v.toFixed(3)}s`;
 const len = (s) => [...s].length;
@@ -167,15 +172,18 @@ const luma = ([r, g, b]) => 0.299 * r + 0.587 * g + 0.114 * b;
 const hex = (c) => "#" + c.map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")).join("");
 
 /**
- * The portrait, or null for "none": its box, and its text rows grouped by
- * alpha class from dim to bright, the order the intro develops them in.
+ * The portrait, or null for "none": its box (at most `box` px wide), and its
+ * text rows grouped by alpha class from dim to bright, the order the intro
+ * develops them in.
  */
-function portrait(cfg, snap, adv) {
-  const mode = cfg.card.portrait;
+function portrait(k, snap, adv, box) {
+  const mode = k.portrait;
   if (mode === "none") return null;
   if (mode === "solid") {
+    const cell = SOLID.fontSize * adv;
+    const side = Math.floor(box / cell + FIT_EPS) * cell; // whole cells, so the torus stays inside the box
     const fc = resolveConfig({
-      size: { width: PORTRAIT.box, height: PORTRAIT.box },
+      size: { width: side, height: side },
       taglines: [],
       field: { preset: "solid", cells: "half", fontSize: SOLID.fontSize, rowPitch: SOLID.pitch, dither: 4, fps: 0, stillAt: SOLID.stillAt, options: { x: 0.5, size: 0.95 } },
     });
@@ -197,19 +205,18 @@ function portrait(cfg, snap, adv) {
       return { col: first, row, s: s.join("") };
     });
     return {
-      kind: "solid", fs: SOLID.fontSize, pitch: SOLID.pitch, top: g.y0, rows: g.ROWS,
-      w: g.COLS * SOLID.fontSize * adv, h: PORTRAIT.box,
+      kind: "solid", fs: SOLID.fontSize, pitch: SOLID.pitch, top: g.y0, rows: g.ROWS, w: side, h: side,
       groups: [...groups].filter(([, byRow]) => byRow.size).map(([c, byRow]) => ({ cls: c, lines: toLines(byRow) })),
     };
   }
-  if (!snap.avatar) throw new ImageError('the snapshot has no avatar; fetch again with card.portrait "avatar"');
+  if (!snap.avatar) throw new ImageError('the snapshot has no avatar; fetch again with portrait "avatar"');
   const img = decodeImage(Buffer.from(snap.avatar.base64, "base64"));
   const px = PORTRAIT.fontSize * adv, py = PORTRAIT.pitch / 2;
-  const cols = Math.round(PORTRAIT.box / px);
+  const cols = Math.floor(box / px + FIT_EPS);
   // rows stretched by the sample aspect, and even, so the image keeps its proportions
-  const rows = 2 * Math.round((PORTRAIT.box * img.height) / img.width / py / 2);
-  const box = { kind: "avatar", fs: PORTRAIT.fontSize, pitch: PORTRAIT.pitch, top: 0, rows: rows / 2, w: cols * px, h: (rows / 2) * PORTRAIT.pitch };
-  const colours = cfg.card.avatarColors;
+  const rows = 2 * Math.round((cols * px * img.height) / img.width / py / 2);
+  const frame = { kind: "avatar", fs: PORTRAIT.fontSize, pitch: PORTRAIT.pitch, top: 0, rows: rows / 2, w: cols * px, h: (rows / 2) * PORTRAIT.pitch };
+  const colours = k.avatarColors;
   if (colours === "accent") {
     // tones of the accent: tone 0 stays dark, the screen; tones 1–3 are alpha classes
     const L = PORTRAIT.tones - 1;
@@ -218,7 +225,7 @@ function portrait(cfg, snap, adv) {
       const level = Math.max(0, Math.min(L, Math.round(v * L)));
       return [level, [level / L]];
     });
-    return { ...box, groups: halfLayers(q, cols, rows, Array.from({ length: L }, (_, i) => i + 1), (t) => `t${t}`) };
+    return { ...frame, groups: halfLayers(q, cols, rows, Array.from({ length: L }, (_, i) => i + 1), (t) => `t${t}`) };
   }
   // opaque colours: an adaptive palette, every sample on one of them
   let rgb;
@@ -241,7 +248,7 @@ function portrait(cfg, snap, adv) {
     return [best, palette[best]];
   });
   // dark to light, the order they develop in
-  return { ...box, groups: halfLayers(q, cols, rows, palette.map((_, k) => k), (k) => `c${k}`), fills: palette.map(hex) };
+  return { ...frame, groups: halfLayers(q, cols, rows, palette.map((_, k) => k), (k) => `c${k}`), fills: palette.map(hex) };
 }
 
 // Reveal keyframes: [share of the way in, declarations], hidden first, shown last.
@@ -261,22 +268,29 @@ const GLITCH = [
 ];
 
 /**
- * The intro's CSS. `reveals` = the animated classes, each { cls, frames, dur,
- * timing, after? }. Intro "once" plays them a single time. Intro "loop" plays
- * them every card.period s, each running its frames backwards `hold` (+ `after`)
- * s after its own start, so the card goes away in the order it came in.
- * `cursors` = reveal "type"'s, a class per line length { cls, steps, travel
- * (px), dur }; `decodeSlot` = how long a decode noise frame shows, s.
+ * The intro's CSS → { css, animated }, `animated` = the class names that move
+ * (prefers-reduced-motion stops them). `N` puts the card's prefix on a name.
+ * `reveals` = the animated classes, each { cls, frames, dur, timing, after? }.
+ * Intro "once" plays them a single time. Intro "loop" plays them every
+ * card.period s, each running its frames backwards `hold` (+ `after`) s after
+ * its own start, so the card goes away in the order it came in. `counters`:
+ * numbers count up; `cursors` = reveal "type"'s, a class per line length
+ * { cls, steps, travel (px), dur }; `decodeSlot` = how long a decode noise frame
+ * shows, s; `wave` = px the activity's band travels, 0 for none.
  */
-function introCss(k, reveals, hold, wave, { cursors = [], decodeSlot = 0 } = {}) {
+function introCss(k, N, { reveals = [], hold = 0, wave = 0, counters = false, cursors = [], decodeSlot = 0 }) {
   const pct = (s) => `${+((100 * s) / k.period).toFixed(3)}%`;
   const slot = INTRO.count / INTRO.countFrames;
   const once = k.intro === "once";
-  const css = [];
+  const css = [], animated = [];
+  const rule = (cls, keys, timing, base = "") => {
+    const n = N(cls);
+    css.push(`@keyframes ${n}{${keys}}.${n}{${base}animation:${n} ${timing}}`);
+    animated.push(cls);
+  };
   for (const { cls, frames, dur, timing, after = 0 } of reveals) {
     if (once) {
-      css.push(`@keyframes ${cls}{${frames.map(([t, d]) => `${+(100 * t).toFixed(3)}%{${d}}`).join("")}}` +
-        `.${cls}{animation:${cls} ${sec(dur)} ${timing} both}`);
+      rule(cls, frames.map(([t, d]) => `${+(100 * t).toFixed(3)}%{${d}}`).join(""), `${sec(dur)} ${timing} both`);
       continue;
     }
     const back = hold + after;
@@ -286,17 +300,18 @@ function introCss(k, reveals, hold, wave, { cursors = [], decodeSlot = 0 } = {})
       ...[...frames].reverse().map(([t, d]) => [pct(back + (1 - t) * dur), d]),
       ["100%", frames[0][1]],
     ];
-    css.push(`@keyframes ${cls}{${keys.map(([p, d]) => `${p}{${d}}`).join("")}}` +
-      `.${cls}{animation:${cls} ${sec(k.period)} ${timing} infinite backwards}`);
+    rule(cls, keys.map(([p, d]) => `${p}{${d}}`).join(""), `${sec(k.period)} ${timing} infinite backwards`);
   }
   // a frame text (count, decode) shows for its slot; the final number hides until the count is done
   const framed = (cls, s) => once
-    ? `@keyframes ${cls}{from,to{opacity:1}}.${cls}{opacity:0;animation:${cls} ${sec(s)}}`
-    : `@keyframes ${cls}{0%{opacity:1}${pct(s)},100%{opacity:0}}.${cls}{opacity:0;animation:${cls} ${sec(k.period)} step-end infinite}`;
-  css.push(framed("nf", slot) + (once
-    ? `@keyframes nv{from,to{opacity:0}}.nv{animation:nv ${sec(INTRO.count)} backwards}`
-    : `@keyframes nv{0%{opacity:0}${pct(INTRO.count)},100%{opacity:1}}.nv{animation:nv ${sec(k.period)} step-end infinite backwards}`));
-  if (decodeSlot) css.push(framed("df", decodeSlot));
+    ? rule(cls, "from,to{opacity:1}", sec(s), "opacity:0;")
+    : rule(cls, `0%{opacity:1}${pct(s)},100%{opacity:0}`, `${sec(k.period)} step-end infinite`, "opacity:0;");
+  if (counters) {
+    framed("nf", slot);
+    if (once) rule("nv", "from,to{opacity:0}", `${sec(INTRO.count)} backwards`);
+    else rule("nv", `0%{opacity:0}${pct(INTRO.count)},100%{opacity:1}`, `${sec(k.period)} step-end infinite backwards`);
+  }
+  if (decodeSlot) framed("df", decodeSlot);
   // the cursor rides its line's mask edge in the same steps, shown only while it moves:
   // typing in, and for intro "loop" backspacing out
   for (const { cls, steps, travel, dur } of cursors) {
@@ -305,26 +320,41 @@ function introCss(k, reveals, hold, wave, { cursors = [], decodeSlot = 0 } = {})
       ? [["0%", at(0)], ["100%", at(travel)]]
       : [["0%", at(0)], [pct(dur), at(travel)], [pct(dur + EPS), at(travel, 0)], [pct(hold - EPS), at(travel, 0)],
         [pct(hold), at(travel)], [pct(hold + dur), at(0)], [pct(hold + dur + EPS), at(0, 0)], ["100%", at(0, 0)]];
-    css.push(`@keyframes ${cls}{${keys.map(([p, d]) => `${p}{${d}}`).join("")}}` +
-      `.${cls}{opacity:0;animation:${cls} ${sec(once ? dur : k.period)} steps(${steps})${once ? "" : " infinite"}}`);
+    rule(cls, keys.map(([p, d]) => `${p}{${d}}`).join(""), `${sec(once ? dur : k.period)} steps(${steps})${once ? "" : " infinite"}`, "opacity:0;");
   }
   if (wave) {
     const cycle = INTRO.wave + INTRO.waveRest;
-    css.push(`@keyframes wv{0%{transform:none}${+((100 * INTRO.wave) / cycle).toFixed(3)}%,100%{transform:translateX(${n2(wave)}px)}}` +
-      `.wv{animation:wv ${sec(cycle)} ease-in-out infinite}`);
+    rule("wv", `0%{transform:none}${+((100 * INTRO.wave) / cycle).toFixed(3)}%,100%{transform:translateX(${n2(wave)}px)}`,
+      `${sec(cycle)} ease-in-out infinite`);
   }
-  css.push("@media (prefers-reduced-motion:reduce){*{animation:none!important}}");
-  return css.join("\n");
+  return { css: css.join("\n"), animated };
 }
 
 /**
- * The card for a resolved config and its snapshot. `glyphs` = the characters
- * the embedded font has (null for a custom font): GitHub text outside it turns
- * into "?" with a warning; your own text outside it is an error, like a tagline's.
+ * One card as a layer of the banner. `card` = a resolved cfg.cards[i], `snap` =
+ * its snapshot entry { mode, fetchedAt, person | project }; `width` = its box's
+ * px; `prefix` starts every class, id and @keyframes name it emits; `t0` (s) is
+ * added to every animation delay; `glyphs` = the characters the embedded font
+ * has (null for a custom font): GitHub text outside it turns into "?" with a
+ * warning, your own text outside it is an error, like a tagline's. A field
+ * reveal draws the card settled: only its numbers count, from `startAt(x, y)`
+ * (card-local px → absolute s; null → t0), and the activity's wave starts once
+ * the field has uncovered all of it.
+ * → { width, height, css, reducedMotion, defs, screen, body, knock, warnings,
+ * stats: { lines, textNodes, introEnd (absolute s; 0 for intro "none") } }:
+ * markup in card-local px; `screen` = the avatar's screen for a field reveal
+ * (else it fades in inside `body`); `knock` = for backdrop "cut", the card's
+ * silhouette for a mask: its glyphs with no fill class, and the screen in black.
  */
-export function renderCard(cfg, snap, fontB64, glyphs) {
-  const k = cfg.card, adv = cfg.font.advance, W = k.width, S = k.textSize, PX = S * adv;
-  const moving = k.intro !== "none";
+export function renderCard(cfg, card, snap, { width, prefix, t0 = 0, glyphs = null, startAt = null }) {
+  const k = card, adv = cfg.font.advance, W = width, S = k.textSize, PX = S * adv;
+  const index = cfg.cards?.indexOf(card) ?? -1;
+  const where = index >= 0 ? `cards[${index}]` : "card"; // the config path errors name
+  const lineReveal = Object.hasOwn(REVEAL, k.reveal);
+  const animated = k.intro !== "none";
+  const moving = animated && lineReveal; // the screen, tones and lines come in; a field reveal draws them settled
+  const N = (name) => prefix + name;
+  const names = (list) => list.split(" ").map(N).join(" ");
   const warnings = [];
   const ownText = (s, key) => {
     const lack = glyphs ? [...new Set(s)].filter((c) => c !== " " && !glyphs.has(c)) : [];
@@ -339,13 +369,17 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     return out;
   };
 
-  const pic = portrait(cfg, snap, adv);
-  const pad = pic?.kind === "avatar" && k.screen ? SCREEN_PAD : 0;
-  const X = MARGIN + (pic ? pic.w + 2 * pad + GAP : 0);
-  const cols = Math.floor((W - X - MARGIN) / PX);
-  if (cols < MIN_COLS)
-    throw new ConfigError(`card: the text column has room for ${cols} characters, at least ${MIN_COLS} are needed; ` +
-      `widen card.width or lower card.textSize`);
+  // a narrow card shrinks the portrait so the text column keeps MIN_COLS, down to PORTRAIT.minBox
+  const pad = k.portrait === "avatar" && k.screen ? SCREEN_PAD : 0;
+  const beside = k.portrait === "none" ? 0 : 2 * pad + GAP; // the screen's margin and the gap to the text
+  const minW = 2 * MARGIN + MIN_COLS * PX + (k.portrait === "none" ? 0 : PORTRAIT.minBox + beside);
+  if (W < minW - FIT_EPS)
+    throw new ConfigError(`${where} (${k.user ?? k.repo}): ${n2(W)} px is too narrow, this card needs at least ` +
+      `${Math.ceil(minW - FIT_EPS)} px (${MIN_COLS} text columns at textSize ${S}` +
+      `${k.portrait === "none" ? "" : ` beside a ${PORTRAIT.minBox} px portrait`}); widen ${where}.width or lower ${where}.textSize`);
+  const pic = portrait(k, snap, adv, Math.min(PORTRAIT.box, W - minW + PORTRAIT.minBox));
+  const X = MARGIN + (pic ? pic.w + beside : 0);
+  const cols = Math.floor((W - X - MARGIN) / PX + FIT_EPS);
   const fit = (s, room, what) => {
     if (len(s) <= room) return s;
     warnings.push(`${what} cut to ${room} columns`);
@@ -361,8 +395,8 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
   const kv = (key, parts) => {
     const strs = parts.map((p) => (typeof p === "number" ? fmt(p) : p));
     const full = strs.join("");
-    const v = fit(full, cols - len(key) - (colon ? 2 : 4), `card row "${key}"`);
-    const counts = (p) => moving && v === full && typeof p === "number" && p > 0;
+    const v = fit(full, cols - len(key) - (colon ? 2 : 4), `${where} row "${key}"`);
+    const counts = (p) => animated && v === full && typeof p === "number" && p > 0;
     const nums = [];
     let col = colon ? len(key) + 2 : cols - len(v);
     parts.forEach((p, i) => {
@@ -378,7 +412,7 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
   /** The header's lines from its [text, class] runs: ruled to the column's end, or underlined (colon). */
   const header = (runs) => {
     const room = cols - 2, total = runs.reduce((a, [s]) => a + len(s), 0);
-    if (total > room) runs.at(-1)[0] = fit(runs.at(-1)[0], Math.max(2, len(runs.at(-1)[0]) - (total - room)), "the header");
+    if (total > room) runs.at(-1)[0] = fit(runs.at(-1)[0], Math.max(2, len(runs.at(-1)[0]) - (total - room)), `${where} header`);
     const width = runs.reduce((a, [s]) => a + len(s), 0);
     return colon
       ? [{ runs }, { runs: [["─".repeat(width), "d"]] }]
@@ -388,10 +422,10 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
 
   // The text column: lines of [text, class] runs, and for a person maybe the calendar.
   const items = [];
-  const rows = k.rows.map(([key, value], i) => [ownText(key, `card.rows[${i}]`), ownText(value, `card.rows[${i}]`)]);
+  const rows = k.rows.map(([key, value], i) => [ownText(key, `${where}.rows[${i}]`), ownText(value, `${where}.rows[${i}]`)]);
   if (snap.mode === "person") {
     const p = snap.person;
-    const title = k.title !== null ? ownText(k.title, "card.title") : gitText(p.name ?? p.login, "the GitHub name");
+    const title = k.title !== null ? ownText(k.title, `${where}.title`) : gitText(p.name ?? p.login, "the GitHub name");
     const handle = `${p.login}@github`;
     items.push(...header(title === p.login ? [[handle, "h"]] : [[title, "h"], [" " + handle, "v"]]));
     const langs = languageList(p.languages);
@@ -435,7 +469,7 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     }
   } else {
     const p = snap.project;
-    items.push(...header([[k.title !== null ? ownText(k.title, "card.title") : p.name, "h"]]));
+    items.push(...header([[k.title !== null ? ownText(k.title, `${where}.title`) : p.name, "h"]]));
     if (p.description) {
       const words = gitText(p.description, "the description").split(/\s+/), wrapped = [""];
       for (const w of words) {
@@ -487,19 +521,33 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
   const H = Math.ceil(2 * MARGIN + Math.max(picH, textH));
   const sizes = new Set([S]);
   const size = (s) => `f${String(s).replace(".", "_")}`;
-  const delayed = (d) => (d > 0 ? ` style="animation-delay:${sec(d)}"` : "");
-  /** A <text> of `s`, its leading spaces turned into x; "" when blank. */
-  const text = (x, y, s, cls, fs, delay = 0) => {
+  // delays below are s after t0
+  const delayed = (d) => (t0 + d > 0 ? ` style="animation-delay:${sec(t0 + d)}"` : "");
+  /** s after t0 when the banner's field shows card-local (x, y): a field reveal's clock. */
+  const shownAt = (x, y) => (startAt?.(x, y) ?? t0) - t0;
+  /** The latest shownAt over a box, probed a column and half a line apart. */
+  const lastShown = ({ x, y, w, h }) => {
+    const nx = Math.max(1, Math.ceil(w / PX)), ny = Math.max(1, Math.ceil(h / (pitch / 2)));
+    let last = 0;
+    for (let i = 0; i <= nx; i++) for (let j = 0; j <= ny; j++) last = Math.max(last, shownAt(x + (w * i) / nx, y + (h * j) / ny));
+    return last;
+  };
+  const cut = k.backdrop === "cut";
+  const knock = []; // backdrop "cut": the glyphs' silhouette, keeping only what shapes them (size, the calendar's spacing)
+  /** A <text> of `s`, its leading spaces turned into x; "" when blank. `solid`: part of the settled card's silhouette. */
+  const text = (x, y, s, cls, fs, delay = 0, solid = true) => {
     const lead = s.length - s.trimStart().length;
     const t = s.trim();
     if (!t) return "";
     sizes.add(fs);
-    return `<text x="${n2(x + lead * fs * adv)}" y="${n2(y)}" class="${cls} ${size(fs)}"${delayed(delay)}>${esc(t)}</text>`;
+    const at = `x="${n2(x + lead * fs * adv)}" y="${n2(y)}"`;
+    if (cut && solid) knock.push(`<text ${at} class="${names([size(fs), ...cls.split(" ").filter((c) => c === "cg")].join(" "))}">${esc(t)}</text>`);
+    return `<text ${at} class="${names(`${cls} ${size(fs)}`)}"${delayed(delay)}>${esc(t)}</text>`;
   };
   const rect = (cls, x, y, w, h, delay, fill = "#fff") =>
-    `<rect class="${cls}" x="${n2(x)}" y="${n2(y)}" width="${n2(w)}" height="${n2(h)}" fill="${fill}"${delayed(delay)}/>`;
-  const mask = (id, rects) => `<mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">${rects.join("")}</mask>`;
-  const group = (id, inner) => (moving ? [`<g mask="url(#${id})">`, ...inner, "</g>"] : inner);
+    `<rect class="${N(cls)}" x="${n2(x)}" y="${n2(y)}" width="${n2(w)}" height="${n2(h)}" fill="${fill}"${delayed(delay)}/>`;
+  const mask = (id, rects) => `<mask id="${N(id)}" maskUnits="userSpaceOnUse" x="0" y="0" width="${n2(W)}" height="${H}">${rects.join("")}</mask>`;
+  const group = (id, inner, on = moving) => (on ? [`<g mask="url(#${N(id)})">`, ...inner, "</g>"] : inner);
 
   // the timeline: when the last element is in, and the last mask reveal ends
   let introEnd = 0, revealEnd = 0;
@@ -507,7 +555,7 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     revealEnd = Math.max(revealEnd, delay + dur);
     introEnd = Math.max(introEnd, delay + dur);
   };
-  const body = [], defs = [], reveals = [];
+  const body = [], screen = [], defs = [], reveals = [];
 
   let screenGone = 0; // intro "loop": when the screen has faded, after the tones on it
   if (pic) {
@@ -515,19 +563,27 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     const toneStep = pic.groups.length > 1 ? Math.min(INTRO.toneStep, INTRO.toneSpread / (pic.groups.length - 1)) : 0;
     const toneEnd = INTRO.start + (pic.groups.length - 1) * toneStep + INTRO.tone;
     if (pad) {
-      body.push(`<rect${moving ? ' class="sc"' : ""} x="${MARGIN}" y="${MARGIN}" width="${n2(pic.w + 2 * pad)}" height="${n2(pic.h + 2 * pad)}" rx="${SCREEN_RADIUS}" fill="${k.screen}"/>`);
-      // going away, the screen waits for the last tone: alone on a light page they read as a negative
-      reveals.push({ cls: "sc", frames: FADE, dur: INTRO.screen, timing: "ease-out", after: toneEnd });
-      reveal(0, INTRO.screen);
-      screenGone = toneEnd + INTRO.screen;
+      const at = `x="${MARGIN}" y="${MARGIN}" width="${n2(pic.w + 2 * pad)}" height="${n2(pic.h + 2 * pad)}" rx="${SCREEN_RADIUS}"`;
+      if (cut) knock.push(`<rect ${at} fill="#000"/>`); // it holds the portrait's glyphs: they need no copies
+      if (!lineReveal) screen.push(`<rect ${at} fill="${k.screen}"/>`);
+      else if (!moving) body.push(`<rect ${at} fill="${k.screen}"/>`);
+      else {
+        body.push(`<rect class="${N("sc")}" ${at} fill="${k.screen}"${delayed(0)}/>`);
+        // going away, the screen waits for the last tone: alone on a light page they read as a negative
+        reveals.push({ cls: "sc", frames: FADE, dur: INTRO.screen, timing: "ease-out", after: toneEnd });
+        reveal(0, INTRO.screen);
+        screenGone = toneEnd + INTRO.screen;
+      }
     }
     const toneH = pic.rows * pic.pitch;
-    reveals.push({ cls: "tn", frames: wipe("Y", toneH), dur: INTRO.tone, timing: `steps(${pic.rows})` });
+    if (moving) reveals.push({ cls: "tn", frames: wipe("Y", toneH), dur: INTRO.tone, timing: `steps(${pic.rows})` });
     pic.groups.forEach(({ cls, lines }, i) => {
       const delay = INTRO.start + i * toneStep;
-      if (moving) defs.push(mask(`p${i}`, [rect("tn", x0, y0 + pic.top, pic.w, toneH, delay)]));
-      reveal(delay, INTRO.tone);
-      body.push(...group(`p${i}`, lines.map((l) => text(x0 + l.col * pic.fs * adv, y0 + pic.top + (l.row + 0.5) * pic.pitch, l.s, cls, pic.fs)).filter(Boolean)));
+      if (moving) {
+        defs.push(mask(`p${i}`, [rect("tn", x0, y0 + pic.top, pic.w, toneH, delay)]));
+        reveal(delay, INTRO.tone);
+      }
+      body.push(...group(`p${i}`, lines.map((l) => text(x0 + l.col * pic.fs * adv, y0 + pic.top + (l.row + 0.5) * pic.pitch, l.s, cls, pic.fs, 0, !pad)).filter(Boolean)));
     });
   }
 
@@ -545,28 +601,31 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
   const steps = new Set(); // "decode": the columns a frame opens, a wipe class each
   let overHost = lines; // where the wave's group goes: with a moving line, inside it
   let activity = null; // its box
+  let counting = false; // some number counts up
   const slot = INTRO.count / INTRO.countFrames;
   let y = top;
   items.forEach((it, i) => {
     const mid = y + pitch / 2, delay = INTRO.start + i * INTRO.lineStep;
     if (it.calendar) {
       const { grid, cell, cp } = it.calendar, n = grid[0].length;
-      const draw = (lift, out) => grid.forEach((row, r) => {
+      const draw = (lift, out, solid) => grid.forEach((row, r) => {
         for (let l = 0; l <= CALENDAR_TOP; l++) {
           const at = row.flatMap((v, c) => (v !== null && Math.min(CALENDAR_TOP, v + lift) === l ? [c] : []));
           if (!at.length) continue;
           const s = Array(at.at(-1) - at[0] + 1).fill(" ");
           for (const c of at) s[c - at[0]] = CELL;
-          out.push(text(X + at[0] * cp, mid + r * cp, s.join(""), `l${l} cg`, S));
+          out.push(text(X + at[0] * cp, mid + r * cp, s.join(""), `l${l} cg`, S, 0, solid));
         }
       });
-      draw(0, lines);
+      draw(0, lines, true);
+      if (animated) {
+        draw(INTRO.boost, over, false); // the same squares, brighter: nothing new for the silhouette
+        activity = { x: X, y, w: n * cp - (cp - cell), h: heights[i] };
+      }
       if (moving) {
-        draw(INTRO.boost, over);
         lineRects.push(rect("cl", X, y, n * cp, heights[i], delay));
         reveals.push({ cls: "cl", frames: wipe("X", n * cp), dur: INTRO.calendar, timing: `steps(${n})` });
         reveal(delay, INTRO.calendar);
-        activity = { x: X, y, w: n * cp - (cp - cell), h: heights[i] };
       }
     } else {
       const own = []; // this line's texts
@@ -590,23 +649,26 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
           lineRects.push(rect(`q${step}`, X, y, step * rv.frames * PX, pitch, delay));
           for (let f = 0; f < rv.frames; f++) {
             const noise = noiseRow(row.slice(f * step), rv.pool, (c) => jitter(i * 7919 + f * 131 + c * 31 + 7));
-            loose.push(text(X + f * step * PX, mid, noise, "m df", S, delay + (f * rv.dur) / rv.frames));
+            loose.push(text(X + f * step * PX, mid, noise, "m df", S, delay + (f * rv.dur) / rv.frames, false));
           }
         }
-        const from = delay + rv.dur; // the count starts once the line is in
-        for (const { col: c, n } of it.nums ?? []) {
-          const s = fmt(n);
-          own.push(text(X + c * PX, mid, s, "v nv", S, from));
-          for (let f = 0; f < INTRO.countFrames; f++)
-            own.push(text(X + c * PX, mid, fmt(Math.round(n * (1 - (1 - f / INTRO.countFrames) ** 3))).padStart(len(s)), "v nf", S, from + f * slot));
-          introEnd = Math.max(introEnd, from + INTRO.count);
-        }
-        if (it.spark) {
-          const lifted = it.spark.levels.map((l) => SPARK[Math.min(8, l + INTRO.boost)]).join("");
-          over.push(text(X + it.spark.col * PX, mid, lifted, "h", S));
-          activity = { x: X + it.spark.col * PX, y, w: it.spark.levels.length * PX, h: pitch };
-          if (!masked) overHost = own;
-        }
+      }
+      // a number counts once its line is in, or once the field has uncovered it
+      for (const { col: c, n } of it.nums ?? []) {
+        const s = fmt(n), x = X + c * PX;
+        const from = moving ? delay + rv.dur : shownAt(x + (len(s) * PX) / 2, mid);
+        own.push(text(x, mid, s, "v nv", S, from));
+        for (let f = 0; f < INTRO.countFrames; f++)
+          own.push(text(x, mid, fmt(Math.round(n * (1 - (1 - f / INTRO.countFrames) ** 3))).padStart(len(s)), "v nf", S, from + f * slot, false));
+        introEnd = Math.max(introEnd, from + INTRO.count);
+        counting = true;
+      }
+      if (animated && it.spark) {
+        // lifted, the weeks stand taller than at rest: part of the silhouette
+        const lifted = it.spark.levels.map((l) => SPARK[Math.min(8, l + INTRO.boost)]).join("");
+        over.push(text(X + it.spark.col * PX, mid, lifted, "h", S));
+        activity = { x: X + it.spark.col * PX, y, w: it.spark.levels.length * PX, h: pitch };
+        if (moving && !masked) overHost = own;
       }
       if (moving && !masked) movers.push([delay, own]);
       else lines.push(...own);
@@ -620,68 +682,66 @@ export function renderCard(cfg, snap, fontB64, glyphs) {
     if (k.reveal === "glitch") reveals.push({ cls: "gl", frames: GLITCH, dur: rv.dur, timing: "step-end" });
   }
 
+  // a field reveal's loop is the field's (the banner checks its period); a line reveal's is the card's own
   let hold = 0;
-  if (k.intro === "loop") {
+  if (moving && k.intro === "loop") {
     // each element hides `hold` s after its own start; the last is gone a pause before the replay
     const out = Math.max(revealEnd, screenGone);
     hold = k.period - INTRO.pause - out;
     if (hold - introEnd < INTRO.minHold)
-      throw new ConfigError(`card.period: one cycle of this card needs at least ` +
+      throw new ConfigError(`${where}.period: one cycle of this card needs at least ` +
         `${Math.ceil(INTRO.pause + out + introEnd + INTRO.minHold)} s (${n2(introEnd)} s to come in, ${n2(out)} s to go, ` +
         `${INTRO.minHold} s in full view, a ${INTRO.pause} s pause), got ${k.period}`);
   }
   if (lineRects.length) defs.push(mask("tx", lineRects));
   let waveShift = 0; // px the wave's band travels: across the activity, from just before it to just past it
-  if (moving && activity) {
+  if (activity) {
     const band = Math.max(3 * PX, activity.w * INTRO.waveBand);
     waveShift = activity.w + band;
-    defs.push(`<linearGradient id="wg"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`);
-    defs.push(mask("wm", [rect("wv", activity.x - band, activity.y, band, activity.h, introEnd, "url(#wg)")]));
-    overHost.push(...group("wm", over.filter(Boolean)));
+    // it starts once everything is in: the lines, or the field off the whole activity
+    const start = moving ? introEnd : lastShown(activity);
+    defs.push(`<linearGradient id="${N("wg")}"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`);
+    defs.push(mask("wm", [rect("wv", activity.x - band, activity.y, band, activity.h, start, `url(#${N("wg")})`)]));
+    overHost.push(...group("wm", over.filter(Boolean), true));
   }
   const drawn = lines.filter(Boolean);
   body.push(...(lineRects.length ? group("tx", drawn) : drawn));
   const mover = k.reveal === "slide" ? "sl" : "gl";
-  for (const [delay, own] of movers) body.push(`<g class="${mover}"${delayed(delay)}>`, ...own.filter(Boolean), "</g>");
+  for (const [delay, own] of movers) body.push(`<g class="${N(mover)}"${delayed(delay)}>`, ...own.filter(Boolean), "</g>");
   body.push(...loose.filter(Boolean));
   if (cursorRects.length) {
     defs.push(mask("cu", cursorRects));
-    body.push(...group("cu", [`<rect class="h" x="${n2(X)}" y="${n2(top)}" width="${n2(cols * PX)}" height="${n2(textH)}"/>`]));
+    body.push(...group("cu", [`<rect class="${N("h")}" x="${n2(X)}" y="${n2(top)}" width="${n2(cols * PX)}" height="${n2(textH)}"/>`]));
   }
 
+  const intro = animated
+    ? introCss(k, N, {
+      reveals, hold, wave: waveShift, counters: counting,
+      cursors: [...wipes].map((n) => ({ cls: `u${n}`, steps: n, travel: n * PX, dur: rv.dur })),
+      decodeSlot: k.reveal === "decode" && moving ? rv.dur / rv.frames : 0,
+    })
+    : { css: "", animated: [] };
   const a = (v) => `rgb(${rgb(cfg.accent)} / ${v})`;
   const calendar = items.find((it) => it.calendar)?.calendar;
-  const style = [
-    `@font-face{font-family:B;src:url(data:font/woff2;base64,${fontB64}) format('woff2')}`,
-    "text{font-family:B,monospace;white-space:pre;dominant-baseline:central;font-variant-ligatures:none;text-rendering:optimizeSpeed}",
-    Object.entries(ALPHA).map(([c, v]) => `.${c}{fill:${a(v)}}`).join(""),
+  const css = [
+    Object.entries(ALPHA).map(([c, v]) => `.${N(c)}{fill:${a(v)}}`).join(""),
     // keys in the accent, values in the ink; with no ink the values take the bright accent and the keys step down
-    `.k{fill:${a(k.ink ? ALPHA.h : ALPHA.m)}}.v{fill:${k.ink ?? a(ALPHA.h)}}`,
-    ...(pic?.fills ? [pic.fills.map((f, i) => `.c${i}{fill:${f}}`).join("")] : []),
+    `.${N("k")}{fill:${a(k.ink ? ALPHA.h : ALPHA.m)}}.${N("v")}{fill:${k.ink ?? a(ALPHA.h)}}`,
+    ...(pic?.fills ? [pic.fills.map((f, i) => `.${N(`c${i}`)}{fill:${f}}`).join("")] : []),
     // swatches: the natural palette spread dark to light, else the accent faint to full
     ...(k.swatches
-      ? [SWATCHES.map((v, i) => `.s${i}{fill:${pic?.fills ? pic.fills[Math.round((i * (pic.fills.length - 1)) / (SWATCHES.length - 1))] : a(v)}}`).join("")]
+      ? [SWATCHES.map((v, i) => `.${N(`s${i}`)}{fill:${pic?.fills ? pic.fills[Math.round((i * (pic.fills.length - 1)) / (SWATCHES.length - 1))] : a(v)}}`).join("")]
       : []),
-    [...sizes].map((s) => `.${size(s)}{font-size:${s}px}`).join(""),
-    ...(calendar ? [`.cg{letter-spacing:${n2(calendar.cp - calendar.cell)}px}`] : []),
-    ...(moving
-      ? [introCss(k, reveals, hold, waveShift, {
-        cursors: [...wipes].map((n) => ({ cls: `u${n}`, steps: n, travel: n * PX, dur: rv.dur })),
-        decodeSlot: k.reveal === "decode" ? rv.dur / rv.frames : 0,
-      })]
-      : []),
+    [...sizes].map((s) => `.${N(size(s))}{font-size:${s}px}`).join(""),
+    ...(calendar ? [`.${N("cg")}{letter-spacing:${n2(calendar.cp - calendar.cell)}px}`] : []),
+    ...(intro.css ? [intro.css] : []),
   ].join("\n");
-  const label = escAttr(snap.mode === "person" ? `${snap.person.login} on GitHub` : snap.project.name);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xml:space="preserve" role="img" aria-label="${label}">
-<title>${label}</title>
-<style>
-${style}
-</style>
-${defs.length ? `<defs>\n${defs.join("\n")}\n</defs>\n` : ""}${body.join("\n")}
-</svg>
-`;
+  // the markup is the finished card: with the animations off it shows settled
+  const reducedMotion = intro.animated.length ? `${intro.animated.map((c) => `.${N(c)}`).join(",")}{animation:none!important}` : "";
+  const layer = { defs: defs.join("\n"), screen: screen.join("\n"), body: body.join("\n"), knock: knock.join("\n") };
+  const textNodes = Object.values(layer).reduce((n, s) => n + (s.match(/<text /g) ?? []).length, 0);
   return {
-    svg, warnings,
-    stats: { width: W, height: H, textNodes: (svg.match(/<text /g) ?? []).length, lines: items.length, intro: moving ? n2(introEnd) : 0 },
+    width: W, height: H, css, reducedMotion, ...layer, warnings,
+    stats: { lines: items.length, textNodes, introEnd: animated ? n2(t0 + introEnd) : 0 },
   };
 }

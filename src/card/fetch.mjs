@@ -1,13 +1,16 @@
-// GitHub data for the card: the one part of ascii-banner that uses the
-// network. One GraphQL query plus the avatar download become a snapshot that
-// the offline `card` build reads, so the card itself always builds the same.
+// GitHub data for the cards: the one part of ascii-banner that uses the
+// network. One GraphQL query per card, plus the avatar download where a card
+// draws it, become one snapshot that the offline `build` reads, so the banner
+// always builds the same.
 import { ConfigError } from "../config.mjs";
 
 const GRAPHQL = "https://api.github.com/graphql";
 const TIMEOUT_MS = 20_000;
 const AVATAR_PX = 460; // requested avatar size; the portrait is resampled from it
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
-export const SNAPSHOT_VERSION = 2; // 2: GitHub's day levels in, fields the card never drew out
+// 2: GitHub's day levels in, fields the card never drew out; 3: every card of the config in one file, keyed by cardKey
+export const SNAPSHOT_VERSION = 3;
+const MAX_PARALLEL = 4; // cards fetched at once; each runs its requests one after another
 // GitHub's shade of a contribution day, as the calendar level 0–4 it draws.
 const DAY_LEVELS = { NONE: 0, FIRST_QUARTILE: 1, SECOND_QUARTILE: 2, THIRD_QUARTILE: 3, FOURTH_QUARTILE: 4 };
 
@@ -136,21 +139,50 @@ async function project(fullName, token, withAvatar) {
   };
 }
 
-/** The snapshot for a resolved `card` config; `token` is a GitHub token (GraphQL needs one). */
-export async function fetchSnapshot(card, token, now = new Date()) {
+/** The snapshot key of a resolved card: "user:<login>" or "repo:<owner>/<name>", as written in the config. */
+export const cardKey = (card) => (card.mode === "person" ? `user:${card.user}` : `repo:${card.repo}`);
+
+/** fn over every item, at most `limit` at a time, results in item order; the first failure rejects and stops new starts. */
+async function inPool(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  let failed = false;
+  const worker = async () => {
+    while (!failed && next < items.length) {
+      const i = next++;
+      try {
+        out[i] = await fn(items[i]);
+      } catch (e) {
+        failed = true;
+        throw e;
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
+
+/**
+ * The snapshot of every card of a resolved config; `token` is a GitHub token (GraphQL needs one).
+ * Cards sharing a key are fetched once, with the avatar if any of them draws it.
+ */
+export async function fetchCards(cfg, token, now = new Date()) {
+  if (!cfg.cards.length) throw new ConfigError("cards: the config has no cards, so there is nothing to fetch");
   if (!token)
     throw new ConfigError(
       "fetch needs a GitHub token in GITHUB_TOKEN (or GH_TOKEN): in a workflow, `env: GITHUB_TOKEN: ${{ github.token }}`; " +
       "locally, `GITHUB_TOKEN=$(gh auth token)` or any token with no scopes",
     );
-  const withAvatar = card.portrait === "avatar";
-  let data;
-  if (card.mode === "person") {
-    if (!card.user) throw new ConfigError('card.user: mode "person" needs a GitHub login to fetch');
-    data = await person(card.user, token, withAvatar);
-  } else {
-    if (!card.repo) throw new ConfigError('card.repo: mode "project" needs "owner/name" to fetch');
-    data = await project(card.repo, token, withAvatar);
+  const wanted = new Map(); // key → { card, withAvatar }, in config order
+  for (const card of cfg.cards) {
+    const key = cardKey(card);
+    const w = wanted.get(key) ?? { card, withAvatar: false };
+    w.withAvatar ||= card.portrait === "avatar";
+    wanted.set(key, w);
   }
-  return { version: SNAPSHOT_VERSION, mode: card.mode, fetchedAt: now.toISOString(), ...data };
+  const cards = await inPool([...wanted], MAX_PARALLEL, async ([key, { card, withAvatar }]) => [key, {
+    mode: card.mode,
+    ...(card.mode === "person" ? await person(card.user, token, withAvatar) : await project(card.repo, token, withAvatar)),
+  }]);
+  return { version: SNAPSHOT_VERSION, fetchedAt: now.toISOString(), cards: Object.fromEntries(cards) };
 }
