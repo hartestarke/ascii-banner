@@ -20,8 +20,8 @@ export function readCards(cfg, dataPath) {
   } catch (e) {
     throw new ConfigError(`data: cannot read ${path} (${e.code ?? e.message}); run \`ascii-banner fetch\` first`);
   }
-  if (snap?.version === SNAPSHOT_VERSION && typeof snap.fetchedAt !== "string")
-    throw new ConfigError(`data: ${path} has no fetch time; fetch again`);
+  if (snap?.version === SNAPSHOT_VERSION && (typeof snap.fetchedAt !== "string" || Number.isNaN(Date.parse(snap.fetchedAt))))
+    throw new ConfigError(`data: ${path} has no valid fetch time; fetch again`);
   if (snap?.version !== SNAPSHOT_VERSION)
     throw new ConfigError(`data: ${path} is snapshot version ${snap?.version}, this build reads ${SNAPSHOT_VERSION}; fetch again`);
   return cfg.cards.map((card) => {
