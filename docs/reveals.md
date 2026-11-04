@@ -29,7 +29,7 @@ reveal: {
 
 **Legacy `decode`.** Configs written before presets existed used a top-level `decode: { seconds, hold, fps, noiseFrames, lead, leadVar, rag, ragTicks, burst, noiseAlpha }`. It still works and means `preset: "scramble"`: `seconds`/`hold`/`fps` go to `reveal`, the rest to `options`. Giving both `decode` and `reveal` is an error.
 
-Sizes below are for the template config (3 taglines, 880 × 240, default options). "Reveal" counts what the preset adds on top of the same banner with no taglines (823,635 bytes). Keyframe counts leave out the field's one. The budget is 1,048,576 bytes.
+Sizes below are for the template config (3 taglines, 880 × 240, default options). "Reveal" counts what the preset adds on top of the same banner with no taglines (823,635 bytes). Keyframe counts leave out the field's one. The budget at that height is 1,048,576 bytes (`budget.maxBytes: null` allows 1 MiB per 240 px of canvas height).
 
 | preset | file bytes | reveal bytes | reveal @keyframes |
 | --- | ---: | ---: | ---: |
@@ -116,7 +116,7 @@ Glyph groups drop into place with an ease-out, their start times staggered left 
 | `group` | `"letter"` | `"letter"` = runs of inked columns between blank ones. Fonts that butt letters together (like the bundled ANSI Shadow) leave fewer runs than letters, so those runs are cut into 6-column chunks. `"column"` = every inked column falls on its own |
 | `stagger` | `0.6` | fraction of `seconds` the start times spread over, in [0, 1] |
 
-886,034 bytes, 26 keyframes. `group: "column"` is the heaviest option: 984,398 bytes at the template size, 64,178 bytes under the 1 MiB budget, so a larger banner or longer taglines can push it over.
+886,034 bytes, 26 keyframes. `group: "column"` is the heaviest option: 984,398 bytes at the template size, 64,178 bytes under the 1 MiB budget of a 240 px banner, so a wider banner or longer taglines can push it over.
 
 ## glitch
 

@@ -2,7 +2,7 @@
 
 # ascii-banner
 
-An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Twelve field presets (or your own function, or none), seven reveals (or none), nineteen bundled fonts and eight glyph sets, all picked in one config file. Next to it, an [info card](#info-card) of you or your repository, neofetch-style, with live numbers from GitHub. Zero dependencies, Node ≥ 20.
+An animated ASCII banner for your GitHub README, baked into one self-contained SVG. A brightness field is pushed through a glyph ramp and precomputed into a CSS frame-flip loop, because README images allow no JavaScript. Taglines set in a figlet font appear on top, one after another. Twelve field presets (or your own function, or none), seven reveals (or none), nineteen bundled fonts and eight glyph sets, all picked in one config file. Inside it, any number of [info cards](#info-cards) of you or your repositories, neofetch-style, with live numbers from GitHub, come out of the field. Zero dependencies, Node ≥ 20.
 
 ## Examples
 
@@ -101,25 +101,29 @@ jobs:
           git commit -m "Rebuild banner" && git push
 ```
 
-## Info card
+## Info cards
 
-neofetch for your profile: a second SVG for under the banner, with your avatar (in tones of the accent, its own colours or greys), your own rows and GitHub's live numbers. On load the portrait develops, the rows come in one by one (typed at a cursor, decoded out of noise, slid or glitched in), the numbers count up, and a band of light runs over a year of contributions.
+neofetch inside the banner: cards of you or your repositories below the taglines, each with a portrait (your avatar in tones of the accent, its own colours or greys), your own rows and GitHub's live numbers. A card comes out of the field as a whole (a wave front, rings of drops or scattered crystals clear the field and leave it behind) or line by line (typed at a cursor, decoded out of noise, slid or glitched in); then its numbers count up and a band of light runs over a year of contributions. It plays once, again every few seconds, or not at all.
 
-<img src="docs/examples/card-person.svg" width="880" alt="info card of hartestarke: an avatar in four red tones, rows decoding out of noise, a contribution calendar">
+<img src="docs/examples/card-person.svg" width="880" alt="banner with an info card of hartestarke: a wave front clears the field and leaves the card behind, an avatar in four red tones, two custom rows, a contribution calendar">
 
 ```js
 export default {
-  card: {
-    user: "hartestarke",
-    title: "[HARTE]",
-    rows: [["role", "software engineer"], ["focus", "backend · distributed systems · AI agents"]],
-    activity: "calendar", // or "sparkline" (the default), "none"
-    reveal: "decode", // or "type" (the default), "slide", "glitch"
-  },
+  taglines: ["info card", "out of the field"],
+  cards: [
+    {
+      user: "hartestarke",
+      title: "[HARTE]",
+      rows: [["role", "software engineer"], ["focus", "backend · distributed systems · AI agents"]],
+      activity: "calendar", // or "sparkline" (the default), "none"
+      reveal: "wave", // the default; or "drops", "crystal", or line by line "type", "decode", "slide", "glitch"
+      intro: "once", // the default; or "loop", "none"
+    },
+  ],
 };
 ```
 
-`ascii-banner fetch` snapshots GitHub (one GraphQL query; public, non-fork repositories only) and `ascii-banner card` renders `card.svg` from the snapshot, offline. A project card, the layouts and colours, the intro's options and a workflow that refreshes the card daily are in [docs/card.md](docs/card.md).
+`ascii-banner fetch` snapshots GitHub for every card into `banner.data.json` (one GraphQL query per card; public, non-fork repositories only) and `build` draws the cards from it, offline; commit both. Cards are a whole row wide or two side by side, or placed with `at`, and `size.height: "auto"` grows the banner to hold them. The layout, the reveals and backdrops, a project card, two cards side by side and a workflow that fetches and builds daily (in place of the one above) are in [docs/card.md](docs/card.md).
 
 ## Pick a look
 
@@ -224,7 +228,7 @@ export default {
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `size.width`, `size.height` | `880`, `240` | viewBox in px; the `<img>` scales it. Raw file size grows with width × height |
+| `size.width`, `size.height` | `880`, `"auto"` | viewBox in px; the `<img>` scales it. `"auto"` = as tall as the taglines and the cards need (240 without cards); px = a fixed canvas they must fit into. Raw file size grows with width × height |
 | `accent` | `"#E62D42"` | the base hue: field, taglines and shadows default to this colour at different alphas, so the banner reads on every theme. `tagline.color` / `shadowColor` and `field.colors` / `gradient` override it per part |
 | `taglines` | `["hello world", "ascii banner", "make it yours"]` | lines revealed one after another; `[]` = pure field. A character the font lacks renders as its `?` and the build warns |
 
@@ -243,6 +247,8 @@ export default {
 | `tagline.font` | `"ansi-shadow"` | a bundled font (`ascii-banner fonts` lists them) or a path to any `.flf`, relative to the config file; an unknown name fails with the list. `ansi-shadow` and the block faces are caps only |
 | `tagline.layout` | `null` | glyph spacing: `"full"` (butted), `"fit"` (moved until they touch), `"smush"` (merged where they touch), `"header"` (as the `.flf` says); `null` = the font's default: `"full"` for `ansi-shadow` and the block faces, `"header"` for the FIGlet fonts and paths |
 | `tagline.shadowGlyphs` | `null` | figlet glyphs drawn at `shadowAlpha`; `null` = the font's set (`"═║╔╗╚╝"` for `ansi-shadow`, `"░"` for `blocks-shadow`, `"▇▉"` for `blocks-3d`, `""` = single tone otherwise) |
+| `tagline.width` | `"full"` | the taglines' block at the top left, whose width and height `fill`, `maxHeight` and `x` are fractions of: `"full"`, `"half"` (cards fill the rest of its row) or px |
+| `tagline.height` | `null` | px; `null` = 240, or the whole canvas when there are no cards and `size.height` is px |
 
 ### `reveal`
 
@@ -283,7 +289,14 @@ export default {
 | `font.file` | `null` | `null` = the bundled JetBrains Mono subset; or a path to your own `.woff2` |
 | `font.advance` | `0.6` | that font's glyph advance in em |
 | `font.blockHeight` | `1.32` | that font's full block `█` height in em; bounds `field.rowPitch` under `cells: "half"` |
-| `budget.maxBytes` | `1048576` | the build fails above this many raw bytes; `0` = no limit |
+| `budget.maxBytes` | `null` | the build fails above this many raw bytes; `null` = 1 MiB per 240 px of canvas height, never less than 1 MiB; `0` = no limit |
+
+### `cards` and `data`
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `cards` | `[]` | info cards inside the banner, each `{ user }` or `{ repo }` plus its own keys (`width`, `at`, `backdrop`, `reveal`, `intro`, ...), listed in [docs/card.md](docs/card.md#config) |
+| `data` | `"banner.data.json"` | the snapshot of every card that `fetch` writes and `build` reads, relative to the config file |
 
 **Legacy keys.** Configs from before the presets still build: a top-level `decode: { seconds, hold, fps, ...options }` means `reveal: { preset: "scramble", ... }` (giving both is an error), and `field.waves` / `field.drive` are aliases of the waves preset's options.
 
@@ -291,14 +304,13 @@ export default {
 
 ```sh
 ascii-banner init [dir] [--force]                    # write the commented banner.config.mjs into dir (default .)
-ascii-banner build [--config <path>] [--out <path>]  # render it (default ./banner.config.mjs → ./banner.svg)
-ascii-banner fetch [--config <path>] [--out <path>]  # snapshot GitHub for the info card (default → card.data); needs GITHUB_TOKEN
-ascii-banner card [--config <path>] [--data <path>] [--out <path>]  # render the card from it, offline (default → ./card.svg)
+ascii-banner build [--config <path>] [--out <path>] [--data <path>]  # render it, cards from the snapshot (default ./banner.config.mjs → ./banner.svg)
+ascii-banner fetch [--config <path>] [--out <path>]  # snapshot GitHub for every card (default → data); needs GITHUB_TOKEN
 ascii-banner fonts [--sample <text>]                 # list the bundled tagline fonts; --sample renders <text> in each
 ascii-banner presets [--json]                        # list the field and reveal presets with their option defaults
 ```
 
-Run it as `npx --yes github:hartestarke/ascii-banner <command>`, or `node bin/ascii-banner.mjs <command>` in a clone. `--config` and `--out` are relative to the current directory, asset paths inside the config (`tagline.font`, `font.file`) to the config file. Exit codes: 0 ok, 1 config/user error, 2 bug.
+Run it as `npx --yes github:hartestarke/ascii-banner <command>`, or `node bin/ascii-banner.mjs <command>` in a clone. `--config`, `--out` and `--data` are relative to the current directory, paths inside the config (`tagline.font`, `font.file`, `data`) to the config file. Exit codes: 0 ok, 1 config/user error, 2 bug.
 
 ## Docs
 
@@ -306,7 +318,7 @@ Run it as `npx --yes github:hartestarke/ascii-banner <command>`, or `node bin/as
 - [docs/reveals.md](docs/reveals.md): the reveal contract, every preset's options and bytes, `tagline.color`, `reveal.pool`; writing a preset.
 - [docs/fonts.md](docs/fonts.md): the bundled fonts, `tagline.font`, `tagline.layout`, `tagline.shadowGlyphs`.
 - [docs/block-fonts.md](docs/block-fonts.md): the five original block faces, their bitmap format and generator.
-- [docs/card.md](docs/card.md): the info card: its rows, activity, portrait, looks and intro, the daily workflow, what the snapshot keeps.
+- [docs/card.md](docs/card.md): info cards in the banner: layout, reveals, intro and backdrops, rows, activity, portrait and looks, the daily workflow, what the snapshot keeps, size.
 - [docs/gallery/README.md](docs/gallery/README.md): every field, reveal, font and glyph set rendered small, and three colour samples.
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version and what breaks a config on upgrade.
 
@@ -351,8 +363,8 @@ pyftsubset YourMono.ttf --text-file=glyphs.txt --flavor=woff2 \
 - **Reveals.** Each preset hides and shows with CSS-animated clips, masks and transforms. `scramble` gives every figlet row its own clip window, stepping in whole columns along a shared uneven pace plus a bounded per-row wander, with a band of cycling ramp glyphs running ahead. `decrypt` shows the whole line as cycling noise from the first tick and locks cells in a left-to-right sweep that is ragged cell by cell: every cell belongs to one of a few interleaved lanes whose fronts trail each other. `typewriter` types the line letter by letter behind a cursor. `wipe` scales one mask rect from the edge it starts at. `dissolve` fills the mask with a dither `<pattern>` whose cells switch on at their threshold tick, so it costs matrix² animations however long the line is. `fall` drops glyph groups into place, and `glitch` jumps rows sideways and flashes noise.
 - **Firefox.** Firefox ignores CSS transforms on a `clipPath`'s children, so the clipped group moves and an inner group counter-moves the glyphs.
 - **Knockout.** A mask clears the field around the letters (stroke dilation), which keeps the tagline legible on any page colour and over the field's hot zones. It opens only where text is visible: with the scramble front, under the wipe window, with each falling group. Opened up front, the letter-shaped hole would give the line away before it appears.
-- **Budget.** Keep the SVG under 1 MiB raw; the default banner is 858 KB raw, 90 KB gzipped. Raw size ∝ frames × rows × columns; gzip barely grows with frames. What visitors actually pay is DOM (about 5.5k text nodes by default) and repaint rate, so keep `fps × loopSeconds` modest. The build fails over `budget.maxBytes`.
-- **Reduced motion.** Under `prefers-reduced-motion` the field freezes at `stillAt` and the first tagline is shown settled, with its knockout.
+- **Budget.** The build fails over `budget.maxBytes`: by default 1 MiB raw per 240 px of canvas height, never less than 1 MiB, so cards that make the banner taller raise it. The default banner is 858 KB raw, 90 KB gzipped; with one full-width card (880 × 560) it is 1.5 MB raw, 131 KB gzipped. Raw size ∝ frames × rows × columns; gzip barely grows with frames. What visitors actually pay is DOM (about 5.5k text nodes by default, 14.5k with that card) and repaint: headless Chrome with software rendering keeps about 0.9 of a CPU core busy on the default banner and about 2.5 on the card one, as much as the banner plus a separate card image used to cost. Keep `fps × loopSeconds` modest and the canvas no bigger than it needs to be.
+- **Reduced motion.** Under `prefers-reduced-motion` the field freezes at `stillAt`, the first tagline is shown settled with its knockout, and every card whole on its backdrop.
 
 ## Fonts & licences
 

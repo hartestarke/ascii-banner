@@ -9,8 +9,9 @@ fold into one to three alpha bands. The brightness comes from a **preset**
 The [gallery](gallery/README.md#fields) renders every preset small.
 
 Byte figures below are full banners built from `banner.config.mjs` (three
-taglines) with only `field.preset` changed and `field.options: {}`. The
-default budget is 1 MiB (1,048,576 bytes).
+taglines) with only `field.preset` changed and `field.options: {}`, 880 × 240.
+Their budget is 1 MiB (1,048,576 bytes): `budget.maxBytes: null` allows 1 MiB
+per 240 px of canvas height, so a banner made taller by cards gets more.
 
 ## The `field` block
 
